@@ -1,8 +1,39 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons'; // Import the icon library
+import emailjs from '@emailjs/browser'; // Import EmailJS
 
-const GuestEmailScreen = ({ navigation }) => {
+const GuestEmailScreen = ({ navigation, route }) => {
+  // Extract the registered email from the route params
+  const registeredEmail = route.params?.email || 'example@gmail.com';
+
+  const sendEmail = () => {
+    // Replace these with your EmailJS credentials
+    const serviceID = 'YOUR_SERVICE_ID';
+    const templateID = 'YOUR_TEMPLATE_ID';
+    const userID = 'YOUR_USER_ID';
+
+    // Email parameters
+    const templateParams = {
+      to_email: registeredEmail, // Registered email address
+      subject: 'Your Future Credentials',
+      message: 'Here are your future credentials to log in to the system.',
+    };
+
+    // Send the email
+    emailjs
+      .send(serviceID, templateID, templateParams, userID)
+      .then((response) => {
+        console.log('Email sent successfully!', response.status, response.text);
+        Alert.alert('Success', 'Email sent successfully!');
+        navigation.navigate('SplashScreen'); // Navigate to SplashScreen
+      })
+      .catch((error) => {
+        console.error('Failed to send email:', error);
+        Alert.alert('Error', 'Failed to send email. Please try again.');
+      });
+  };
+
   return (
     <View style={styles.container}>
       {/* Email Icon at the Top (Centered Horizontally) */}
@@ -23,7 +54,7 @@ const GuestEmailScreen = ({ navigation }) => {
       {/* Finish Button */}
       <TouchableOpacity
         style={styles.button}
-        onPress={() => navigation.navigate('SplashScreen')} // Navigate to SplashScreen
+        onPress={sendEmail} // Send email when clicked
       >
         <Text style={styles.buttonText}>Finish</Text>
       </TouchableOpacity>

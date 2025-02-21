@@ -47,7 +47,7 @@ const CodeTribeSplash = ({ navigation }) => {
             useNativeDriver: true,
           })
         )
-      ).start(() => navigation.replace("GuestRegisterScreen"));
+      ).start(() => navigation.replace("GetStartedScreen"));
     }, letters.length * 100 + 1500);
 
     return () => {

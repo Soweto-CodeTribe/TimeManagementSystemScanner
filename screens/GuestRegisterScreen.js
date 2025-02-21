@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Modal, Pressable } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Modal, Pressable, Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons'; // Import the icon library
 import { useNavigation } from '@react-navigation/native'; // Import useNavigation
 
@@ -28,7 +28,37 @@ const GuestRegisterScreen = () => {
     setModalVisible(false);
   };
 
+  const validateEmail = (email) => {
+    const regex = /^[^\s@]+@(gmail\.com|yahoo\.com)$/;
+    return regex.test(email);
+  };
+
+  const validateIDNumber = (idNumber) => {
+    const regex = /^\d{13}$/;
+    return regex.test(idNumber);
+  };
+
+  const validatePhoneNumber = (phoneNumber) => {
+    const regex = /^\d{10}$/;
+    return regex.test(phoneNumber);
+  };
+
   const handleRegister = () => {
+    if (!validateEmail(email)) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address ending with @gmail.com or @yahoo.com.');
+      return;
+    }
+
+    if (idNumber && !validateIDNumber(idNumber)) {
+      Alert.alert('Invalid ID Number', 'Please enter a valid 13-digit South African ID number.');
+      return;
+    }
+
+    if (!validatePhoneNumber(phoneNumber)) {
+      Alert.alert('Invalid Phone Number', 'Please enter a valid 10-digit phone number.');
+      return;
+    }
+
     setDetailsModalVisible(true); // Show the details modal
   };
 
@@ -39,8 +69,9 @@ const GuestRegisterScreen = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Back Button */}
-      <TouchableOpacity style={styles.backButton}>
+      {/* Back Button with Arrow */}
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <MaterialIcons name="arrow-back" size={24} color="#000" style={styles.backIcon} /> {/* Back arrow icon */}
         <Text style={styles.backButtonText}>Back</Text>
       </TouchableOpacity>
 
@@ -57,6 +88,7 @@ const GuestRegisterScreen = () => {
           placeholderTextColor="#888"
           value={email}
           onChangeText={setEmail}
+          keyboardType="email-address"
         />
       </View>
 
@@ -81,6 +113,8 @@ const GuestRegisterScreen = () => {
           placeholderTextColor="#888"
           value={idNumber}
           onChangeText={setIdNumber}
+          keyboardType="numeric"
+          maxLength={13}
         />
       </View>
 
@@ -93,6 +127,8 @@ const GuestRegisterScreen = () => {
           placeholderTextColor="#888"
           value={phoneNumber}
           onChangeText={setPhoneNumber}
+          keyboardType="phone-pad"
+          maxLength={10}
         />
       </View>
 
@@ -182,22 +218,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F5F5',
   },
   backButton: {
+    flexDirection: 'row', // Align icon and text horizontally
+    alignItems: 'center', // Center items vertically
     alignSelf: 'flex-start',
     marginBottom: 20,
   },
+  backIcon: {
+    marginRight: 5, // Space between icon and text
+  },
   backButtonText: {
-    fontSize: 16,
-    color: '#6200EE',
+    fontSize: 10,
+    color: '#000', // Black text color
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#000',
-    marginBottom: 30,
+    marginBottom: 32,
     textAlign: 'center',
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#888', // Grey text color
     marginBottom: 10,
   },
@@ -206,7 +247,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderColor: '#888',
     borderWidth: 1,
-    borderRadius: 10,
+    borderRadius: 5,
     marginBottom: 20,
     backgroundColor: '#FFF',
   },
@@ -244,10 +285,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#E0E0E0', // Very light grey
-    marginTop: 20,
+    marginTop: 25,
   },
   registerButtonText: {
-    fontSize: 18,
+    fontSize: 15,
     color: '#888', // Grey text
     fontWeight: 'bold',
   },
@@ -303,8 +344,8 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     marginTop: 20,
-    padding: 15,
-    backgroundColor: '#6200EE',
+    padding: 10,
+    backgroundColor: 'green',
     borderRadius: 10,
     alignItems: 'center',
   },

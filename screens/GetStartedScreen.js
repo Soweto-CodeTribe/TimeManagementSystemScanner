@@ -1,17 +1,30 @@
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Pressable, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
+import QRcode from "../assets/qrcode.png"
 
+// Dimensions
 const { width, height } = Dimensions.get('window');
 
 const GetStartedScreen = () => {
+
+  // declaring variable navigation to useNavigation for usage 
+  const navigation = useNavigation(); 
+
   return (
     <>
+
+    {/*Status Bar*/}
       <StatusBar style="dark" />
+
+    {/* Safe area view */}
       <SafeAreaView style={styles.container}> 
+
         <View style={styles.wrapper}>
+
           {/* Decorative gradient in top-right corner */}
           <LinearGradient
             colors={[
@@ -24,12 +37,15 @@ const GetStartedScreen = () => {
             style={styles.cornerGradient}
           />
 
+
           {/* Main content container */}
           <View style={styles.contentContainer}>
-            <View style={styles.box}>
-              <Text style={styles.boxText}>Logo</Text>
-            </View>
+
+              <Image  source={QRcode} style={styles.image}/>
+              {/* <Text style={styles.boxText}>Logo</Text> */}
+        
           </View>
+
 
           {/* Bottom container with gradient background */}
           <LinearGradient
@@ -39,8 +55,9 @@ const GetStartedScreen = () => {
             <Text style={styles.getStartedText}>Get Started</Text>
             <Text style={styles.textcontainer}>Track Time effortly, work brilliantly,</Text>
             <Text style={styles.textcontainer}>eleminate the need of a pen.</Text>
-            <Pressable style={styles.LetsGoButton}><Text style={{color:"white"}}>Let's Go</Text></Pressable>
+            <Pressable style={styles.LetsGoButton} onPress={()=> navigation.navigate("ScanScreen")}><Text style={{color:"white"}}>Let's Go</Text></Pressable>
           </LinearGradient>
+
         </View>
       </SafeAreaView>
     </>
@@ -49,6 +66,9 @@ const GetStartedScreen = () => {
 
 export default GetStartedScreen;
 
+
+
+// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -65,7 +85,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
   },
-  box: {
+  image: {
     width: width * 0.30,              
     height: width * 0.30,
     backgroundColor: '#4A90E2',

@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, SafeAreaView, TextInput, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import TraineeLoginScreen from './TraineeLoginScreen';
+
+
 const ForgetPasswordScreen = ({ navigation }) => {
+
   const [email, setEmail] = useState('');
   return (
     <SafeAreaView style={styles.container}>
       <TouchableOpacity
         style={styles.backButton}
-        onPress={() => navigation.goBack()}
+        onPress={() => navigation.navigate('TraineeLoginScreen')}
       >
         <Ionicons name="chevron-back" size={24} color="#000" />
         <Text style={styles.backText}>Back</Text>

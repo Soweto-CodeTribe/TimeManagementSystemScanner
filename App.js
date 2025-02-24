@@ -11,12 +11,15 @@ import GuestEmailScreen from './screens/GuestEmailScreen';
 import ForgetPasswordScreen from './screens/ForgetPasswordScreen';
 import PasswordEmailScreen from './screens/PasswordEmailScreen';
 import Scanner from './screens/Scanner';
+import { Provider } from 'react-redux';
+import store from './Components/Redux/Store'
 
 const Stack = createStackNavigator();
 
 export default function App() {
   return (
-    <NavigationContainer>
+    <Provider store={store}>
+      <NavigationContainer>
       <StatusBar style="auto" />
       <Stack.Navigator initialRouteName="SplashScreen" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="SplashScreen" component={SplashScreen} />
@@ -30,5 +33,6 @@ export default function App() {
         <Stack.Screen name="PasswordEmailScreen" component={PasswordEmailScreen} />
       </Stack.Navigator>
     </NavigationContainer>
+    </Provider>
   );
 }

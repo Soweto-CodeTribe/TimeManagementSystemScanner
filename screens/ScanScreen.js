@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import QRcode from "../assets/qrcode.png"
-import LocationPermissionPopup from '../Components/locationPermissionPop';
+import LocationPermissionPopup from '../Components/LocationPermissionPopup';
 
 // Dimensions
 const { width, height } = Dimensions.get('window');
@@ -57,7 +57,7 @@ const ScanScreen = () => {
         </View>
         <LocationPermissionPopup
           isVisible={isBottomSheetVisible}
-          onClose={() => setIsBottomSheetVisible(false)}        
+          // onClose={() => setIsBottomSheetVisible(false)}        
         />
       </SafeAreaView>
     </>

@@ -25,27 +25,74 @@ const TraineeLoginScreen = ({ navigation }) => {
   // Check if email is valid
   const isEmailValid = emailRegex.test(email) && email.length > 0;
 
-  const handleLogin = () => {
+  // const handleLogin = () => {
+  //   setEmailError("");
+  //   setPasswordError("");
+
+  //   if (!email) {
+  //     setEmailError("Please enter your email.");
+  //   } else if (!isEmailValid) {
+  //     setEmailError("Please enter a valid email.");
+  //     return;
+  //   }
+
+  //   if (!password) {
+  //     setPasswordError("Please enter your password.");
+  //   }
+
+  //   if (email && password && isEmailValid) {
+  //     console.log("Email:", email);
+  //     console.log("Password:", password);
+  //     console.log("Keep Signed In:", keepSignedIn);
+  //   }
+  // };
+
+  //handle login with firebase
+  const handleLogin = async () => {
     setEmailError("");
     setPasswordError("");
-
+  
     if (!email) {
       setEmailError("Please enter your email.");
+      return;
     } else if (!isEmailValid) {
       setEmailError("Please enter a valid email.");
       return;
     }
-
+  
     if (!password) {
       setPasswordError("Please enter your password.");
+      return;
     }
-
-    if (email && password && isEmailValid) {
-      console.log("Email:", email);
-      console.log("Password:", password);
-      console.log("Keep Signed In:", keepSignedIn);
+  
+    try {
+      const response = await fetch("https://timemanagementsystemserver.onrender.com/api/auth/loginT", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+  
+      // Log raw response before parsing
+      const text = await response.text();
+      console.log("Raw response:", text);
+  
+      // Check if response is OK
+      if (!response.ok) {
+        throw new Error(`Login failed: ${text}`);
+      }
+  
+      // Parse JSON only if response is valid
+      const data = JSON.parse(text);
+      console.log("Login successful:", data);
+  
+    } catch (error) {
+      console.error("Error logging in:", error.message);
     }
   };
+  
+  
 
   // Check if form is valid
   
@@ -125,7 +172,7 @@ const TraineeLoginScreen = ({ navigation }) => {
           disabled={!isFormValid} // Disable button if form is invalid
         >
           <Text style={styles.buttonText}>Login</Text>
-        </TouchableOpacity>
+        </TouchableOpacity>  
       </View>
     </SafeAreaView>
   );

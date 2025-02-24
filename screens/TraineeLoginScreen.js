@@ -115,7 +115,7 @@ const TraineeLoginScreen = ({ navigation }) => {
   }
 
   // Navigate after login
-  navigation.replace("GetStartedScreen");
+  navigation.replace("HomeScreen");
 
       // Parse JSON only if response is valid
       const data = JSON.parse(text);
@@ -136,7 +136,7 @@ const TraineeLoginScreen = ({ navigation }) => {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         {/* Back Button */}
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.replace("ScanScreen")}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color="#333" />
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
@@ -237,6 +237,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "flex-start",
     marginBottom: 10,
+    paddingTop:40,
   },
   backText: {
     fontSize: 16,

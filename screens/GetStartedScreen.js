@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import QRcode from "../assets/qrcode.png";
+import CodeTribeText from "../assets/codetribetext.png"
 
 const { width, height } = Dimensions.get('window');
 
@@ -28,7 +29,7 @@ const GetStartedScreen = () => {
   const navigation = useNavigation();
 
   const handleGetStarted = () => {
-    navigation.navigate("ScanScreen");
+    navigation.navigate("PermissionsScreen");
   };
 
   return (
@@ -48,8 +49,15 @@ const GetStartedScreen = () => {
             style={styles.cornerGradient}
           />
 
+           
           {/* Main content */}
           <View style={styles.contentContainer}>
+            
+            <Image
+              source={CodeTribeText}
+              style={styles.qrImage}
+              resizeMode="contain"
+            />
             <Image
               source={QRcode}
               style={styles.qrImage}
@@ -100,9 +108,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
+    
   },
   qrImage: {
-    width: width * 0.4,
+    width: width * 0.5,
     height: width * 0.4,
     borderRadius: SPACING.sm,
   },

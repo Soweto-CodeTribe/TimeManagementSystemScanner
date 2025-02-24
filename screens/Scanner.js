@@ -2,11 +2,14 @@ import { CameraView } from 'expo-camera';
 import { useState } from 'react';
 import { StyleSheet, View, Alert, Text, TouchableOpacity } from 'react-native';
 import { AntDesign } from '@expo/vector-icons'; 
+import PermissionsPopup from '../Components/PermissionsPopup';
+import UserGuestBottomSheet from '../Components/UserGuestbottomsheet';
 
 export default function ScannerScreen({ navigation }) { 
   // Hooks
   const [facing] = useState('back');
   const [scanned, setScanned] = useState(false);
+  const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
 
   function handleBarcodeScanned({ data }) {
     if (!scanned) {
@@ -14,7 +17,8 @@ export default function ScannerScreen({ navigation }) {
       Alert.alert('QR Code Scanned', `Data: ${data}`, [
         { text: 'OK', onPress: () => setScanned(false) }
       ]);
-      console.log(data);
+      setIsBottomSheetVisible(true)
+      console.log(data); 
     }
   }
 
@@ -45,6 +49,10 @@ export default function ScannerScreen({ navigation }) {
         <View style={styles.overlay}>
           <View style={styles.frame} />
         </View>
+        <UserGuestBottomSheet
+          isVisible={isBottomSheetVisible}
+          // onClose={() => setIsBottomSheetVisible(false)}        
+        />
       </CameraView>
     </View>
   );

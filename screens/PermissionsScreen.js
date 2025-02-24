@@ -5,6 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import QRcode from "../assets/qrcode.png";
+import PermissionsPopup from '../Components/PermissionsPopup';
+import { useState, useEffect } from 'react';
 import CodeTribeText from "../assets/codetribetext.png"
 
 const { width, height } = Dimensions.get('window');
@@ -17,6 +19,7 @@ const COLORS = {
   shadow: '#000000',
 };
 
+// Spacing for responsiveness on different screens
 const SPACING = {
   xs: 10,
   sm: 12,
@@ -25,11 +28,17 @@ const SPACING = {
   xl: 40,
 };
 
-const GetStartedScreen = () => {
+const PermissionsScreen = () => {
   const navigation = useNavigation();
+  const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
+
+    useEffect(() => {
+      // Show bottom sheet when screen mounts
+      setIsBottomSheetVisible(true);
+    }, []);
 
   const handleGetStarted = () => {
-    navigation.navigate("PermissionsScreen");
+    navigation.navigate("ScanScreen");
   };
 
   return (
@@ -49,12 +58,11 @@ const GetStartedScreen = () => {
             style={styles.cornerGradient}
           />
 
-           
           {/* Main content */}
           <View style={styles.contentContainer}>
-            
+
             <Image
-              source={CodeTribeText}
+             source={CodeTribeText}
               style={styles.qrImage}
               resizeMode="contain"
             />
@@ -66,28 +74,11 @@ const GetStartedScreen = () => {
           </View>
 
           {/* Bottom section */}
-          <LinearGradient
-            colors={[COLORS.secondary, COLORS.secondary]}
-            style={styles.bottomContainer}
-          >
-            <View style={styles.textGroup}>
-              <Text style={styles.heading}>Get Started</Text>
-              <Text style={styles.subheading}>
-                Track Time effortlessly, work brilliantly,
-              </Text>
-              <Text style={styles.subheading}>
-                eliminate the need of a pen.
-              </Text>
-            </View>
-
-            <Pressable
-              style={styles.button}
-              onPress={handleGetStarted}
-              android_ripple={{ color: 'rgba(255, 255, 255, 0.2)' }}
-            >
-              <Text style={styles.buttonText}>Let's Go</Text>
-            </Pressable>
-          </LinearGradient>
+          <PermissionsPopup
+          isVisible={isBottomSheetVisible}
+          // onClose={() => setIsBottomSheetVisible(false)}        
+        />
+          
         </View>
       </SafeAreaView>
     </>
@@ -108,7 +99,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
-    
+    marginBottom:340
   },
   qrImage: {
     width: width * 0.5,
@@ -175,4 +166,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default GetStartedScreen;
+export default PermissionsScreen;

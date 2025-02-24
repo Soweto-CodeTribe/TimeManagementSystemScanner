@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect  } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 const TraineeLoginScreen = ({ navigation }) => {
@@ -25,6 +26,26 @@ const TraineeLoginScreen = ({ navigation }) => {
   // Check if email is valid
   const isEmailValid = emailRegex.test(email) && email.length > 0;
 
+  useEffect(() => {
+    const loadCredentials = async () => {
+      try {
+        const storedEmail = await AsyncStorage.getItem("email");
+        const storedPassword = await AsyncStorage.getItem("password");
+        const storedKeepSignedIn = await AsyncStorage.getItem("keepSignedIn");
+  
+        if (storedKeepSignedIn === "true" && storedEmail && storedPassword) {
+          setEmail(storedEmail);
+          setPassword(storedPassword);
+          setKeepSignedIn(true);
+        }
+      } catch (error) {
+        console.error("Error loading stored credentials:", error);
+      }
+    };
+  
+    loadCredentials();
+  }, []);
+  
   // const handleLogin = () => {
   //   setEmailError("");
   //   setPasswordError("");
@@ -82,7 +103,20 @@ const TraineeLoginScreen = ({ navigation }) => {
       if (!response.ok) {
         throw new Error(`Login failed: ${text}`);
       }
-  
+  // Store credentials if Keep Me Signed In is checked
+  if (keepSignedIn) {
+    await AsyncStorage.setItem("email", email);
+    await AsyncStorage.setItem("password", password);
+    await AsyncStorage.setItem("keepSignedIn", "true");
+  } else {
+    await AsyncStorage.removeItem("email");
+    await AsyncStorage.removeItem("password");
+    await AsyncStorage.removeItem("keepSignedIn");
+  }
+
+  // Navigate after login
+  navigation.replace("GetStartedScreen");
+
       // Parse JSON only if response is valid
       const data = JSON.parse(text);
       console.log("Login successful:", data);
@@ -151,14 +185,18 @@ const TraineeLoginScreen = ({ navigation }) => {
 
         {/* Keep Me Signed In & Forgot Password */}
         <View style={styles.optionsContainer}>
-          <TouchableOpacity style={styles.checkboxContainer} onPress={() => setKeepSignedIn(!keepSignedIn)}>
-            <MaterialCommunityIcons
-              name={keepSignedIn ? "checkbox-marked-outline" : "checkbox-blank-outline"}
-              size={20}
-              color="#8AC052"
-            />
-            <Text style={styles.checkboxLabel}>Keep me signed in</Text>
-          </TouchableOpacity>
+        <TouchableOpacity 
+  style={styles.checkboxContainer} 
+  onPress={() => setKeepSignedIn(!keepSignedIn)}
+>
+  <MaterialCommunityIcons
+    name={keepSignedIn ? "checkbox-marked-outline" : "checkbox-blank-outline"}
+    size={20}
+    color="#8AC052"
+  />
+  <Text style={styles.checkboxLabel}>Keep me signed in</Text>
+</TouchableOpacity>
+
 
           <TouchableOpacity>
             <Text style={styles.forgotPassword} onPress={() => navigation.replace("PasswordEmailScreen")}>Forgot Password?</Text>

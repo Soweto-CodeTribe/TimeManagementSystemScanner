@@ -4,80 +4,96 @@ import { View, Text, StyleSheet, Dimensions, Pressable, Image } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
-import QRcode from "../assets/qrcode.png"
+import QRcode from "../assets/qrcode.png";
 
-// Dimensions
 const { width, height } = Dimensions.get('window');
 
-const GetStartedScreen = () => {
+// Constants for consistent styling
+const COLORS = {
+  primary: '#8AC052',
+  secondary: '#7C808D',
+  white: '#FFFFFF',
+  shadow: '#000000',
+};
 
-  // declaring variable navigation to useNavigation for usage 
-  const navigation = useNavigation(); 
+const SPACING = {
+  xs: 10,
+  sm: 12,
+  md: 20,
+  lg: 30,
+  xl: 40,
+};
+
+const GetStartedScreen = () => {
+  const navigation = useNavigation();
+
+  const handleGetStarted = () => {
+    navigation.navigate("ScanScreen");
+  };
 
   return (
     <>
-
-    {/*Status Bar*/}
       <StatusBar style="dark" />
-
-    {/* Safe area view */}
-      <SafeAreaView style={styles.container}> 
-
+      <SafeAreaView style={styles.container}>
         <View style={styles.wrapper}>
-
-          {/* Decorative gradient in top-right corner */}
+          {/* Decorative top gradient */}
           <LinearGradient
             colors={[
-              'rgba(138, 192, 82, 0.15)',  
-              'rgba(138, 192, 82, 0.1)',   
-              'rgba(138, 192, 82, 0)'      
+              'rgba(138, 192, 82, 0.15)',
+              'rgba(138, 192, 82, 0.1)',
+              'rgba(138, 192, 82, 0)',
             ]}
-            start={{ x: 0.1, y: 0.1 }}         
+            start={{ x: 0.1, y: 0.1 }}
             end={{ x: 1, y: 1 }}
             style={styles.cornerGradient}
           />
 
-
-          {/* Main content container */}
+          {/* Main content */}
           <View style={styles.contentContainer}>
-
-              <Image  source={QRcode} style={styles.image}/>
-              {/* <Text style={styles.boxText}>Logo</Text> */}
-        
+            <Image
+              source={QRcode}
+              style={styles.qrImage}
+              resizeMode="contain"
+            />
           </View>
 
-
-          {/* Bottom container with gradient background */}
+          {/* Bottom section */}
           <LinearGradient
-            colors={['#7C808D', '#7C808D']}
-            style={styles.getStartedContainer}
+            colors={[COLORS.secondary, COLORS.secondary]}
+            style={styles.bottomContainer}
           >
-            <Text style={styles.getStartedText}>Get Started</Text>
-            <Text style={styles.textcontainer}>Track Time effortly, work brilliantly,</Text>
-            <Text style={styles.textcontainer}>eleminate the need of a pen.</Text>
-            <Pressable style={styles.LetsGoButton} onPress={()=> navigation.navigate("ScanScreen")}><Text style={{color:"white"}}>Let's Go</Text></Pressable>
-          </LinearGradient>
+            <View style={styles.textGroup}>
+              <Text style={styles.heading}>Get Started</Text>
+              <Text style={styles.subheading}>
+                Track Time effortlessly, work brilliantly,
+              </Text>
+              <Text style={styles.subheading}>
+                eliminate the need of a pen.
+              </Text>
+            </View>
 
+            <Pressable
+              style={styles.button}
+              onPress={handleGetStarted}
+              android_ripple={{ color: 'rgba(255, 255, 255, 0.2)' }}
+            >
+              <Text style={styles.buttonText}>Let's Go</Text>
+            </Pressable>
+          </LinearGradient>
         </View>
       </SafeAreaView>
     </>
   );
 };
 
-export default GetStartedScreen;
-
-
-
-// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white",
+    backgroundColor: COLORS.white,
   },
   wrapper: {
     flex: 1,
     alignItems: 'center',
-    position: "relative",
   },
   contentContainer: {
     flex: 1,
@@ -85,44 +101,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
   },
-  image: {
-    width: width * 0.30,              
-    height: width * 0.30,
-    backgroundColor: '#4A90E2',
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: "#000",             
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  boxText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
+  qrImage: {
+    width: width * 0.4,
+    height: width * 0.4,
+    borderRadius: SPACING.sm,
   },
   cornerGradient: {
-    width: width * 0.8,        
+    width: width * 0.8,
     height: width * 0.7,
     borderRadius: width * 0.4,
-    position: "absolute",
-    top: -width * 0.4,               
-    right: -width * 0.4,             
+    position: 'absolute',
+    top: -width * 0.4,
+    right: -width * 0.4,
   },
-  getStartedContainer: {
-    width: "100%",
-    height: height * 0.40,           
-    justifyContent: 'center',
+  bottomContainer: {
+    width: '100%',
+    height: height * 0.4,
+    paddingVertical: SPACING.xl,
+    paddingHorizontal: SPACING.lg,
+    justifyContent: 'space-between',
     alignItems: 'center',
-    borderTopRightRadius: 40,
-    borderTopLeftRadius: 40,
-    shadowColor: "#000", 
-    gap:10,            
+    borderTopRightRadius: SPACING.xl,
+    borderTopLeftRadius: SPACING.xl,
+    shadowColor: COLORS.shadow,
     shadowOffset: {
       width: 0,
       height: -3,
@@ -131,22 +132,38 @@ const styles = StyleSheet.create({
     shadowRadius: 4.65,
     elevation: 6,
   },
-  getStartedText: {
-    color: 'white',
+  textGroup: {
+    alignItems: 'center',
+    gap: SPACING.xs,
+  },
+  heading: {
+    color: COLORS.white,
     fontSize: 42,
     fontWeight: 'bold',
-    lineHeight:52.79,
+    lineHeight: 53,
+    marginBottom: SPACING.xs,
   },
-  textcontainer:{
-    color:"white", fontWeight:"400", lineHeight:21.3, fontSize:17
+  subheading: {
+    color: COLORS.white,
+    fontSize: 17,
+    fontWeight: '400',
+    lineHeight: 21,
   },
-  LetsGoButton:{
-    width:352,
-    height:44,
-    backgroundColor:"#8AC052",
-    borderRadius:10,
-    marginTop:30,
+  button: {
+    width: '100%',
+    maxWidth: 352,
+    height: 44,
+    backgroundColor: COLORS.primary,
+    borderRadius: SPACING.xs,
     justifyContent: 'center',
     alignItems: 'center',
-  }
+    marginTop: SPACING.lg,
+  },
+  buttonText: {
+    color: COLORS.white,
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
+
+export default GetStartedScreen;

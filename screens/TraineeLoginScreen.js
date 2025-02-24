@@ -199,7 +199,7 @@ const TraineeLoginScreen = ({ navigation }) => {
 
 
           <TouchableOpacity>
-            <Text style={styles.forgotPassword} onPress={() => navigation.replace("PasswordEmailScreen")}>Forgot Password?</Text>
+            <Text style={styles.forgotPassword} onPress={() => navigation.replace("ForgetPasswordScreen")}>Forgot Password?</Text>
           </TouchableOpacity>
         </View>
 

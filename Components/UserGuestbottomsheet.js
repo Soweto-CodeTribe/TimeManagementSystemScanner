@@ -70,7 +70,7 @@ const UserGuestBottomSheet = ({ isVisible }) => {
                       styles.acceptButton,
                       pressed && {opacity: 0.8}
                     ]}
-                    onPress={()=>console.log("hello")}
+                    onPress={() => navigation.navigate("TraineeLoginScreen")}
                     android_ripple={{color: 'rgba(255, 255, 255, 0.3)'}}
                   >
                     <Text style={styles.buttontextAccept}>Continue as trainee</Text>
@@ -81,7 +81,7 @@ const UserGuestBottomSheet = ({ isVisible }) => {
                       styles.declineButton,
                       pressed && {opacity: 0.8}
                     ]}
-                    onPress={() => navigation.navigate("GetStartedScreen")}
+                    onPress={() => navigation.navigate("TraineeLoginScreen")}
                     android_ripple={{color: 'rgba(0, 0, 0, 0.1)'}}
                   >
                     <Text style={styles.buttontextDecline}>Continue as guest</Text>

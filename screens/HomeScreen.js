@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { TouchableOpacity, View, Text, StyleSheet, SafeAreaView, Dimensions, Alert } from "react-native";
+import { TouchableOpacity, View, Text, StyleSheet, SafeAreaView, Dimensions, Alert, StatusBar } from "react-native";
 import { BarChart } from "react-native-chart-kit";
 import DocumentsUpload from "../Components/DocumentsUpload";
 // import axios from "axios";
@@ -33,6 +33,7 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle={'light-content'} backgroundColor={'#7C808D'}/>
       <SafeAreaView style={styles.safeArea} />
       <View style={styles.header}>
         <View style={styles.headerContent}>
@@ -145,8 +146,8 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 40,
     backgroundColor: "#7c808d",
-    margin: 7,
-    borderRadius: 25,
+    // margin: 7,
+    borderRadius: 40,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -169,7 +170,7 @@ const styles = StyleSheet.create({
   iconButton: {
     padding: 8,
     backgroundColor: "#fff",
-    borderRadius: 15,
+    borderRadius: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -179,13 +180,12 @@ const styles = StyleSheet.create({
   },
   chartCard: {
     backgroundColor: "#fff",
-    borderRadius: 20,
+    borderRadius: 30,
     padding: 15,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
-    elevation: 2,
   },
   chartTitle: {
     fontSize: 16,
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
   statsCard: {
     backgroundColor: "#8ac05233",
     padding: 15,
-    borderRadius: 16,
+    borderRadius: 20,
     width: "48%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#4CAF50",
     margin: 16,
     padding: 16,
-    borderRadius: 12,
+    borderRadius: 20,
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },

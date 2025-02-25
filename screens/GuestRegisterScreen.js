@@ -6,7 +6,6 @@ import { useNavigation } from '@react-navigation/native'; // Import useNavigatio
 const GuestRegisterScreen = () => {
   const navigation = useNavigation(); // Initialize navigation
   const [modalVisible, setModalVisible] = useState(false);
-  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState('Choose Event');
   const [email, setEmail] = useState('');
   const [fullNames, setFullNames] = useState('');
@@ -59,12 +58,14 @@ const GuestRegisterScreen = () => {
       return;
     }
 
-    setDetailsModalVisible(true); // Show the details modal
-  };
-
-  const handleCloseModal = () => {
-    setDetailsModalVisible(false); // Close the modal
-    navigation.navigate('GuestEmailScreen'); // Navigate to GuestEmailScreen
+    // Navigate to GuestDetailsScreen with user details
+    navigation.navigate('GuestDetailsScreen', {
+      email,
+      fullNames,
+      idNumber,
+      phoneNumber,
+      selectedEvent,
+    });
   };
 
   return (
@@ -171,42 +172,6 @@ const GuestRegisterScreen = () => {
           </View>
         </Pressable>
       </Modal>
-
-      {/* Modal for Registered Details */}
-      <Modal
-        animationType="slide"
-        transparent={false}
-        visible={detailsModalVisible}
-        onRequestClose={() => setDetailsModalVisible(false)}
-      >
-        <View style={styles.detailsModalContainer}>
-          <Text style={styles.detailsTitle}>Registered Details</Text>
-          <View style={styles.detailsContent}>
-            <Text style={styles.detailsLabel}>Email:</Text>
-            <Text style={styles.detailsText}>{email}</Text>
-
-            <Text style={styles.detailsLabel}>Full Names:</Text>
-            <Text style={styles.detailsText}>{fullNames}</Text>
-
-            <Text style={styles.detailsLabel}>ID Number:</Text>
-            <Text style={styles.detailsText}>{idNumber || 'N/A'}</Text>
-
-            <Text style={styles.detailsLabel}>Phone Number:</Text>
-            <Text style={styles.detailsText}>{phoneNumber}</Text>
-
-            <Text style={styles.detailsLabel}>Event:</Text>
-            <Text style={styles.detailsText}>{selectedEvent}</Text>
-          </View>
-
-          {/* Close Button */}
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={handleCloseModal} // Use handleCloseModal to close the modal and navigate
-          >
-            <Text style={styles.closeButtonText}>Close</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
     </ScrollView>
   );
 };
@@ -312,47 +277,6 @@ const styles = StyleSheet.create({
   eventText: {
     fontSize: 16,
     color: '#888', // Grey text color
-  },
-  detailsModalContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    padding: 20,
-  },
-  detailsTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 30,
-  },
-  detailsContent: {
-    width: '100%',
-    backgroundColor: '#FFF',
-    borderRadius: 10,
-    padding: 20,
-  },
-  detailsLabel: {
-    fontSize: 16,
-    color: '#888',
-    marginBottom: 10,
-  },
-  detailsText: {
-    fontSize: 16,
-    color: '#000',
-    marginBottom: 20,
-  },
-  closeButton: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: 'green',
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  closeButtonText: {
-    fontSize: 18,
-    color: '#FFF',
-    fontWeight: 'bold',
   },
 });
 

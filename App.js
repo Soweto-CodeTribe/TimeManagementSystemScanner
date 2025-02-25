@@ -10,6 +10,7 @@ import GuestRegisterScreen from './screens/GuestRegisterScreen';
 import GuestEmailScreen from './screens/GuestEmailScreen';
 import ForgetPasswordScreen from './screens/ForgetPasswordScreen';
 import PasswordEmailScreen from './screens/PasswordEmailScreen';
+import GuestDetailsScreen from './screens/GuestDetailsScreen'; // Ensure this import is correct
 
 const Stack = createStackNavigator();
 
@@ -26,6 +27,7 @@ export default function App() {
         <Stack.Screen name="GuestEmailScreen" component={GuestEmailScreen} />
         <Stack.Screen name="ForgetPasswordScreen" component={ForgetPasswordScreen} />
         <Stack.Screen name="PasswordEmailScreen" component={PasswordEmailScreen} />
+        <Stack.Screen name="GuestDetailsScreen" component={GuestDetailsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

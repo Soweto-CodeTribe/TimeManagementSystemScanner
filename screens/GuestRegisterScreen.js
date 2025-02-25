@@ -183,7 +183,7 @@ const GuestRegisterScreen = ({ navigation }) => {
       backgroundColor: '#888',
     },
     checkboxText: {
-      fontSize: 10,
+      fontSize: 14,
       color: '#888',
     },
     modalOverlay: {
@@ -375,7 +375,7 @@ const GuestRegisterScreen = ({ navigation }) => {
           </TouchableOpacity>
 
           {/* Title */}
-          <Text style={styles.detailsTitle}>Guest Details</Text>
+          <Text style={styles.detailsTitle}>Register As Guest</Text> {/* Updated heading */}
 
           {/* Email Section */}
           <View style={styles.detailSection}>

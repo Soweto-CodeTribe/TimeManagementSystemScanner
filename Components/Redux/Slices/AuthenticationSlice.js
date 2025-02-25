@@ -14,7 +14,7 @@ export const AuthenticationSlice = createSlice({
         signOut : ()=>{
             console.log('user signed in');
         },
-        signOut : ()=>{
+        forgotPassword : ()=>{
             console.log('user signed in');
         },
     }

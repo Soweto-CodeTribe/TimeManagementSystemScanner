@@ -6,10 +6,13 @@ import {
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from 'axios';
+import * as Location from "expo-location";
 
 
 const TraineeLoginScreen = ({ navigation }) => {
@@ -87,49 +90,109 @@ const TraineeLoginScreen = ({ navigation }) => {
     }
   
     try {
-      const response = await fetch("https://timemanagementsystemserver.onrender.com/api/auth/loginT", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await fetch(
+        "https://timemanagementsystemserver.onrender.com/api/auth/loginT",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        }
+      );
   
-      // Log raw response before parsing
       const text = await response.text();
       console.log("Raw response:", text);
   
-      // Check if response is OK
       if (!response.ok) {
-        throw new Error(`Login failed: ${text}`);
+        let errorMessage = "Login failed";
+        try {
+          const errorData = JSON.parse(text);
+          errorMessage = errorData.message || errorMessage;
+        } catch (err) {
+          console.error("Error parsing error response:", err);
+        }
+        throw new Error(errorMessage);
       }
-  // Store credentials if Keep Me Signed In is checked
-  if (keepSignedIn) {
-    await AsyncStorage.setItem("email", email);
-    await AsyncStorage.setItem("password", password);
-    await AsyncStorage.setItem("keepSignedIn", "true");
-  } else {
-    await AsyncStorage.removeItem("email");
-    await AsyncStorage.removeItem("password");
-    await AsyncStorage.removeItem("keepSignedIn");
-  }
-
-  // Navigate after login
-  navigation.replace("HomeScreen");
-
-      // Parse JSON only if response is valid
+  
       const data = JSON.parse(text);
       console.log("Login successful:", data);
   
+      // Store only email, not the password
+      if (keepSignedIn) {
+        await AsyncStorage.setItem("email", email);
+        await AsyncStorage.setItem("keepSignedIn", "true");
+      } else {
+        await AsyncStorage.removeItem("email");
+        await AsyncStorage.removeItem("keepSignedIn");
+      }
+  
+      // Call the check-in function after successful login
+      await checkIn(data.traineeId, data.name);
+  
+      // Navigate only after successful login and check-in
+      navigation.replace("HomeScreen");
     } catch (error) {
       console.error("Error logging in:", error.message);
+      setPasswordError(error.message); // Display error to user
     }
   };
   
+  // Define the checkIn function
+  const checkIn = async (traineeId, name, token) => {
+    try {
+      // Request location permissions
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permission Denied", "Location permission is required for check-in.");
+        return;
+      }
   
-
+      // Get current location
+      let location = await Location.getCurrentPositionAsync({});
+      const currentLocation = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      };
+  
+      // Get current time
+      const currentTime = new Date().toISOString();
+  
+      console.log("Current Time:", currentTime);
+      console.log("Current Location:", currentLocation);
+  
+      // Send check-in request with current time & location
+      const response = await axios.post(
+        "https://timemanagementsystemserver.onrender.com/api/session/check-in",
+        {
+          traineeId,
+          name,
+          // currentTime,
+          // currentLocation,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,  
+          },
+        }
+      );
+  
+      console.log("Check-in Response:", response.data);
+      Alert.alert("Check-in Successful", `Welcome, ${name}`);
+  
+    } catch (error) {
+      console.error("Check-in Error:", error.response?.data || error);
+  
+      let errorMessage = "Failed to check in. Please try again.";
+      if (error.response) {
+        errorMessage = error.response.data.error || errorMessage;
+      }
+  
+      Alert.alert("Error", errorMessage);
+    }
+  };
+  
   // Check if form is valid
-  
   const isFormValid = email && password && isEmailValid;
 
   return (

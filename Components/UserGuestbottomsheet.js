@@ -86,7 +86,6 @@ const UserGuestBottomSheet = ({ isVisible }) => {
                   >
                     <Text style={styles.buttontextDecline}>Continue as guest</Text>
                   </Pressable>
-                  {/* https://nhlakaniphoalsonradebe.vercel.app/ */}
                 </View>
               </>
           </View>

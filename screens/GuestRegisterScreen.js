@@ -1,11 +1,22 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Modal, Pressable, Alert } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  Modal,
+  Pressable,
+  Alert,
+} from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons'; // Import the icon library
 import { useNavigation } from '@react-navigation/native'; // Import useNavigation
 
 const GuestRegisterScreen = () => {
   const navigation = useNavigation(); // Initialize navigation
   const [modalVisible, setModalVisible] = useState(false);
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false); // State for GuestDetailsScreen modal
   const [selectedEvent, setSelectedEvent] = useState('Choose Event');
   const [email, setEmail] = useState('');
   const [fullNames, setFullNames] = useState('');
@@ -58,14 +69,12 @@ const GuestRegisterScreen = () => {
       return;
     }
 
-    // Navigate to GuestDetailsScreen with user details
-    navigation.navigate('GuestDetailsScreen', {
-      email,
-      fullNames,
-      idNumber,
-      phoneNumber,
-      selectedEvent,
-    });
+    setDetailsModalVisible(true); // Show GuestDetailsScreen modal
+  };
+
+  const handleCloseDetailsModal = () => {
+    setDetailsModalVisible(false); // Close GuestDetailsScreen modal
+    navigation.navigate('GuestEmailScreen'); // Navigate to GuestEmailScreen
   };
 
   return (
@@ -172,6 +181,70 @@ const GuestRegisterScreen = () => {
           </View>
         </Pressable>
       </Modal>
+
+      {/* Modal for GuestDetailsScreen */}
+      <Modal
+        animationType="slide"
+        transparent={false}
+        visible={detailsModalVisible}
+        onRequestClose={() => setDetailsModalVisible(false)}
+      >
+        <View style={styles.detailsModalContainer}>
+          {/* Back Button with Arrow */}
+          <TouchableOpacity style={styles.backButton} onPress={handleCloseDetailsModal}>
+            <MaterialIcons name="arrow-back" size={24} color="#000" style={styles.backIcon} /> {/* Back arrow icon */}
+            <Text style={styles.backButtonText}>Back</Text>
+          </TouchableOpacity>
+
+          {/* Title */}
+          <Text style={styles.detailsTitle}>Guest Details</Text>
+
+          {/* Email Section */}
+          <View style={styles.detailSection}>
+            <MaterialIcons name="email" size={24} color="#888" style={styles.icon} />
+            <View style={styles.detailTextContainer}>
+              <Text style={styles.label}>Email</Text>
+              <Text style={styles.value}>{email}</Text>
+            </View>
+          </View>
+
+          {/* Full Names Section */}
+          <View style={styles.detailSection}>
+            <MaterialIcons name="person" size={24} color="#888" style={styles.icon} />
+            <View style={styles.detailTextContainer}>
+              <Text style={styles.label}>Full Names</Text>
+              <Text style={styles.value}>{fullNames}</Text>
+            </View>
+          </View>
+
+          {/* ID Number Section */}
+          <View style={styles.detailSection}>
+            <MaterialIcons name="credit-card" size={24} color="#888" style={styles.icon} />
+            <View style={styles.detailTextContainer}>
+              <Text style={styles.label}>ID Number</Text>
+              <Text style={styles.value}>{idNumber || 'N/A'}</Text>
+            </View>
+          </View>
+
+          {/* Phone Number Section */}
+          <View style={styles.detailSection}>
+            <MaterialIcons name="phone" size={24} color="#888" style={styles.icon} />
+            <View style={styles.detailTextContainer}>
+              <Text style={styles.label}>Phone Number</Text>
+              <Text style={styles.value}>{phoneNumber}</Text>
+            </View>
+          </View>
+
+          {/* Event Section */}
+          <View style={styles.detailSection}>
+            <MaterialIcons name="event" size={24} color="#888" style={styles.icon} />
+            <View style={styles.detailTextContainer}>
+              <Text style={styles.label}>Event</Text>
+              <Text style={styles.value}>{selectedEvent}</Text>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -277,6 +350,35 @@ const styles = StyleSheet.create({
   eventText: {
     fontSize: 16,
     color: '#888', // Grey text color
+  },
+  detailsModalContainer: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#F5F5F5',
+  },
+  detailsTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 32,
+    textAlign: 'center',
+  },
+  detailSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    backgroundColor: '#FFF',
+    padding: 15,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#EEE',
+  },
+  detailTextContainer: {
+    flex: 1,
+  },
+  value: {
+    fontSize: 16,
+    color: '#000',
   },
 });
 

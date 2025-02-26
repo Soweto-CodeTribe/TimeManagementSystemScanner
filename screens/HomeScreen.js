@@ -1,14 +1,13 @@
 import React, { useState } from "react";
-import { TouchableOpacity, View, Text, StyleSheet, SafeAreaView, Dimensions, Alert, StatusBar } from "react-native";
+import { TouchableOpacity, View, Text, StyleSheet, SafeAreaView, ScrollView, Dimensions, Alert, StatusBar } from "react-native";
 import { BarChart } from "react-native-chart-kit";
 import DocumentsUpload from "../Components/DocumentsUpload";
 // import axios from "axios";
 
-
 const HomeScreen = ({ navigation }) => {
   const [name, setName] = useState("Eks");
   const [activeStats, setActiveStats] = useState("monthly");
-  const [isDayMissed, setIsDayMissed ] = useState(false)
+  const [isDayMissed, setIsDayMissed] = useState(false);
 
   const weeklyData = {
     labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
@@ -32,99 +31,101 @@ const HomeScreen = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle={'light-content'} backgroundColor={'#7C808D'}/>
-      <SafeAreaView style={styles.safeArea} />
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View>
-            <Text style={styles.greeting}>Hi, {name}! 👋</Text>
-            <Text style={styles.welcomeBack}>Welcome Back!</Text>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle={'light-content'} backgroundColor={'#7C808D'} />
+      
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <View>
+              <Text style={styles.greeting}>Hi, {name}! 👋</Text>
+              <Text style={styles.welcomeBack}>Welcome Back!</Text>
+            </View>
+            <View style={styles.headerIcons}>
+              <TouchableOpacity onPress={() => Alert.alert("Notifications Screen will show when developed")} style={styles.iconButton}>
+                <Text>🔔</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => Alert.alert("Profile Screen will show when developed")} style={styles.iconButton}>
+                <Text>👤</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-          <View style={styles.headerIcons}>
-            <TouchableOpacity onPress={()=> Alert.alert("Notifications Screen will show when developed")} style={styles.iconButton}>
-              <Text>🔔</Text>
+          <View style={styles.chartCard}>
+            <Text style={styles.chartTitle}>Weekly Attendance</Text>
+            <BarChart
+              data={weeklyData}
+              width={Dimensions.get("window").width - 80}
+              height={160}
+              chartConfig={{
+                backgroundColor: "transparent",
+                backgroundGradientFrom: "#fff",
+                backgroundGradientTo: "#fff",
+                decimalPlaces: 0,
+                color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
+                barPercentage: 0.5,
+                style: {
+                  borderRadius: 16
+                }
+              }}
+              style={styles.chart}
+              showValuesOnTopOfBars={true}
+              fromZero={true}
+              withInnerLines={false}
+              withHorizontalLabels={false}
+            />
+          </View>
+        </View>
+
+        <View style={styles.statsToggle}>
+          <Text style={styles.overviewText}>Overview Stats</Text>
+          <View style={styles.toggleButtons}>
+            <TouchableOpacity 
+              style={[styles.toggleButton, activeStats === "monthly" && styles.activeToggle]}
+              onPress={() => setActiveStats("monthly")}
+            >
+              <Text style={[styles.toggleText, activeStats === "monthly" && styles.activeText]}>
+                Monthly Stats
+              </Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={()=> Alert.alert("Profile Screen will show when developed")} style={styles.iconButton}>
-              <Text>👤</Text>
+            <TouchableOpacity 
+              style={[styles.toggleButton, activeStats === "yearly" && styles.activeToggle]}
+              onPress={() => setActiveStats("yearly")}
+            >
+              <Text style={[styles.toggleText, activeStats === "yearly" && styles.activeText]}>
+                Yearly Stats
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
-        <View style={styles.chartCard}>
-          <Text style={styles.chartTitle}>Weekly Attendance</Text>
-          <BarChart
-            data={weeklyData}
-            width={Dimensions.get("window").width - 80}
-            height={160}
-            chartConfig={{
-              backgroundColor: "transparent",
-              backgroundGradientFrom: "#fff",
-              backgroundGradientTo: "#fff",
-              decimalPlaces: 0,
-              color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
-              barPercentage: 0.5,
-              style: {
-                borderRadius: 16
-              }
-            }}
-            style={styles.chart}
-            showValuesOnTopOfBars={true}
-            fromZero={true}
-            withInnerLines={false}
-            withHorizontalLabels={false}
-          />
+
+        {isDayMissed && <DocumentsUpload isVisible={isDayMissed} onClose={() => setIsDayMissed(false)} />}
+
+        <View style={styles.statsGrid}>
+          {activeStats === "monthly" ? (
+            <>
+              {renderStatsCard(85, "February", "Your daily attendance rate", "15-20")}
+              {renderStatsCard(92, "February", "Your daily attendance rate", "20-25")}
+              {renderStatsCard(78, "February", "Your daily attendance rate", "12-15")}
+              {renderStatsCard(88, "February", "Your daily attendance rate", "18-22")}
+            </>
+          ) : (
+            <>
+              {renderStatsCard(90, "2024-2025", "Yearly attendance rate", "280-300")}
+              {renderStatsCard(87, "2024-2025", "Yearly attendance rate", "265-285")}
+              {renderStatsCard(93, "2024-2025", "Yearly attendance rate", "290-310")}
+              {renderStatsCard(89, "2024-2025", "Yearly attendance rate", "270-290")}
+            </>
+          )}
         </View>
-      </View>
 
-      <View style={styles.statsToggle}>
-        <Text style={styles.overviewText}>Overview Stats</Text>
-        <View style={styles.toggleButtons}>
-          <TouchableOpacity 
-            style={[styles.toggleButton, activeStats === "monthly" && styles.activeToggle]}
-            onPress={() => setActiveStats("monthly")}
-          >
-            <Text style={[styles.toggleText, activeStats === "monthly" && styles.activeText]}>
-              Monthly Stats
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.toggleButton, activeStats === "yearly" && styles.activeToggle]}
-            onPress={() => setActiveStats("yearly")}
-          >
-            <Text style={[styles.toggleText, activeStats === "yearly" && styles.activeTexrt]}>
-              Yearly Stats
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {isDayMissed && <DocumentsUpload isVisible={isDayMissed} onClose={() => setIsDayMissed(false)} />}
-
-      <View style={styles.statsGrid}>
-        {activeStats === "monthly" ? (
-          <>
-            {renderStatsCard(85, "February", "Your daily attendance rate", "15-20")}
-            {renderStatsCard(92, "February", "Your daily attendance rate", "20-25")}
-            {renderStatsCard(78, "February", "Your daily attendance rate", "12-15")}
-            {renderStatsCard(88, "February", "Your daily attendance rate", "18-22")}
-          </>
-        ) : (
-          <>
-            {renderStatsCard(90, "2024-2025", "Yearly attendance rate", "280-300")}
-            {renderStatsCard(87, "2024-2025", "Yearly attendance rate", "265-285")}
-            {renderStatsCard(93, "2024-2025", "Yearly attendance rate", "290-310")}
-            {renderStatsCard(89, "2024-2025", "Yearly attendance rate", "270-290")}
-          </>
-        )}
-      </View>
-
-      <TouchableOpacity 
-        style={styles.scanButton}
-        onPress={() => navigation.navigate('ScannerScreen')}
-      >
-        <Text style={styles.scanButtonText}>Let's scan</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity 
+          style={styles.scanButton}
+          onPress={() => navigation.navigate('ScannerScreen')}
+        >
+          <Text style={styles.scanButtonText}>Let's scan</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -133,21 +134,25 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f8f9fa",
   },
+  scrollView: {
+    flex: 1,
+    backgroundColor: "#f8f9fa",
+  },
+  scrollContent: {
+    paddingBottom: 20,
+  },
   headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 20,
-  },
-  safeArea: {
-    backgroundColor: "#f8f9fa",
   },
   header: {
     flexDirection: "column",
     padding: 20,
     paddingTop: 40,
     backgroundColor: "#7c808d",
-    // margin: 7,
-    borderRadius: 40,
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -200,6 +205,7 @@ const styles = StyleSheet.create({
   statsToggle: {
     paddingHorizontal: 20,
     paddingVertical: 10,
+    marginTop: 10,
   },
   overviewText: {
     fontSize: 16,

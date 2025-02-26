@@ -1,4 +1,4 @@
-import React, { useEffect, useState} from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Dimensions, Pressable, Alert } from 'react-native';
 import Animated, { 
   useSharedValue, 
@@ -7,7 +7,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
-import { useNavigation } from '@react-navigation/native';
+import * as DocumentPicker from 'expo-document-picker';
 
 const { height, width } = Dimensions.get('window');
 const SHEET_HEIGHT = height * 0.3;
@@ -16,21 +16,14 @@ const SHEET_OVERFLOW = 20;
 const DocumentsUpload = ({ isVisible, onClose }) => {
   const translateY = useSharedValue(SHEET_HEIGHT);
   const overlayOpacity = useSharedValue(0);
-  const navigation = useNavigation();
 
   useEffect(() => {
     if (isVisible) {
       overlayOpacity.value = withTiming(1, { duration: 200 });
-      translateY.value = withSpring(0, {
-        damping: 20,
-        stiffness: 90
-      });
+      translateY.value = withSpring(0, { damping: 20, stiffness: 90 });
     } else {
       overlayOpacity.value = withTiming(0, { duration: 200 });
-      translateY.value = withSpring(SHEET_HEIGHT, {
-        damping: 20,
-        stiffness: 90
-      });
+      translateY.value = withSpring(SHEET_HEIGHT, { damping: 20, stiffness: 90 });
     }
   }, [isVisible]);
 
@@ -44,12 +37,28 @@ const DocumentsUpload = ({ isVisible, onClose }) => {
       if (translateY.value > SHEET_HEIGHT / 3) {
         onClose();
       } else {
-        translateY.value = withSpring(0, {
-          damping: 20,
-          stiffness: 90
-        });
+        translateY.value = withSpring(0, { damping: 20, stiffness: 90 });
       }
     });
+
+  const handleFileUpload = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: '*/*', 
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled) {
+        Alert.alert('Upload canceled');
+      } else {
+        Alert.alert('File Selected', `Name: ${result.assets[0].name}`);
+        console.log('File Details:', result.assets[0]);
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Something went wrong while selecting the file');
+      console.error(error);
+    }
+  };
 
   const animatedSheetStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
@@ -73,31 +82,26 @@ const DocumentsUpload = ({ isVisible, onClose }) => {
           
           <View style={styles.permissionButtonsContainer}>
             <View style={styles.buttonsContainer}>
-                <Text style={styles.documentsModalHeader}>Missing Check-in Notice</Text>
-                <Text style={styles.documentsModalText}>Our records show you were unable to check in 
-                    yesterday due to being upset. Please provide 
-                    documentation of your condition or cancel the 
-                    report to record it as a day off.</Text>
+              <Text style={styles.documentsModalHeader}>Missing Check-in Notice</Text>
+              <Text style={styles.documentsModalText}>
+                Our records show you were unable to check in yesterday due to being upset. 
+                Please provide documentation of your condition or cancel the report to record it as a day off.
+              </Text>
+              
               <Pressable 
-                style={({pressed}) => [
-                  styles.acceptButton,
-                  pressed && {opacity: 0.8}
-                ]}
-                onPress={() => Alert.alert('upload will be handled')}
-                android_ripple={{color: 'rgba(255, 255, 255, 0.3)'}}
+                style={({ pressed }) => [styles.acceptButton, pressed && { opacity: 0.8 }]}
+                onPress={handleFileUpload}
+                android_ripple={{ color: 'rgba(255, 255, 255, 0.3)' }}
               >
-                <Text style={styles.buttontextAccept}>upload a document</Text>
+                <Text style={styles.buttontextAccept}>Upload a document</Text>
               </Pressable>
               
               <Pressable 
-                style={({pressed}) => [
-                  styles.declineButton,
-                  pressed && {opacity: 0.8}
-                ]}
+                style={({ pressed }) => [styles.declineButton, pressed && { opacity: 0.8 }]}
                 onPress={onClose}
-                android_ripple={{color: 'rgba(0, 0, 0, 0.1)'}}
+                android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}
               >
-                <Text style={styles.buttontextDecline}>Mark is as day off</Text>
+                <Text style={styles.buttontextDecline}>Cancel</Text>
               </Pressable>
             </View>
           </View>
@@ -137,10 +141,7 @@ const styles = StyleSheet.create({
     paddingBottom: SHEET_OVERFLOW + 20,
     alignItems: 'center',
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: -3,
-    },
+    shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
     shadowRadius: 4.65,
     elevation: 6,
@@ -149,38 +150,25 @@ const styles = StyleSheet.create({
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: '#ffffff40',
+    backgroundColor: 'grey',
     borderRadius: 2,
-    marginBottom: 20,
   },
   documentsModalHeader: {
     color: '#053742',
-    textAlign: 'center'
-},
-documentsModalText: {
+    textAlign: 'center',
+    marginBottom: 20,
+    fontSize: 18,
+  },
+  documentsModalText: {
     color: '#7C808D',
     textAlign: 'center',
     marginBottom: 40,
-
-},
-  getStartedText: {
-    color: 'white',
-    fontSize: 42,
-    fontWeight: 'bold',
-    lineHeight: 52.79,
-  },
-  textcontainer: {
-    color: "white",
-    fontWeight: "400",
-    lineHeight: 21.3,
-    fontSize: 17,
-    textAlign: 'center',
   },
   permissionButtonsContainer: {
     marginTop: 20,
     width: width - 40,
     alignItems: 'center',
-    textAlign: 'center'
+    textAlign: 'center',
   },
   acceptButton: {
     width: '100%',
@@ -189,7 +177,7 @@ documentsModalText: {
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 20,
     elevation: 2,
   },
   declineButton: {
@@ -200,11 +188,10 @@ documentsModalText: {
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#053742'
-    // elevation: 2,
+    borderColor: '#053742',
   },
   buttontextDecline: {
-    color: '##053742',
+    color: '#053742',
     fontSize: 17,
     fontWeight: '600',
   },

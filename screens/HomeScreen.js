@@ -7,7 +7,7 @@ import DocumentsUpload from "../Components/DocumentsUpload";
 const HomeScreen = ({ navigation }) => {
   const [name, setName] = useState("Eks");
   const [activeStats, setActiveStats] = useState("monthly");
-  const [isDayMissed, setIsDayMissed] = useState(false);
+  const [isDayMissed, setIsDayMissed ] = useState(true)
 
   const weeklyData = {
     labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
@@ -31,50 +31,49 @@ const HomeScreen = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle={'light-content'} backgroundColor={'#7C808D'} />
-      
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <View>
-              <Text style={styles.greeting}>Hi, {name}! 👋</Text>
-              <Text style={styles.welcomeBack}>Welcome Back!</Text>
-            </View>
-            <View style={styles.headerIcons}>
-              <TouchableOpacity onPress={() => Alert.alert("Notifications Screen will show when developed")} style={styles.iconButton}>
-                <Text>🔔</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => Alert.alert("Profile Screen will show when developed")} style={styles.iconButton}>
-                <Text>👤</Text>
-              </TouchableOpacity>
-            </View>
+    <View style={styles.container}>
+      <StatusBar barStyle={'light-content'} backgroundColor={'#7C808D'}/>
+      <SafeAreaView style={styles.safeArea} />
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={styles.greeting}>Hi, {name}! 👋</Text>
+            <Text style={styles.welcomeBack}>Welcome Back!</Text>
           </View>
-          <View style={styles.chartCard}>
-            <Text style={styles.chartTitle}>Weekly Attendance</Text>
-            <BarChart
-              data={weeklyData}
-              width={Dimensions.get("window").width - 80}
-              height={160}
-              chartConfig={{
-                backgroundColor: "transparent",
-                backgroundGradientFrom: "#fff",
-                backgroundGradientTo: "#fff",
-                decimalPlaces: 0,
-                color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
-                barPercentage: 0.5,
-                style: {
-                  borderRadius: 16
-                }
-              }}
-              style={styles.chart}
-              showValuesOnTopOfBars={true}
-              fromZero={true}
-              withInnerLines={false}
-              withHorizontalLabels={false}
-            />
+          <View style={styles.headerIcons}>
+            <TouchableOpacity onPress={()=> navigation.navigate('NotificationScreen')} style={styles.iconButton}>
+              <Text>🔔</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={()=> Alert.alert("Profile Screen will show when developed")} style={styles.iconButton}>
+              <Text>👤</Text>
+            </TouchableOpacity>
           </View>
         </View>
+        <View style={styles.chartCard}>
+          <Text style={styles.chartTitle}>Weekly Attendance</Text>
+          <BarChart
+            data={weeklyData}
+            width={Dimensions.get("window").width - 80}
+            height={160}
+            chartConfig={{
+              backgroundColor: "transparent",
+              backgroundGradientFrom: "#fff",
+              backgroundGradientTo: "#fff",
+              decimalPlaces: 0,
+              color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
+              barPercentage: 0.5,
+              style: {
+                borderRadius: 16
+              }
+            }}
+            style={styles.chart}
+            showValuesOnTopOfBars={true}
+            fromZero={true}
+            withInnerLines={false}
+            withHorizontalLabels={false}
+          />
+        </View>
+      </View>
 
         <View style={styles.statsToggle}>
           <Text style={styles.overviewText}>Overview Stats</Text>
@@ -151,13 +150,12 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 40,
     backgroundColor: "#7c808d",
-    borderBottomLeftRadius: 40,
-    borderBottomRightRadius: 40,
+    borderRadius: 40,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
-    elevation: 3,
+    // elevation: 3,
   },
   greeting: {
     fontSize: 16,

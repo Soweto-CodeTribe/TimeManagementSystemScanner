@@ -8,7 +8,7 @@ import DocumentsUpload from "../Components/DocumentsUpload";
 const HomeScreen = ({ navigation }) => {
   const [name, setName] = useState("Eks");
   const [activeStats, setActiveStats] = useState("monthly");
-  const [isDayMissed, setIsDayMissed ] = useState(false)
+  const [isDayMissed, setIsDayMissed ] = useState(true)
 
   const weeklyData = {
     labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
@@ -146,13 +146,12 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 40,
     backgroundColor: "#7c808d",
-    // margin: 7,
     borderRadius: 40,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
-    elevation: 3,
+    // elevation: 3,
   },
   greeting: {
     fontSize: 16,

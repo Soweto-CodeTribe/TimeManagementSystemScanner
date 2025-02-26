@@ -42,7 +42,7 @@ const HomeScreen = ({ navigation }) => {
             <Text style={styles.welcomeBack}>Welcome Back!</Text>
           </View>
           <View style={styles.headerIcons}>
-            <TouchableOpacity onPress={()=> Alert.alert("Notifications Screen will show when developed")} style={styles.iconButton}>
+            <TouchableOpacity onPress={()=> navigation.navigate('NotificationScreen')} style={styles.iconButton}>
               <Text>🔔</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={()=> Alert.alert("Profile Screen will show when developed")} style={styles.iconButton}>

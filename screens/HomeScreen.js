@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import { 
   TouchableOpacity, View, Text, StyleSheet, SafeAreaView, ScrollView, 
   Dimensions, Alert, StatusBar 
@@ -18,16 +18,27 @@ const HomeScreen = ({ navigation }) => {
 
   const token = useSelector((state) => state.auth.token);
   const BASE_URL = 'https://timemanagementsystemserver.onrender.com';
+  const traineeId = useSelector((state) => state.auth.user.id);
 
+  useEffect(() => {
+  setTimeout(()=>{
+    const loadState = async () =>{
+      setIsLoading(false)
+    }
+  }, 3000)
+  }, [])
+  
   useEffect(() => {
     if (!token) {
       console.warn("🚨 No token available, skipping API request!");
       return;
     }
-
+  
+    // const traineeId = 18; 
+  
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/api/session/program-stats`, {
+        const response = await axios.get(`${BASE_URL}/api/session/monthly-stats?traineeId=${traineeId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log("✅ API Response:", response.data);
@@ -40,9 +51,10 @@ const HomeScreen = ({ navigation }) => {
         }
       }
     };
-
+  
     fetchData();
   }, [token]);
+  
 
   const weeklyData = {
     labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
@@ -100,6 +112,7 @@ const HomeScreen = ({ navigation }) => {
               }}
               style={styles.chart}
               showValuesOnTopOfBars
+              
               fromZero
               withInnerLines={false}
               withHorizontalLabels={false}
@@ -151,7 +164,7 @@ const HomeScreen = ({ navigation }) => {
         >
           <Text style={styles.scanButtonText}>Let's scan</Text>
         </TouchableOpacity>
-        <LoaderPopup message=" hello " visible={isLoading}/>
+        {isLoading && <LoaderPopup visible={isLoading}/>}
       </ScrollView>
     </SafeAreaView>
   );

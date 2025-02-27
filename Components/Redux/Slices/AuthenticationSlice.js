@@ -1,64 +1,140 @@
+// import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+// import axios from "axios";
+
+// // Async Thunk for login
+// export const loginUser = createAsyncThunk(
+//   "auth/loginUser",
+//   async ({ email, password, keepSignedIn }, { rejectWithValue }) => {
+//     try {
+//       const response = await axios.post(
+//         "https://timemanagementsystemserver.onrender.com/api/auth/loginT",
+//         { email, password }
+//       );
+//       const data = response.data;
+
+//       if (keepSignedIn) {
+//         await AsyncStorage.setItem("email", email);
+//         await AsyncStorage.setItem("keepSignedIn", "true");
+//       } else {
+//         await AsyncStorage.removeItem("email");
+//         await AsyncStorage.removeItem("keepSignedIn");
+//       }
+
+//       return data;
+//     } catch (error) {
+//       return rejectWithValue(error.response?.data?.message || "Login failed");
+//     }
+//   }
+// );
+
+// const authSlice = createSlice({
+//   name: "auth",
+//   initialState: {
+//     user: null,
+//     token: null,
+//     isLoading: false,
+//     error: null,
+//   },
+//   reducers: {
+//     logout: (state) => {
+//       state.user = null;
+//       state.token = null;
+//       AsyncStorage.removeItem("email");
+//       AsyncStorage.removeItem("keepSignedIn");
+//     },
+//   },
+//   extraReducers: (builder) => {
+//     builder
+//       .addCase(loginUser.pending, (state) => {
+//         state.isLoading = true;
+//         state.error = null;
+//       })
+//       .addCase(loginUser.fulfilled, (state, action) => {
+//         state.isLoading = false;
+//         state.user = action.payload.traineeId;
+//         state.token = action.payload.token;
+//       })
+//       .addCase(loginUser.rejected, (state, action) => {
+//         state.isLoading = false;
+//         state.error = action.payload;
+//       });
+//   },
+// });
+
+// export const { logout } = authSlice.actions;
+// export default authSlice.reducer;
+
+
+
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
-// Async Thunk for login
+// Async Thunk for login and check-in
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
   async ({ email, password, keepSignedIn }, { rejectWithValue }) => {
     try {
+      // Login API Call
       const response = await axios.post(
         "https://timemanagementsystemserver.onrender.com/api/auth/loginT",
         { email, password }
       );
-
       const data = response.data;
 
-      console.log("🔹 Login Response Data:", data); // Log full response data
-      console.log("🔹 Token:", data.token);
-
-      if (!data.token) throw new Error("No token received");
-
+      // Save login details if 'Keep Signed In' is enabled
       if (keepSignedIn) {
-        await AsyncStorage.setItem("token", data.token);
         await AsyncStorage.setItem("email", email);
         await AsyncStorage.setItem("keepSignedIn", "true");
       } else {
-        await AsyncStorage.removeItem("token");
         await AsyncStorage.removeItem("email");
         await AsyncStorage.removeItem("keepSignedIn");
       }
 
-      return data;
+      // Perform Check-In after successful login
+      const checkInData = await checkInUser(data.traineeId, data.name);
+
+      return { ...data, checkInData };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Login failed");
     }
   }
 );
 
-// Async Thunk to fetch user data using token
-export const fetchUserData = createAsyncThunk(
-  "auth/fetchUserData",
-  async (_, { getState, rejectWithValue }) => {
+// Async function for Check-In
+const checkInUser = async (traineeId, name) => {
+  try {
+    const response = await axios.post(
+      "https://timemanagementsystemserver.onrender.com/api/session/check-in",
+      { traineeId, name }
+    );
+
+    if (response.status === 200) {
+      const checkInData = response.data;
+
+      // Store Check-In Data in AsyncStorage
+      await AsyncStorage.setItem("CheckInData", JSON.stringify(checkInData));
+
+      return checkInData;
+    } else {
+      throw new Error("Check-in failed");
+    }
+  } catch (error) {
+    console.error("Check-in Error:", error.response?.data || error);
+    return null; // Return null if check-in fails
+  }
+};
+
+// Async function to get Check-In Data from AsyncStorage
+export const getCheckInData = createAsyncThunk(
+  "auth/getCheckInData",
+  async (_, { rejectWithValue }) => {
     try {
-      const { token } = getState().auth;
-      if (!token) throw new Error("No token found");
-
-      const response = await axios.get(
-        "https://timemanagementsystemserver.onrender.com/api/auth/getUser",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      const userData = response.data;
-
-      console.log("🔹 Fetched User Data from Firebase:", userData); // Log fetched user data
-      await AsyncStorage.setItem("user", JSON.stringify(userData));
-
-      return userData;
+      const storedData = await AsyncStorage.getItem("CheckInData");
+      return storedData ? JSON.parse(storedData) : null;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch user data");
+      return rejectWithValue("Failed to fetch check-in data");
     }
   }
 );
@@ -68,6 +144,7 @@ const authSlice = createSlice({
   initialState: {
     user: null,
     token: null,
+    checkInData: null,
     isLoading: false,
     error: null,
   },
@@ -75,10 +152,10 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.token = null;
-      AsyncStorage.removeItem("token");
-      AsyncStorage.removeItem("user");
+      state.checkInData = null;
       AsyncStorage.removeItem("email");
       AsyncStorage.removeItem("keepSignedIn");
+      AsyncStorage.removeItem("CheckInData");
     },
   },
   extraReducers: (builder) => {
@@ -89,25 +166,18 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
+        state.user = action.payload.traineeId;
         state.token = action.payload.token;
-
-        console.log("🔹 Token after Login:", action.payload.token);
-        console.log("🔹 User Response Data:", action.payload);
-
-        if (action.payload.user) {
-          state.user = action.payload.user;
-          console.log("🔹 Stored User in Redux:", state.user);
-        }
+        state.checkInData = action.payload.checkInData;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       })
-      .addCase(fetchUserData.fulfilled, (state, action) => {
-        state.user = action.payload;
-        console.log("🔹 Updated Redux State - User:", state.user);
+      .addCase(getCheckInData.fulfilled, (state, action) => {
+        state.checkInData = action.payload;
       })
-      .addCase(fetchUserData.rejected, (state, action) => {
+      .addCase(getCheckInData.rejected, (state, action) => {
         state.error = action.payload;
       });
   },

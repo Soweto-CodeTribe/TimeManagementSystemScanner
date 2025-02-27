@@ -91,12 +91,12 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.token = action.payload.token;
 
-        console.log("🔹 Token after Login:", action.payload.token);
-        console.log("🔹 User Response Data:", action.payload);
+        console.log(" Token after Login:", action.payload.token);
+        console.log(" User Response Data:", action.payload);
 
         if (action.payload.user) {
           state.user = action.payload.user;
-          console.log("🔹 Stored User in Redux:", state.user);
+          console.log(" Stored User in Redux:", state.user);
         }
       })
       .addCase(loginUser.rejected, (state, action) => {
@@ -105,7 +105,7 @@ const authSlice = createSlice({
       })
       .addCase(fetchUserData.fulfilled, (state, action) => {
         state.user = action.payload;
-        console.log("🔹 Updated Redux State - User:", state.user);
+        console.log(" Updated Redux State - User:", state.user);
       })
       .addCase(fetchUserData.rejected, (state, action) => {
         state.error = action.payload;

@@ -1,39 +1,118 @@
 import { CameraView } from 'expo-camera';
 import { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
-import { Alert } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Platform, Alert } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import UserGuestBottomSheet from '../Components/UserGuestbottomsheet';
 import * as Location from 'expo-location';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CheckinCheckoutbottomsheet from '../Components/CheckinCheckoutbottomsheet';
+import Toast from 'react-native-toast-message'; // Add this import
 
 export default function ScannerAuth({ navigation }) {
   // Hooks
   const [facing, setFacing] = useState('back');
   const [scanned, setScanned] = useState(false);
   const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
-
-
+  const [loading, setLoading] = useState(false); // Add loading state
 
   // Handle QR Code Scanned
-  function handleBarcodeScanned({ data }) {
-    if (!scanned) {
-      setScanned(true);
-      Alert.alert('QR Code Scanned', `Data: ${data}`, [
-        { text: 'OK', onPress: () => setScanned(false) }
-      ]);
-      console.log(data);
-      setIsBottomSheetVisible(true);
+  async function handleBarcodeScanned({ data }) {
+    if (scanned) return;  // Prevent scanning if already scanned
+    setScanned(true);      // Mark as scanned to prevent further scanning
+    setLoading(true);
+    
+    try {
+        const isValid = await verifyQRCode(data);
+        if (isValid) {
+            const checkIn = Date.now();
+            const readableDate = new Date(checkIn);
+            console.log(readableDate.toString()); 
+
+            // Capture location
+            let location = null;
+            try {
+                const { status } = await Location.requestForegroundPermissionsAsync();
+                if (status === "granted") {
+                    if (Platform.OS === "android") {
+                        const isAvailable = await Location.hasServicesEnabledAsync();
+                        if (!isAvailable) {
+                            throw new Error("Location services are not available on this device.");
+                        }
+                    }
+                    const loc = await Location.getCurrentPositionAsync({
+                        enableHighAccuracy: false,
+                    });
+                    location = {
+                        latitude: loc.coords.latitude,
+                        longitude: loc.coords.longitude,
+                    };
+                } else {
+                    Alert.alert(
+                        "Permission Denied",
+                        "Location permission is required to check in."
+                    );
+                }
+            } catch (error) {
+                console.error("Location Error:", error);
+                Alert.alert(
+                    "Location Error",
+                    error.message || "Could not get location."
+                );
+            }
+            
+            // Save to local storage
+            const checkInData = {
+                checkInTime: checkIn,
+                location,
+            };
+            await AsyncStorage.setItem("checkInData", JSON.stringify(checkInData));
+
+            console.log(checkInData);
+            
+            // Show toast notification
+            Toast.show({
+              type: "success",
+              text1: "Scanned Successfully",
+              text2: "You can now log in to check in",
+              position: "top",
+            });
+
+            // Important: Make sure this is set to true
+            console.log("Setting bottom sheet visible");
+            setIsBottomSheetVisible(true);
+        } else {
+            Alert.alert("Invalid QR Code", "This QR code is expired or incorrect.");
+        }
+    } catch (error) {
+        console.error("Scan Error:", error);
+        Alert.alert("Error", "Invalid QR Code");
+    } finally {
+        setLoading(false);
     }
   }
+
   // Close Bottom Sheet
   function closeBottomSheet() {
     setIsBottomSheetVisible(false);
     setScanned(false); // Allow scanning again
   }
 
+  async function verifyQRCode(qrId) {
+    try {
+      const res = await axios.post(
+        "https://timemanagementsystemserver.onrender.com/api/QR/verify-QRcode",
+        { qrId }
+      );
+      return res.data.success;
+    } catch (error) {
+      console.error(
+        "QR Code Verification Error:",
+        error.response?.data || error
+      );
+      return false;
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -61,10 +140,18 @@ export default function ScannerAuth({ navigation }) {
         </View>
       </CameraView>
 
+      {/* Add debugging info to verify bottom sheet state */}
+      {/* <Text style={styles.debugText}>
+        Bottom Sheet State: {isBottomSheetVisible ? 'Visible' : 'Hidden'}
+      </Text> */}
+
       <CheckinCheckoutbottomsheet 
         isVisible={isBottomSheetVisible}
-        onClose={closeBottomSheet} // Pass a function to close the bottom sheet
+        onClose={closeBottomSheet}
       />
+      
+      {/* Toast component needs to be at the root level */}
+      <Toast />
     </View>
   );
 }
@@ -115,5 +202,15 @@ const styles = StyleSheet.create({
     borderColor: 'white',
     borderRadius: 10,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  debugText: {
+    position: 'absolute',
+    bottom: 10,
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    color: 'white',
+    padding: 5,
   },
 });

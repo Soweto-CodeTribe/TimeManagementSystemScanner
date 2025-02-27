@@ -4,21 +4,99 @@ import { StyleSheet, View, Alert, Text, TouchableOpacity } from 'react-native';
 import { AntDesign } from '@expo/vector-icons'; 
 import PermissionsPopup from '../Components/PermissionsPopup';
 import UserGuestBottomSheet from '../Components/UserGuestbottomsheet';
+import * as Location from "expo-location";
+import axios from 'axios';
+import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ScannerScreen({ navigation }) { 
   // Hooks
   const [facing] = useState('back');
   const [scanned, setScanned] = useState(false);
+  const [loading, setLoading] = useState(false)
   const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
 
-  function handleBarcodeScanned({ data }) {
-    if (!scanned) {
-      setScanned(true);
-      Alert.alert('QR Code Scanned', `Data: ${data}`, [
-        { text: 'OK', onPress: () => setScanned(false) }
-      ]);
-      setIsBottomSheetVisible(true)
-      console.log(data); 
+
+
+  async function handleBarcodeScanned({ data }) {
+    if (scanned) return;  // Prevent scanning if already scanned
+    setScanned(true);      // Mark as scanned to prevent further scanning
+    setLoading(true);
+    try {
+        const isValid = await verifyQRCode(data);
+        if (isValid) {
+            const checkIn = Date.now();
+
+            // Capture location
+            let location = null;
+            try {
+                const { status } = await Location.requestForegroundPermissionsAsync();
+                if (status === "granted") {
+                    if (Platform.OS === "android") {
+                        const isAvailable = await Location.hasServicesEnabledAsync();
+                        if (!isAvailable) {
+                            throw new Error("Location services are not available on this device.");
+                        }
+                    }
+                    const loc = await Location.getCurrentPositionAsync({
+                        enableHighAccuracy: false,
+                    });
+                    location = {
+                        latitude: loc.coords.latitude,
+                        longitude: loc.coords.longitude,
+                    };
+                } else {
+                    Alert.alert(
+                        "Permission Denied",
+                        "Location permission is required to check in."
+                    );
+                }
+            } catch (error) {
+                console.error("Location Error:", error);
+                Alert.alert(
+                    "Location Error",
+                    error.message || "Could not get location."
+                );
+            }
+            // Save to local storage
+            const checkInData = {
+                checkInTime: checkIn,
+                location,
+            };
+            await AsyncStorage.setItem("checkInData", JSON.stringify(checkInData));
+            Alert.alert(
+                "Check in data captured. You can now log in to finish the process"
+            );
+
+            setIsBottomSheetVisible(true);
+        } else {
+            Alert.alert("Invalid QR Code", "This QR code is expired or incorrect.");
+        }
+    } catch (error) {
+        console.error("Scan Error:", error);
+        Alert.alert("Error", "Invalid QR Code");
+    } finally {
+        setLoading(false);
+    }
+}
+
+  
+
+
+  async function verifyQRCode(qrId) {
+    try {
+      const res = await axios.post(
+        "https://timemanagementsystemserver.onrender.com/api/QR/verify-QRcode",
+        { qrId }
+    
+      );
+      return res.data.success;
+    } catch (error) {
+      console.error(
+        "QR Code Verification Error:",
+        error.response?.data || error
+      );
+      return false;
     }
   }
 

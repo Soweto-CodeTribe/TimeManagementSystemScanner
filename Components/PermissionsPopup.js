@@ -53,14 +53,66 @@ const PermissionsPopup = ({ isVisible }) => {
     opacity: overlayOpacity.value,
   }));
 
+
+// Locations Function
   const requestLocationPermission = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status === "granted") {
         Alert.alert("Location Permission", "Location access granted.");
         setCameraPermissions(true);
+        
+        try {
+          // First check if location services are enabled before trying to get position
+          const providerStatus = await Location.getProviderStatusAsync();
+          console.log("Provider status:", providerStatus);
+          
+          if (!providerStatus.locationServicesEnabled) {
+            Alert.alert(
+              "Location Services Disabled",
+              "Please enable location services in your device settings to use this feature.",
+              [{ text: "OK" }]
+            );
+            return; // Exit early if location services are disabled
+          }
+          
+          // Try with simpler options first
+          const location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Low, // Try with lower accuracy first
+            mayShowUserSettingsDialog: true
+          });
+          console.log("Current location:", location);
+          
+        } catch (locationError) {
+          console.error("Error getting current position:", locationError);
+          
+          if (locationError.message.includes("rejected")) {
+            Alert.alert(
+              "Location Request Rejected",
+              "Your device rejected the location request. This might happen if you're in battery saving mode or have restricted background location access.",
+              [
+                { 
+                  text: "Try Again", 
+                  onPress: () => requestLocationPermission() // Retry the location request
+                },
+                { 
+                  text: "You cannot continue without granting location permission", 
+                  onPress: () =>  navigation.navigate("GetStartedScreen")
+                }
+              ]
+            );
+           
+          } else {
+            // Handle other location errors
+            Alert.alert(
+              "Location Error",
+              "Unable to get your current location. Please try again later.",
+              [{ text: "OK" }]
+            );
+          }
+        }
       } else {
-        Alert.alert("Location Permission", "Location access denied.");
+        Alert.alert("Location Permission", "Please enable location services in your device settings to use this feature");
         navigation.navigate("GetStartedScreen");
       }
     } catch (error) {
@@ -69,6 +121,10 @@ const PermissionsPopup = ({ isVisible }) => {
     }
   };
 
+
+
+
+// Camera Permissions
   const requestCameraPermission = async () => {
     try {
       const { status } = await Camera.requestCameraPermissionsAsync();
@@ -79,6 +135,7 @@ const PermissionsPopup = ({ isVisible }) => {
         }, 2000);
       } else {
         Alert.alert("Camera Permission", "Camera access denied.");
+        navigation.navigate("GetStartedScreen");
       }
     } catch (error) {
       console.error("Error requesting camera permission:", error);
@@ -86,6 +143,9 @@ const PermissionsPopup = ({ isVisible }) => {
     }
   };
 
+
+
+// Layout UI
   return (
     <View style={styles.container}>
       <Animated.View 

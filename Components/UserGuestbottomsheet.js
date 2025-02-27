@@ -1,5 +1,5 @@
 import React, { useEffect, useState} from 'react';
-import { View, Text, StyleSheet, Dimensions, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Pressable,Linking  } from 'react-native';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -81,7 +81,7 @@ const UserGuestBottomSheet = ({ isVisible }) => {
                       styles.declineButton,
                       pressed && {opacity: 0.8}
                     ]}
-                    onPress={() => navigation.navigate("TraineeLoginScreen")}
+                    onPress={() => Linking.openURL('https://example.com')}
                     android_ripple={{color: 'rgba(0, 0, 0, 0.1)'}}
                   >
                     <Text style={styles.buttontextDecline}>Continue as guest</Text>

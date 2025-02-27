@@ -39,13 +39,20 @@ const TraineeLoginScreen = ({ navigation }) => {
       Alert.alert("Error", "Please enter valid credentials");
       return;
     }
+  
     dispatch(loginUser({ email, password, keepSignedIn }))
       .unwrap()
-      .then(() => {
+      .then((response) => {
+        if (response.checkInData) {
+          Alert.alert("Success", `Checked in as ${response.checkInData.name}`);
+        } else {
+          Alert.alert("Warning", "Login successful, but check-in failed.");
+        }
         navigation.replace("HomeScreen");
       })
       .catch((err) => Alert.alert("Login Failed", err));
   };
+  
 
   return (
     <SafeAreaView style={styles.safeArea}>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState} from 'react';
-import { View, Text, StyleSheet, Dimensions, Pressable,Linking  } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Pressable, Linking } from 'react-native';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -8,15 +8,31 @@ import Animated, {
 } from 'react-native-reanimated';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser } from './Redux/Slices/AuthenticationSlice';
+import { selectTraineeId } from './Redux/Slices/AuthenticationSlice';
 
 const { height, width } = Dimensions.get('window');
-const SHEET_HEIGHT = height * 0.3;
+const SHEET_HEIGHT = height * 0.3; // Increased height to accommodate more buttons
 const SHEET_OVERFLOW = 20;
 
 const CheckinCheckoutbottomsheet = ({ isVisible }) => {
   const translateY = useSharedValue(SHEET_HEIGHT);
   const overlayOpacity = useSharedValue(0);
-  const navigation = useNavigation();
+  const traineeId = useSelector((state) => state.auth.user);
+  const token = useSelector((state) => state.auth.token);
+  const isLoading = useSelector((state) => state.auth.isLoading);
+  const error = useSelector((state) => state.auth.error);
+  
+  // Example of accessing the dispatch function
+  const dispatch = useDispatch();
+  
+  // Now you can use traineeId and token in your component
+  console.log('Current trainee ID:', traineeId);
+  console.log('Auth token:', token);
+
+
+  console.log(traineeId)
 
   useEffect(() => {
     if (isVisible) {
@@ -49,9 +65,6 @@ const CheckinCheckoutbottomsheet = ({ isVisible }) => {
     opacity: overlayOpacity.value,
   }));
 
-
-
-
   return (
     <View style={styles.container}>
       <Animated.View 
@@ -61,41 +74,40 @@ const CheckinCheckoutbottomsheet = ({ isVisible }) => {
         <Animated.View style={[styles.bottomSheet, animatedSheetStyle]}>
           <View style={styles.handle} />
           
-          
           <View style={styles.permissionButtonsContainer}>
               <>
                 <View style={styles.buttonsContainer}>
                   <Pressable 
                     style={({pressed}) => [
-                      styles.acceptButton,
+                      styles.lunchInButton,
                       pressed && {opacity: 0.8}
                     ]}
-                    onPress={() => navigation.navigate("TraineeLoginScreen")}
+                    onPress={() => Linking.openURL('https://example.com')}
+                    android_ripple={{color: 'rgba(0, 0, 0, 0.1)'}}
+                  >
+                    <Text style={styles.buttonTextLight}>Check In to Lunch</Text>
+                  </Pressable>
+                  
+                  <Pressable 
+                    style={({pressed}) => [
+                      styles.lunchOutButton,
+                      pressed && {opacity: 0.8}
+                    ]}
+                    onPress={() => Linking.openURL('https://example.com')}
+                    android_ripple={{color: 'rgba(0, 0, 0, 0.1)'}}
+                  >
+                    <Text style={styles.buttonTextDark}>Check Out of Lunch</Text>
+                  </Pressable>
+                  
+                  <Pressable 
+                    style={({pressed}) => [
+                      styles.checkOutButton,
+                      pressed && {opacity: 0.8}
+                    ]}
+                    onPress={() => Linking.openURL('https://example.com')}
                     android_ripple={{color: 'rgba(255, 255, 255, 0.3)'}}
                   >
-                    <Text style={styles.buttontextAccept}>Continue as trainee</Text>
-                  </Pressable>
-                  
-                  <Pressable 
-                    style={({pressed}) => [
-                      styles.declineButton,
-                      pressed && {opacity: 0.8}
-                    ]}
-                    onPress={() => Linking.openURL('https://example.com')}
-                    android_ripple={{color: 'rgba(0, 0, 0, 0.1)'}}
-                  >
-                    <Text style={styles.buttontextDecline}>Continue as guest</Text>
-                  </Pressable>
-                  
-                  <Pressable 
-                    style={({pressed}) => [
-                      styles.declineButton,
-                      pressed && {opacity: 0.8}
-                    ]}
-                    onPress={() => Linking.openURL('https://example.com')}
-                    android_ripple={{color: 'rgba(0, 0, 0, 0.1)'}}
-                  >
-                    <Text style={styles.buttontextDecline}>Continue as guest</Text>
+                    <Text style={styles.buttonTextLight}>Check Out</Text>
                   </Pressable>
                 </View>
               </>
@@ -171,32 +183,52 @@ const styles = StyleSheet.create({
     width: width - 40,
     alignItems: 'center',
   },
-  acceptButton: {
+  checkInButton: {
     width: '100%',
     height: 44,
-    backgroundColor: "#8AC052",
+    backgroundColor: "#8AC052", // Green for check in
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
     elevation: 2,
   },
-  declineButton: {
+  lunchInButton: {
     width: '100%',
     height: 44,
-    backgroundColor: "white",
+    backgroundColor: "#F4A261", // Orange for lunch check in
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+    elevation: 2,
+  },
+  lunchOutButton: {
+    width: '100%',
+    height: 44,
+    backgroundColor: "#E9C46A", // Yellow for lunch check out
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+    elevation: 2,
+  },
+  checkOutButton: {
+    width: '100%',
+    height: 44,
+    backgroundColor: "#E76F51", // Red for check out
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 2,
   },
-  buttontextDecline: {
-    color: 'black',
+  buttonTextLight: {
+    color: 'white',
     fontSize: 17,
     fontWeight: '600',
   },
-  buttontextAccept: {
-    color: 'white',
+  buttonTextDark: {
+    color: 'black',
     fontSize: 17,
     fontWeight: '600',
   },

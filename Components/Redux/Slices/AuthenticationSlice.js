@@ -14,22 +14,30 @@ export const loginUser = createAsyncThunk(
 
       const data = response.data;
 
-      console.log("🔹 Login Response Data:", data); // Log full response data
-      console.log("🔹 Token:", data.token);
+      console.log("Login Response Data:", data);
+      console.log("Token:", data.token);
 
       if (!data.token) throw new Error("No token received");
+
+      // Extract traineeID from user data
+      const traineeID = data.user?.traineeID;
+      console.log("Trainee ID:", traineeID);
 
       if (keepSignedIn) {
         await AsyncStorage.setItem("token", data.token);
         await AsyncStorage.setItem("email", email);
         await AsyncStorage.setItem("keepSignedIn", "true");
+        if (traineeID) {
+          await AsyncStorage.setItem("traineeID", traineeID);
+        }
       } else {
         await AsyncStorage.removeItem("token");
         await AsyncStorage.removeItem("email");
         await AsyncStorage.removeItem("keepSignedIn");
+        await AsyncStorage.removeItem("traineeID");
       }
 
-      return data;
+      return { ...data, traineeID };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Login failed");
     }
@@ -53,8 +61,13 @@ export const fetchUserData = createAsyncThunk(
 
       const userData = response.data;
 
-      console.log("🔹 Fetched User Data from Firebase:", userData); // Log fetched user data
+      console.log("Fetched User Data:", userData);
       await AsyncStorage.setItem("user", JSON.stringify(userData));
+
+      // Store traineeID if available
+      if (userData.traineeID) {
+        await AsyncStorage.setItem("traineeID", userData.traineeID);
+      }
 
       return userData;
     } catch (error) {
@@ -68,6 +81,7 @@ const authSlice = createSlice({
   initialState: {
     user: null,
     token: null,
+    traineeID: null, // Add traineeID state
     isLoading: false,
     error: null,
   },
@@ -75,10 +89,12 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.token = null;
+      state.traineeID = null; // Clear traineeID on logout
       AsyncStorage.removeItem("token");
       AsyncStorage.removeItem("user");
       AsyncStorage.removeItem("email");
       AsyncStorage.removeItem("keepSignedIn");
+      AsyncStorage.removeItem("traineeID");
     },
   },
   extraReducers: (builder) => {
@@ -90,13 +106,14 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.token = action.payload.token;
+        state.traineeID = action.payload.traineeID; // Store traineeID in state
 
-        console.log(" Token after Login:", action.payload.token);
-        console.log(" User Response Data:", action.payload);
+        console.log("Token after Login:", action.payload.token);
+        console.log("Trainee ID after Login:", action.payload.traineeID);
 
         if (action.payload.user) {
           state.user = action.payload.user;
-          console.log(" Stored User in Redux:", state.user);
+          console.log("Stored User in Redux:", state.user);
         }
       })
       .addCase(loginUser.rejected, (state, action) => {
@@ -105,7 +122,8 @@ const authSlice = createSlice({
       })
       .addCase(fetchUserData.fulfilled, (state, action) => {
         state.user = action.payload;
-        console.log(" Updated Redux State - User:", state.user);
+        state.traineeID = action.payload.traineeID || state.traineeID; // Update traineeID if available
+        console.log("Updated Redux State - User:", state.user);
       })
       .addCase(fetchUserData.rejected, (state, action) => {
         state.error = action.payload;

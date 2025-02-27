@@ -1,11 +1,13 @@
 import { CameraView } from 'expo-camera';
 import { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { Alert } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import UserGuestBottomSheet from '../Components/UserGuestbottomsheet';
 import * as Location from 'expo-location';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import CheckinCheckoutbottomsheet from '../Components/CheckinCheckoutbottomsheet';
 
 export default function ScannerAuth({ navigation }) {
   // Hooks
@@ -23,6 +25,7 @@ export default function ScannerAuth({ navigation }) {
         { text: 'OK', onPress: () => setScanned(false) }
       ]);
       console.log(data);
+      setIsBottomSheetVisible(true);
     }
   }
   // Close Bottom Sheet
@@ -58,7 +61,7 @@ export default function ScannerAuth({ navigation }) {
         </View>
       </CameraView>
 
-      <UserGuestBottomSheet
+      <CheckinCheckoutbottomsheet 
         isVisible={isBottomSheetVisible}
         onClose={closeBottomSheet} // Pass a function to close the bottom sheet
       />

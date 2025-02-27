@@ -1,26 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, Alert, StyleSheet } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser, fetchCheckInData, getStoredCheckInData, checkInUser } from "../Components/Redux/Slices/AuthenticationSlice";
+import { loginUser } from "../Components/Redux/Slices/AuthenticationSlice";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
 const TraineeLoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [keepSignedIn, setKeepSignedIn] = useState(false);
   const dispatch = useDispatch();
-  const { isLoading, error, isFetchingCheckIn } = useSelector((state) => state.auth);
-
+  const { isLoading, error } = useSelector((state) => state.auth);
   useEffect(() => {
     const loadCredentials = async () => {
       try {
         const storedEmail = await AsyncStorage.getItem("email");
         const storedPassword = await AsyncStorage.getItem("password");
         const storedKeepSignedIn = await AsyncStorage.getItem("keepSignedIn");
-
         if (storedKeepSignedIn === "true" && storedEmail) {
           setEmail(storedEmail);
           setPassword(storedPassword);
@@ -30,52 +27,20 @@ const TraineeLoginScreen = ({ navigation }) => {
         console.error("Error loading stored credentials:", error);
       }
     };
-
     loadCredentials();
   }, []);
-
-  const handleLogin = async () => {
+  const handleLogin = () => {
     if (!email || !password) {
       Alert.alert("Error", "Please enter valid credentials");
       return;
     }
-  
     dispatch(loginUser({ email, password, keepSignedIn }))
       .unwrap()
-      .then(async (response) => {
-        console.log("Login Response:", response); // Log full response
-  
-        // Ensure response and response.data exist before destructuring
-        const { traineeId, name, token } = response?.data || {};
-  
-        if (!traineeId || !name || !token) {
-          console.error("Invalid response structure:", response);
-          Alert.alert("Error", "Invalid login response format.");
-          return;
-        }
-  
-        try {
-          let checkInData = await getStoredCheckInData();
-  
-          if (!checkInData) {
-            console.log("Attempting Check-In...");
-            checkInData = await checkInUser(traineeId, name, token);
-            console.log("Check-In Response:", checkInData);
-          }
-  
-          navigation.replace("HomeScreen", { checkInData });
-        } catch (error) {
-          console.error("Check-in Error:", error);
-          Alert.alert("Check-In Failed", error.message || "Failed to check in");
-        }
+      .then(() => {
+        navigation.replace("HomeScreen");
       })
-      .catch((error) => {
-        console.error("Login Error:", error);
-        Alert.alert("Login Failed", error.message || "An error occurred");
-      });
+      .catch((err) => Alert.alert("Login Failed", err));
   };
-  
-  
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -83,9 +48,7 @@ const TraineeLoginScreen = ({ navigation }) => {
           <Ionicons name="chevron-back" size={24} color="#333" />
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
-
         <Text style={styles.heading}>Login As Trainee</Text>
-
         <Text style={styles.label}>Email</Text>
         <View style={styles.inputContainer}>
           <MaterialCommunityIcons name="email-outline" size={20} color="#88879C" />
@@ -97,7 +60,6 @@ const TraineeLoginScreen = ({ navigation }) => {
             onChangeText={setEmail}
           />
         </View>
-
         <Text style={styles.label}>Password</Text>
         <View style={styles.inputContainer}>
           <TextInput
@@ -111,7 +73,6 @@ const TraineeLoginScreen = ({ navigation }) => {
             <MaterialCommunityIcons name={passwordVisible ? "eye-off-outline" : "eye-outline"} size={20} color="#88879C" />
           </TouchableOpacity>
         </View>
-
         <View style={styles.optionsContainer}>
           <TouchableOpacity style={styles.checkboxContainer} onPress={() => setKeepSignedIn(!keepSignedIn)}>
             <MaterialCommunityIcons
@@ -125,23 +86,18 @@ const TraineeLoginScreen = ({ navigation }) => {
             <Text style={styles.forgotPassword}>Forgot Password?</Text>
           </TouchableOpacity>
         </View>
-
         <TouchableOpacity
-          style={[styles.button, { backgroundColor: isLoading || isFetchingCheckIn ? "#88879C" : "#8AC052" }]}
+          style={[styles.button, { backgroundColor: isLoading ? "#88879C" : "#8AC052" }]}
           onPress={handleLogin}
-          disabled={isLoading || isFetchingCheckIn}
+          disabled={isLoading}
         >
-          <Text style={styles.buttonText}>
-            {isLoading ? "Logging in..." : isFetchingCheckIn ? "Checking in..." : "Login"}
-          </Text>
+          <Text style={styles.buttonText}>{isLoading ? "Logging in..." : "Login"}</Text>
         </TouchableOpacity>
-
         {error && <Text style={styles.errorText}>{error}</Text>}
       </View>
     </SafeAreaView>
   );
 };
-
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -230,5 +186,4 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
 });
-
 export default TraineeLoginScreen;

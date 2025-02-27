@@ -14,6 +14,7 @@ import PasswordEmailScreen from './screens/PasswordEmailScreen';
 import PermissionsScreen from './screens/PermissionsScreen';
 import ScannerScreen from './screens/Scanner';
 import HomeScreen from './screens/HomeScreen.js';
+import ScannerAuth from './screens/AuthScanner.js'
 
 const Stack = createStackNavigator();
 
@@ -32,6 +33,7 @@ export default function App() {
           <Stack.Screen name="GuestEmailScreen" component={GuestEmailScreen} />
           <Stack.Screen name="ForgetPasswordScreen" component={ForgetPasswordScreen} />
           <Stack.Screen name="PasswordEmailScreen" component={PasswordEmailScreen} />
+          <Stack.Screen name="ScannerAuth" component={ScannerAuth} />
           <Stack.Screen name="HomeScreen" component={HomeScreen} />
         </Stack.Navigator>
       </NavigationContainer>

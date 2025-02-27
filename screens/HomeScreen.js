@@ -120,7 +120,7 @@ const HomeScreen = ({ navigation }) => {
 
         <TouchableOpacity 
           style={styles.scanButton}
-          onPress={() => navigation.navigate('ScannerScreen')}
+          onPress={() => navigation.navigate('ScannerAuth')}
         >
           <Text style={styles.scanButtonText}>Let's scan</Text>
         </TouchableOpacity>

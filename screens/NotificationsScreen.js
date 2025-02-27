@@ -1,46 +1,184 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, TextInput, StyleSheet, Pressable } from 'react-native';
-import ReadMessagePopup from '../Components/ReadMessagePopup';
+"use client"
 
-import { useNavigation } from '@react-navigation/native'; 
-
+import { useState } from "react"
+import {
+  View,
+  Text,
+  FlatList,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  Pressable,
+  SafeAreaView,
+  StatusBar,
+  Image,
+} from "react-native"
+import ReadMessagePopup from "../Components/ReadMessagePopup"
+import { Ionicons } from "@expo/vector-icons"
+import { useNavigation } from "@react-navigation/native"
 
 export default function NotificationScreen() {
-  const [selectedMessage, setSelectedMessage] = useState(null);
- const navigation = useNavigation(); 
-  const SAMPLE_MESSAGES = [
-    { id: '1', sender: 'Mahlatse Serathi', preview: 'Hey, I just sent you the updated project files...', timestamp: 'Sent: 2025-02-02', message:"The message is rescheduled due to the weather" },
-    { id: '2', sender: 'Mahlatse Serathi', preview: 'Meeting rescheduled to 3 PM tomorrow', timestamp: 'Sent: 2025-02-02', message:"The message is rescheduled due to the weather" },
-  ];
+  const [selectedMessage, setSelectedMessage] = useState(null)
+  const [searchQuery, setSearchQuery] = useState("")
+  const navigation = useNavigation()
 
-  const MessageItem = ({ item }) => (
-    <Pressable style={styles.messageCard} onPress={() => setSelectedMessage(item)}>
-      <Text style={styles.senderName}>{item.sender}</Text>
-      <Text style={styles.messagePreview}>{item.preview}</Text>
-      <Text style={styles.timestamp}>{item.timestamp}</Text>
+  const NOTIFICATIONS = [
+    {
+      id: "1",
+      name: "Upjeet Orry",
+      time: "4 days ago",
+      message: "This document will serve as a Proof of Upjeet. It SHOULD be UPLOADED by you via the Worker Portal.",
+      hasUploadButton: true,
+    },
+    {
+      id: "2",
+      name: "Upjeet Orry",
+      time: "1 day ago",
+      message: "You've provided Proof for 23 February 2023. It will operate until 28 February 2023.",
+      hasDownloadButton: true,
+    },
+    {
+      id: "3",
+      name: "Upjeet Orry",
+      time: "1 day ago",
+      message: "This document will serve as a Proof of Upjeet. It SHOULD be UPLOADED by you via the Worker Portal.",
+    },
+    {
+      id: "4",
+      name: "Upjeet Orry",
+      time: "Yesterday",
+      message: "This document will serve as a Proof of Upjeet. It SHOULD be UPLOADED by you via the Worker Portal.",
+    },
+    {
+      id: "5",
+      name: "Mahlatse Serathi",
+      time: "4 weeks ago",
+      message: "Hey, I just sent you the updated project files...",
+      fullMessage: "The message is rescheduled due to the weather",
+    },
+    {
+      id: "6",
+      name: "Mahlatse Serathi",
+      time: "4 weeks ago",
+      message: "Meeting rescheduled to 3 PM tomorrow",
+      fullMessage: "The message is rescheduled due to the weather",
+    },
+  ]
+
+  const filteredNotifications = searchQuery
+    ? NOTIFICATIONS.filter(
+        (notification) =>
+          notification.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          notification.message.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
+    : NOTIFICATIONS
+
+  const renderNotificationItem = ({ item }) => (
+    <Pressable style={styles.notificationCard} onPress={() => (item.fullMessage ? setSelectedMessage(item) : null)}>
+      <View style={styles.avatarContainer}>
+        <Text style={styles.avatarText}>
+          {item.name
+            .split(" ")
+            .map((n) => n[0])
+            .join("")}
+        </Text>
+      </View>
+      <View style={styles.notificationContent}>
+        <View style={styles.notificationHeader}>
+          <Text style={styles.notificationName}>{item.name}</Text>
+          <Text style={styles.notificationTime}>{item.time}</Text>
+        </View>
+        <Text style={styles.notificationMessage}>{item.message}</Text>
+        {item.hasUploadButton && (
+          <TouchableOpacity style={styles.uploadButton}>
+            <Text style={styles.uploadButtonText}>Upload Proof</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+      {item.hasDownloadButton && (
+        <TouchableOpacity style={styles.downloadButton}>
+          <Ionicons name="download-outline" size={20} color="#fff" />
+        </TouchableOpacity>
+      )}
     </Pressable>
-  );
+  )
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Notification Center</Text>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" />
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={24} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Notifications</Text>
+      </View>
 
-      <TextInput style={styles.searchbar} placeholder="Search for Messages..." />
+      <FlatList
+        data={filteredNotifications}
+        renderItem={renderNotificationItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContent}
+      />
 
-      <FlatList data={SAMPLE_MESSAGES} renderItem={MessageItem} keyExtractor={(item) => item.id} />
-
-      <ReadMessagePopup message={selectedMessage} visible={!!selectedMessage} onClose={() => setSelectedMessage(null)} />
-    </View>
-  );
+      <ReadMessagePopup
+        message={
+          selectedMessage
+            ? {
+                id: selectedMessage.id,
+                sender: selectedMessage.name,
+                message: selectedMessage.fullMessage,
+                timestamp: selectedMessage.time,
+              }
+            : null
+        }
+        visible={!!selectedMessage}
+        onClose={() => setSelectedMessage(null)}
+      />
+    </SafeAreaView>
+  )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f2f2f2", padding: 16 },
-  header: { fontSize: 20, fontWeight: "bold", textAlign: "center", marginBottom: 16 },
-  searchbar: { borderRadius: 8, borderWidth: 1, borderColor: "#ddd", height: 48, paddingHorizontal: 16, backgroundColor: "white", marginBottom: 16 },
-  messageCard: { backgroundColor: "#ffffff", padding: 16, borderRadius: 12, marginBottom: 10, borderWidth: 2, borderColor: "#8CC1518F" },
-  senderName: { fontSize: 16, fontWeight: "600", color: "#1A1A1A" },
-  messagePreview: { fontSize: 14, color: "#666666", marginVertical: 4 },
-  timestamp: { fontSize: 12, color: "#999999", alignSelf: "flex-end" },
-});
+  container: {
+
+  },
+  header: {
+  },
+  backButton: {
+  },
+  headerTitle: {
+  },
+  profileImage: {
+  },
+  searchContainer: {
+  },
+  searchIcon: {
+  },
+  searchInput: {
+  },
+  listContent: {
+  },
+  notificationCard: {
+  },
+  avatarContainer: {
+  },
+  avatarText: {
+  },
+  notificationContent: {
+  },
+  notificationHeader: {
+  },
+  notificationName: {
+  },
+  notificationTime: {
+  },
+  notificationMessage: {
+  },
+  uploadButton: {
+  },
+  uploadButtonText: {
+  },
+  downloadButton: {
+  },
+})
 

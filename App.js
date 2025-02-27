@@ -29,6 +29,7 @@ export default function App() {
           <Stack.Screen name="PermissionsScreen" component={PermissionsScreen} />
           <Stack.Screen name="TraineeLoginScreen" component={TraineeLoginScreen} />
           <Stack.Screen name="NotificationScreen" component={NotificationScreen} />
+          <Stack.Screen name="ScannerScreen" component={ScannerScreen} />
           <Stack.Screen name="GuestRegisterScreen" component={GuestRegisterScreen} />
           <Stack.Screen name="GuestEmailScreen" component={GuestEmailScreen} />
           <Stack.Screen name="ForgetPasswordScreen" component={ForgetPasswordScreen} />

@@ -1,23 +1,54 @@
-import React, { useState } from "react";
-import { TouchableOpacity, View, Text, StyleSheet, SafeAreaView, ScrollView, Dimensions, Alert, StatusBar } from "react-native";
+import React, { useState, useEffect } from "react";
+import { 
+  TouchableOpacity, View, Text, StyleSheet, SafeAreaView, ScrollView, 
+  Dimensions, Alert, StatusBar 
+} from "react-native";
 import { BarChart } from "react-native-chart-kit";
 import DocumentsUpload from "../Components/DocumentsUpload";
-// import axios from "axios";
+import axios from "axios";
+import { useSelector } from 'react-redux';
 
 const HomeScreen = ({ navigation }) => {
   const [name, setName] = useState("Eks");
   const [activeStats, setActiveStats] = useState("monthly");
-  const [isDayMissed, setIsDayMissed ] = useState(true)
+  const [isDayMissed, setIsDayMissed] = useState(false);
+  const [statsData, setStatsData] = useState(null); // Store API response
+
+  const token = useSelector((state) => state.auth.token);
+  const BASE_URL = 'https://timemanagementsystemserver.onrender.com';
+
+  useEffect(() => {
+    if (!token) {
+      console.warn("🚨 No token available, skipping API request!");
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/api/session/program-stats`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log("✅ API Response:", response.data);
+        setStatsData(response.data);
+      } catch (error) {
+        console.error("❌ Error fetching data:", error.message);
+        if (error.response) {
+          console.error("Response Data:", error.response.data);
+          console.error("Status Code:", error.response.status);
+        }
+      }
+    };
+
+    fetchData();
+  }, [token]);
 
   const weeklyData = {
     labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-    datasets: [{
-      data: [65, 45, 75, 55, 70]
-    }]
+    datasets: [{ data: [65, 45, 75, 55, 70] }]
   };
 
   const renderStatsCard = (percentage, title, subtitle, days) => (
-    <View style={styles.statsCard}>
+    <View style={styles.statsCard} key={title}>
       <View style={styles.statsHeader}>
         <Text style={styles.percentage}>{percentage}%</Text>
         <View style={styles.trendIndicator}>
@@ -31,49 +62,48 @@ const HomeScreen = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle={'light-content'} backgroundColor={'#7C808D'}/>
-      <SafeAreaView style={styles.safeArea} />
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View>
-            <Text style={styles.greeting}>Hi, {name}! 👋</Text>
-            <Text style={styles.welcomeBack}>Welcome Back!</Text>
+    <SafeAreaView style={{ flex: 1 }}>
+      <ScrollView style={styles.container}>
+        <StatusBar barStyle={'light-content'} backgroundColor={'#7C808D'} />
+        
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <View>
+              <Text style={styles.greeting}>Hi, {name}! 👋</Text>
+              <Text style={styles.welcomeBack}>Welcome Back!</Text>
+            </View>
+            <View style={styles.headerIcons}>
+              <TouchableOpacity onPress={() => navigation.navigate('NotificationScreen')} style={styles.iconButton}>
+                <Text>🔔</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => Alert.alert("Profile Screen will show when developed")} style={styles.iconButton}>
+                <Text>👤</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-          <View style={styles.headerIcons}>
-            <TouchableOpacity onPress={()=> navigation.navigate('NotificationScreen')} style={styles.iconButton}>
-              <Text>🔔</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={()=> Alert.alert("Profile Screen will show when developed")} style={styles.iconButton}>
-              <Text>👤</Text>
-            </TouchableOpacity>
+
+          <View style={styles.chartCard}>
+            <Text style={styles.chartTitle}>Weekly Attendance</Text>
+            <BarChart
+              data={weeklyData}
+              width={Dimensions.get("window").width - 80}
+              height={160}
+              chartConfig={{
+                backgroundColor: "transparent",
+                backgroundGradientFrom: "#fff",
+                backgroundGradientTo: "#fff",
+                decimalPlaces: 0,
+                color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
+                barPercentage: 0.5,
+              }}
+              style={styles.chart}
+              showValuesOnTopOfBars
+              fromZero
+              withInnerLines={false}
+              withHorizontalLabels={false}
+            />
           </View>
         </View>
-        <View style={styles.chartCard}>
-          <Text style={styles.chartTitle}>Weekly Attendance</Text>
-          <BarChart
-            data={weeklyData}
-            width={Dimensions.get("window").width - 80}
-            height={160}
-            chartConfig={{
-              backgroundColor: "transparent",
-              backgroundGradientFrom: "#fff",
-              backgroundGradientTo: "#fff",
-              decimalPlaces: 0,
-              color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
-              barPercentage: 0.5,
-              style: {
-                borderRadius: 16
-              }
-            }}
-            style={styles.chart}
-            showValuesOnTopOfBars={true}
-            fromZero={true}
-            withInnerLines={false}
-            withHorizontalLabels={false}
-          />
-        </View>
-      </View>
 
         <View style={styles.statsToggle}>
           <Text style={styles.overviewText}>Overview Stats</Text>
@@ -82,17 +112,13 @@ const HomeScreen = ({ navigation }) => {
               style={[styles.toggleButton, activeStats === "monthly" && styles.activeToggle]}
               onPress={() => setActiveStats("monthly")}
             >
-              <Text style={[styles.toggleText, activeStats === "monthly" && styles.activeText]}>
-                Monthly Stats
-              </Text>
+              <Text style={[styles.toggleText, activeStats === "monthly" && styles.activeText]}>Monthly Stats</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={[styles.toggleButton, activeStats === "yearly" && styles.activeToggle]}
               onPress={() => setActiveStats("yearly")}
             >
-              <Text style={[styles.toggleText, activeStats === "yearly" && styles.activeText]}>
-                Yearly Stats
-              </Text>
+              <Text style={[styles.toggleText, activeStats === "yearly" && styles.activeText]}>Yearly Stats</Text>
             </TouchableOpacity>
           </View>
         </View>

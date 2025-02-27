@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, Alert, StyleSheet } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { loginUser } from "../Components/Redux/Slices/AuthenticationSlice";
+import { loginUser, fetchCheckInData, getStoredCheckInData, checkInUser } from "../Components/Redux/Slices/AuthenticationSlice";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -12,7 +12,7 @@ const TraineeLoginScreen = ({ navigation }) => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [keepSignedIn, setKeepSignedIn] = useState(false);
   const dispatch = useDispatch();
-  const { isLoading, error } = useSelector((state) => state.auth);
+  const { isLoading, error, isFetchingCheckIn } = useSelector((state) => state.auth);
 
   useEffect(() => {
     const loadCredentials = async () => {
@@ -34,7 +34,7 @@ const TraineeLoginScreen = ({ navigation }) => {
     loadCredentials();
   }, []);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please enter valid credentials");
       return;
@@ -42,18 +42,40 @@ const TraineeLoginScreen = ({ navigation }) => {
   
     dispatch(loginUser({ email, password, keepSignedIn }))
       .unwrap()
-      .then((response) => {
-        if (response.checkInData) {
-          Alert.alert("Success", `Checked in as ${response.checkInData.name}`);
-        } else {
-          Alert.alert("Warning", "Login successful, but check-in failed.");
+      .then(async (response) => {
+        console.log("Login Response:", response); // Log full response
+  
+        // Ensure response and response.data exist before destructuring
+        const { traineeId, name, token } = response?.data || {};
+  
+        if (!traineeId || !name || !token) {
+          console.error("Invalid response structure:", response);
+          Alert.alert("Error", "Invalid login response format.");
+          return;
         }
-        navigation.replace("HomeScreen");
+  
+        try {
+          let checkInData = await getStoredCheckInData();
+  
+          if (!checkInData) {
+            console.log("Attempting Check-In...");
+            checkInData = await checkInUser(traineeId, name, token);
+            console.log("Check-In Response:", checkInData);
+          }
+  
+          navigation.replace("HomeScreen", { checkInData });
+        } catch (error) {
+          console.error("Check-in Error:", error);
+          Alert.alert("Check-In Failed", error.message || "Failed to check in");
+        }
       })
-      .catch((err) => Alert.alert("Login Failed", err));
+      .catch((error) => {
+        console.error("Login Error:", error);
+        Alert.alert("Login Failed", error.message || "An error occurred");
+      });
   };
   
-
+  
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -105,11 +127,13 @@ const TraineeLoginScreen = ({ navigation }) => {
         </View>
 
         <TouchableOpacity
-          style={[styles.button, { backgroundColor: isLoading ? "#88879C" : "#8AC052" }]}
+          style={[styles.button, { backgroundColor: isLoading || isFetchingCheckIn ? "#88879C" : "#8AC052" }]}
           onPress={handleLogin}
-          disabled={isLoading}
+          disabled={isLoading || isFetchingCheckIn}
         >
-          <Text style={styles.buttonText}>{isLoading ? "Logging in..." : "Login"}</Text>
+          <Text style={styles.buttonText}>
+            {isLoading ? "Logging in..." : isFetchingCheckIn ? "Checking in..." : "Login"}
+          </Text>
         </TouchableOpacity>
 
         {error && <Text style={styles.errorText}>{error}</Text>}

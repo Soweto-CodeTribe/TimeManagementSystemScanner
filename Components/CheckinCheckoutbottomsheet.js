@@ -1,4 +1,4 @@
-import React, { useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, Pressable, Linking } from 'react-native';
 import Animated, { 
   useSharedValue, 
@@ -13,7 +13,7 @@ import { loginUser } from './Redux/Slices/AuthenticationSlice';
 import { selectTraineeId } from './Redux/Slices/AuthenticationSlice';
 
 const { height, width } = Dimensions.get('window');
-const SHEET_HEIGHT = height * 0.3; // Increased height to accommodate more buttons
+const SHEET_HEIGHT = height * 0.3;
 const SHEET_OVERFLOW = 20;
 
 const CheckinCheckoutbottomsheet = ({ isVisible }) => {
@@ -24,15 +24,13 @@ const CheckinCheckoutbottomsheet = ({ isVisible }) => {
   const isLoading = useSelector((state) => state.auth.isLoading);
   const error = useSelector((state) => state.auth.error);
   
-  // Example of accessing the dispatch function
   const dispatch = useDispatch();
   
-  // Now you can use traineeId and token in your component
   console.log('Current trainee ID:', traineeId);
   console.log('Auth token:', token);
 
 
-  console.log(traineeId)
+  const [lunchStatus, setLunchStatus] = useState("notStarted");
 
   useEffect(() => {
     if (isVisible) {
@@ -75,42 +73,53 @@ const CheckinCheckoutbottomsheet = ({ isVisible }) => {
           <View style={styles.handle} />
           
           <View style={styles.permissionButtonsContainer}>
-              <>
-                <View style={styles.buttonsContainer}>
-                  <Pressable 
-                    style={({pressed}) => [
-                      styles.lunchInButton,
-                      pressed && {opacity: 0.8}
-                    ]}
-                    onPress={() => Linking.openURL('https://example.com')}
-                    android_ripple={{color: 'rgba(0, 0, 0, 0.1)'}}
-                  >
-                    <Text style={styles.buttonTextLight}>Check In to Lunch</Text>
-                  </Pressable>
-                  
-                  <Pressable 
-                    style={({pressed}) => [
-                      styles.lunchOutButton,
-                      pressed && {opacity: 0.8}
-                    ]}
-                    onPress={() => Linking.openURL('https://example.com')}
-                    android_ripple={{color: 'rgba(0, 0, 0, 0.1)'}}
-                  >
-                    <Text style={styles.buttonTextDark}>Check Out of Lunch</Text>
-                  </Pressable>
-                  
-                  <Pressable 
-                    style={({pressed}) => [
-                      styles.checkOutButton,
-                      pressed && {opacity: 0.8}
-                    ]}
-                    onPress={() => Linking.openURL('https://example.com')}
-                    android_ripple={{color: 'rgba(255, 255, 255, 0.3)'}}
-                  >
-                    <Text style={styles.buttonTextLight}>Check Out</Text>
-                  </Pressable>
-                </View>
-              </>
+            <View style={styles.buttonsContainer}>
+              {/* Check In to Lunch */}
+              <Pressable 
+                disabled={lunchStatus !== "notStarted"}
+                style={({ pressed }) => [
+                  styles.lunchInButton,
+                  pressed && { opacity: 0.8 },
+                  lunchStatus !== "notStarted" && { backgroundColor: '#ccc' }
+                ]}
+                onPress={() => {
+                  setLunchStatus("checkedIn");
+                  Linking.openURL('https://example.com');
+                }}
+                android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}
+              >
+                <Text style={styles.buttonTextLight}>Check In to Lunch</Text>
+              </Pressable>
+              
+              {/* Check Out of Lunch */}
+              <Pressable 
+                disabled={lunchStatus !== "checkedIn"}
+                style={({ pressed }) => [
+                  styles.lunchOutButton,
+                  pressed && { opacity: 0.8 },
+                  lunchStatus !== "checkedIn" && { backgroundColor: '#ccc' }
+                ]}
+                onPress={() => {
+                  setLunchStatus("checkedOut");
+                  Linking.openURL('https://example.com');
+                }}
+                android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}
+              >
+                <Text style={styles.buttonTextDark}>Check Out of Lunch</Text>
+              </Pressable>
+              
+              {/* Check Out (always enabled) */}
+              <Pressable 
+                style={({ pressed }) => [
+                  styles.checkOutButton,
+                  pressed && { opacity: 0.8 }
+                ]}
+                onPress={() => Linking.openURL('https://example.com')}
+                android_ripple={{ color: 'rgba(255, 255, 255, 0.3)' }}
+              >
+                <Text style={styles.buttonTextLight}>Check Out</Text>
+              </Pressable>
+            </View>
           </View>
         </Animated.View>
       </GestureDetector>
@@ -165,38 +174,15 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     marginBottom: 20,
   },
-  getStartedText: {
-    color: 'white',
-    fontSize: 42,
-    fontWeight: 'bold',
-    lineHeight: 52.79,
-  },
-  textcontainer: {
-    color: "white",
-    fontWeight: "400",
-    lineHeight: 21.3,
-    fontSize: 17,
-    textAlign: 'center',
-  },
   permissionButtonsContainer: {
     marginTop: 20,
     width: width - 40,
     alignItems: 'center',
   },
-  checkInButton: {
-    width: '100%',
-    height: 44,
-    backgroundColor: "#8AC052", // Green for check in
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
-    elevation: 2,
-  },
   lunchInButton: {
     width: '100%',
     height: 44,
-    backgroundColor: "#F4A261", // Orange for lunch check in
+    backgroundColor: "#F4A261",
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
@@ -206,7 +192,7 @@ const styles = StyleSheet.create({
   lunchOutButton: {
     width: '100%',
     height: 44,
-    backgroundColor: "#E9C46A", // Yellow for lunch check out
+    backgroundColor: "#E9C46A",
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
@@ -216,7 +202,7 @@ const styles = StyleSheet.create({
   checkOutButton: {
     width: '100%',
     height: 44,
-    backgroundColor: "#E76F51", // Red for check out
+    backgroundColor: "#E76F51",
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
@@ -234,7 +220,6 @@ const styles = StyleSheet.create({
   },
   buttonsContainer: {
     width: "100%",
-    display: "flex",
     flexDirection: "column",
   }
 });

@@ -8,6 +8,7 @@ import * as Location from "expo-location";
 import axios from 'axios';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from "react-native-toast-message";
 
 export default function ScannerScreen({ navigation }) { 
   // Hooks
@@ -64,9 +65,15 @@ export default function ScannerScreen({ navigation }) {
                 location,
             };
             await AsyncStorage.setItem("checkInData", JSON.stringify(checkInData));
-            Alert.alert(
-                "Check in data captured. You can now log in to finish the process"
-            );
+            // Alert.alert(
+            //     "Check in data captured. You can now log in to finish the process"
+            // );
+            Toast.show({
+              type: "success",
+              text1: "Scanned Successfully",
+              text2: "You can now log in to check in",
+              position: "top",
+            });
 
             setIsBottomSheetVisible(true);
         } else {
@@ -104,6 +111,7 @@ export default function ScannerScreen({ navigation }) {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
+        <Toast/>
 
         <TouchableOpacity 
             style={styles.closeButton}

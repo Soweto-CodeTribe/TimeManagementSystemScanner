@@ -19,8 +19,9 @@ export const loginUser = createAsyncThunk(
 
       if (!data.token) throw new Error("No token received");
 
-      // Extract traineeID from user data
-      const traineeID = data.user?.traineeID;
+      // Extract traineeID from user data - fixed property name
+      const traineeID = data.trainee?.traineeId?.toString();
+      const name = data.trainee?.name;
       console.log("Trainee ID:", traineeID);
 
       if (keepSignedIn) {
@@ -30,11 +31,15 @@ export const loginUser = createAsyncThunk(
         if (traineeID) {
           await AsyncStorage.setItem("traineeID", traineeID);
         }
+        if (name) {
+          await AsyncStorage.setItem("name", name);
+        }
       } else {
         await AsyncStorage.removeItem("token");
         await AsyncStorage.removeItem("email");
         await AsyncStorage.removeItem("keepSignedIn");
         await AsyncStorage.removeItem("traineeID");
+        await AsyncStorage.removeItem("name");
       }
 
       return { ...data, traineeID };
@@ -65,8 +70,9 @@ export const fetchUserData = createAsyncThunk(
       await AsyncStorage.setItem("user", JSON.stringify(userData));
 
       // Store traineeID if available
-      if (userData.traineeID) {
-        await AsyncStorage.setItem("traineeID", userData.traineeID);
+      const traineeID = userData.trainee?.traineeId?.toString();
+      if (traineeID) {
+        await AsyncStorage.setItem("traineeID", traineeID);
       }
 
       return userData;
@@ -95,6 +101,7 @@ const authSlice = createSlice({
       AsyncStorage.removeItem("email");
       AsyncStorage.removeItem("keepSignedIn");
       AsyncStorage.removeItem("traineeID");
+      AsyncStorage.removeItem("name");
     },
   },
   extraReducers: (builder) => {
@@ -122,8 +129,10 @@ const authSlice = createSlice({
       })
       .addCase(fetchUserData.fulfilled, (state, action) => {
         state.user = action.payload;
-        state.traineeID = action.payload.traineeID || state.traineeID; // Update traineeID if available
+        const traineeID = action.payload.trainee?.traineeId?.toString();
+        state.traineeID = traineeID || state.traineeID; // Update traineeID if available
         console.log("Updated Redux State - User:", state.user);
+        console.log("Updated Redux State - Trainee ID:", state.traineeID);
       })
       .addCase(fetchUserData.rejected, (state, action) => {
         state.error = action.payload;

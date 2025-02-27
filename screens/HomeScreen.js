@@ -7,12 +7,14 @@ import { BarChart } from "react-native-chart-kit";
 import DocumentsUpload from "../Components/DocumentsUpload";
 import axios from "axios";
 import { useSelector } from 'react-redux';
+import LoaderPopup from "../Components/LoaderPopup";
 
 const HomeScreen = ({ navigation }) => {
   const [name, setName] = useState("Eks");
   const [activeStats, setActiveStats] = useState("monthly");
   const [isDayMissed, setIsDayMissed] = useState(false);
   const [statsData, setStatsData] = useState(null); // Store API response
+  const [isLoading, setIsLoading] = useState(false);
 
   const token = useSelector((state) => state.auth.token);
   const BASE_URL = 'https://timemanagementsystemserver.onrender.com';
@@ -149,6 +151,7 @@ const HomeScreen = ({ navigation }) => {
         >
           <Text style={styles.scanButtonText}>Let's scan</Text>
         </TouchableOpacity>
+        <LoaderPopup message=" hello " visible={isLoading}/>
       </ScrollView>
     </SafeAreaView>
   );

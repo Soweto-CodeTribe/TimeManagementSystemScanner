@@ -81,7 +81,7 @@ const UserGuestBottomSheet = ({ isVisible }) => {
                       styles.declineButton,
                       pressed && {opacity: 0.8}
                     ]}
-                    onPress={() => Linking.openURL('https://example.com')}
+                    onPress={() => Linking.openURL('https://guestregisterform.netlify.app')}
                     android_ripple={{color: 'rgba(0, 0, 0, 0.1)'}}
                   >
                     <Text style={styles.buttontextDecline}>Continue as guest</Text>

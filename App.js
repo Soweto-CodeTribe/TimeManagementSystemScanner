@@ -14,6 +14,7 @@ import PasswordEmailScreen from './screens/PasswordEmailScreen';
 import PermissionsScreen from './screens/PermissionsScreen';
 import ScannerScreen from './screens/Scanner';
 import HomeScreen from './screens/HomeScreen.js';
+import NotificationScreen from './screens/NotificationsScreen.js'
 import ScannerAuth from './screens/AuthScanner.js'
 
 const Stack = createStackNavigator();
@@ -28,7 +29,8 @@ export default function App() {
           <Stack.Screen name="GetStartedScreen" component={GetStartedScreen} />
           <Stack.Screen name="PermissionsScreen" component={PermissionsScreen} />
           <Stack.Screen name="TraineeLoginScreen" component={TraineeLoginScreen} />
-          <Stack.Screen name="ScannerScreen" component={ScannerScreen } />
+          <Stack.Screen name="NotificationScreen" component={NotificationScreen} />
+          <Stack.Screen name="ScannerScreen" component={ScannerScreen} />
           <Stack.Screen name="GuestRegisterScreen" component={GuestRegisterScreen} />
           <Stack.Screen name="GuestEmailScreen" component={GuestEmailScreen} />
           <Stack.Screen name="ForgetPasswordScreen" component={ForgetPasswordScreen} />

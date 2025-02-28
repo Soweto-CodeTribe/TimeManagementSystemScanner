@@ -1,12 +1,56 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, SafeAreaView, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, SafeAreaView, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import TraineeLoginScreen from './TraineeLoginScreen';
-
+import axios from 'axios';
+import { useSelector } from 'react-redux';
 
 const ForgetPasswordScreen = ({ navigation }) => {
-
   const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  
+  const token = useSelector((state) => state.auth.token);
+  const BASE_URL = 'https://timemanagementsystemserver.onrender.com';
+  const handleForgotPassword = async () => {
+    if (!email) return;
+    
+    setLoading(true);
+    setError('');
+    
+    try {
+      const response = await axios.post(`${BASE_URL}/api/auth/forgot-password`, 
+        { email },
+        { 
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          } 
+        }
+      );
+      
+      setLoading(false);
+      
+      if (response.data.message === "Password reset link sent successfully") {
+        navigation.navigate('PasswordEmailScreen', { email });
+      } else {
+        setError(response.data.message || 'An error occurred');
+      }
+    } catch (error) {
+      setLoading(false); 
+      if (error.response) {
+        // Server responded with an error
+        setError(error.response.data.message || 'Server error');
+      } else if (error.request) {
+        // No response received
+        setError('Network error. Please check your connection.');
+      } else {
+        // Request setup error
+        setError('Failed to send request');
+      }
+      console.error('Error:', error);
+    }
+  };
+  
   return (
     <SafeAreaView style={styles.container}>
       <TouchableOpacity
@@ -34,27 +78,37 @@ const ForgetPasswordScreen = ({ navigation }) => {
             style={styles.input}
             placeholder="Enter email"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(text) => {
+              setEmail(text);
+              setError('');
+            }}
             keyboardType="email-address"
             autoCapitalize="none"
           />
         </View>
+        
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        
         <TouchableOpacity
-          style={[styles.button, !email && styles.buttonDisabled]}
-          disabled={!email}
-          onPress={() => {
-            navigation.navigate('PasswordEmailScreen')
-          }}
+          style={[styles.button, (!email || loading) && styles.buttonDisabled]}
+          disabled={!email || loading}
+          onPress={handleForgotPassword}
         >
-          <Text style={[styles.buttonText, !email && styles.buttonTextDisabled]}>
-            Send
-          </Text>
+          {loading ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <Text style={[styles.buttonText, !email && styles.buttonTextDisabled]}>
+              Send
+            </Text>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 };
+
 export default ForgetPasswordScreen;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -126,7 +180,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    transition: 'linear .4s',
   },
   buttonDisabled: {
     backgroundColor: '#E0E0E0',
@@ -138,5 +191,10 @@ const styles = StyleSheet.create({
   },
   buttonTextDisabled: {
     color: '#999',
+  },
+  errorText: {
+    color: 'red',
+    marginBottom: 16,
+    textAlign: 'center',
   },
 });

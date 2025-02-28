@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, Pressable, Linking, Alert } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, Dimensions, Pressable, Alert } from 'react-native';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -10,9 +10,13 @@ import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import Toast from "react-native-toast-message";
-import axios from 'axios';
 
-
+// Import the actions from your new slice
+import { 
+  startLunch, 
+  endLunch, 
+  checkOut 
+} from '../Components/Redux/Slices/CheckInOutSlice';
 
 const { height, width } = Dimensions.get('window');
 const SHEET_HEIGHT = height * 0.3;
@@ -21,18 +25,14 @@ const SHEET_OVERFLOW = 20;
 const CheckinCheckoutbottomsheet = ({ isVisible }) => {
   const translateY = useSharedValue(SHEET_HEIGHT);
   const overlayOpacity = useSharedValue(0);
-  // const traineeId = useSelector((state) => state.auth.user);
+  
+  // Get state from Redux
   const token = useSelector((state) => state.auth.token);
-  const TraineeID = useSelector((state) => state.auth.traineeID);
+  const traineeId = useSelector((state) => state.auth.traineeID);
+  const { lunchStatus, loading } = useSelector((state) => state.checkInOut);
   
   const dispatch = useDispatch();
-  
-  console.log('Current trainee ID:', TraineeID);
-  console.log('Auth token:', token);
-
-
-  const [lunchStatus, setLunchStatus] = useState("notStarted");
-   const navigation = useNavigation();
+  const navigation = useNavigation();
 
   useEffect(() => {
     if (isVisible) {
@@ -65,137 +65,35 @@ const CheckinCheckoutbottomsheet = ({ isVisible }) => {
     opacity: overlayOpacity.value,
   }));
 
+  const handleCheckInLunch = async () => {
+    dispatch(startLunch({ traineeId, token }))
+      .unwrap()
+      .then(() => {
+        setTimeout(() => {
+          navigation.navigate("HomeScreen");
+        }, 3000);
+      });
+  };
 
-  const  HandleCheckInLunch = async ()=>{
+  const handleCheckOutLunch = async () => {
+    dispatch(endLunch({ traineeId, token }))
+      .unwrap()
+      .then(() => {
+        setTimeout(() => {
+          navigation.navigate("HomeScreen");
+        }, 3000);
+      });
+  };
 
-      const now = new Date();
-      let hours = now.getHours();
-      const minutes = now.getMinutes().toString().padStart(2, '0');
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12;
-      hours = hours ? hours : 12; 
-      const Time = `${hours}:${minutes} ${ampm}`;
-
-      console.log(Time);
-
-      try {
-
-        const response = await axios.post('https://timemanagementsystemserver.onrender.com/api/session/lunch-start',
-          { 
-            traineeId: TraineeID, 
-            lunchStartTime: Time 
-          },
-          {
-            headers: { 
-              Authorization: `Bearer ${token}`
-            }
-          }
-        )
-
-         Toast.show({
-                type: "success",
-                text1: "Scanned Successfully",
-                text2: "Checked out Successfully from Lunch",
-                position: "top",
-              });
-
-              setTimeout(()=>{
-                navigation.navigate("HomeScreen")
-          }, 2000);
-        
-      } catch (error) {
-        console.error("Check-in error", error)
-      Alert.alert("Error" )}
-  
-  }
-
-  const   HandleCheckOutLunch = async ()=>{
-
-      const now = new Date();
-      let hours = now.getHours();
-      const minutes = now.getMinutes().toString().padStart(2, '0');
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12;
-      hours = hours ? hours : 12; // the hour '0' should be '12'
-      const Time = `${hours}:${minutes} ${ampm}`;
-
-      console.log(Time);
-
-      try {
-
-        const response = await axios.post('https://timemanagementsystemserver.onrender.com/api/session/lunch-end',
-          { 
-            traineeId: TraineeID, 
-            lunchEndTime: Time  
-          },
-          {
-            headers: { 
-              Authorization: `Bearer ${token}`
-            }
-          }
-        )
-
-         Toast.show({
-                type: "success",
-                text1: "Scanned Successfully",
-                text2: "Checked out Successfully from Lunch",
-                position: "top",
-              });
-
-              setTimeout(()=>{
-                navigation.navigate("HomeScreen")
-          }, 2000);
-        
-      } catch (error) {
-        console.error("Check-in error", error)
-      Alert.alert("Error" )}
-  
-  }
-
-
-  const  HandleCheckOut = async ()=>{
-
-      const now = new Date();
-      let hours = now.getHours();
-      const minutes = now.getMinutes().toString().padStart(2, '0');
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12;
-      hours = hours ? hours : 12; 
-      const Time = `${hours}:${minutes} ${ampm}`;
-
-      console.log(Time);
-
-      try {
-
-        const response = await axios.post('https://timemanagementsystemserver.onrender.com/api/session/check-out',
-          { 
-            traineeId: TraineeID, 
-            checkOutTime: Time  
-          },
-          {
-            headers: { 
-              Authorization: `Bearer ${token}`
-            }
-          }
-        )
-
-        Toast.show({
-          type: "success",
-          text1: "Scanned Successfully",
-          text2: "Checked Out Successfully",
-          position: "top",
-        });
-
-              setTimeout(()=>{
-                navigation.navigate("HomeScreen")
-          }, 2000);
-        
-      } catch (error) {
-        console.error("Check-in error", error)
-      Alert.alert("Error" )}
-  
-  }
-
+  const handleCheckOut = async () => {
+    dispatch(checkOut({ traineeId, token }))
+      .unwrap()
+      .then(() => {
+        setTimeout(() => {
+          navigation.navigate("HomeScreen");
+        }, 3000);
+      });
+  };
 
   return (
     <View style={styles.container}>
@@ -211,48 +109,50 @@ const CheckinCheckoutbottomsheet = ({ isVisible }) => {
             <View style={styles.buttonsContainer}>
               {/* Check In to Lunch */}
               <Pressable 
-                // disabled={lunchStatus !== "notStarted"}
+                disabled={loading || lunchStatus !== "notStarted"}
                 style={({ pressed }) => [
                   styles.lunchInButton,
                   pressed && { opacity: 0.8 },
-                  // lunchStatus !== "notStarted" && { backgroundColor: '#ccc' }
+                  (loading || lunchStatus !== "notStarted") && { backgroundColor: '#ccc' }
                 ]}
-                onPress={() => {
-                  setLunchStatus("checkedIn");
-                  HandleCheckInLunch()
-                }}
+                onPress={handleCheckInLunch}
                 android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}
               >
-                <Text style={styles.buttonTextLight}>Check In to Lunch</Text>
+                <Text style={styles.buttonTextLight}>
+                  {loading && lunchStatus === "notStarted" ? "Loading..." : "Check In to Lunch"}
+                </Text>
               </Pressable>
               
               {/* Check Out of Lunch */}
               <Pressable 
-                // disabled={lunchStatus !== "checkedIn"}
+                disabled={loading || lunchStatus !== "checkedIn"}
                 style={({ pressed }) => [
                   styles.lunchOutButton,
                   pressed && { opacity: 0.8 },
-                  // lunchStatus !== "checkedIn" && { backgroundColor: '#ccc' }
+                  (loading || lunchStatus !== "checkedIn") && { backgroundColor: '#ccc' }
                 ]}
-                onPress={() => {
-                  setLunchStatus("checkedOut");
-                  HandleCheckOutLunch();
-                }}
+                onPress={handleCheckOutLunch}
                 android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}
               >
-                <Text style={styles.buttonTextDark}>Check Out of Lunch</Text>
+                <Text style={styles.buttonTextDark}>
+                  {loading && lunchStatus === "checkedIn" ? "Loading..." : "Check Out of Lunch"}
+                </Text>
               </Pressable>
               
               {/* Check Out (always enabled) */}
               <Pressable 
+                disabled={loading}
                 style={({ pressed }) => [
                   styles.checkOutButton,
-                  pressed && { opacity: 0.8 }
+                  pressed && { opacity: 0.8 },
+                  loading && { backgroundColor: '#ccc' }
                 ]}
-                onPress={() => HandleCheckOut()}
+                onPress={handleCheckOut}
                 android_ripple={{ color: 'rgba(255, 255, 255, 0.3)' }}
               >
-                <Text style={styles.buttonTextLight}>Check Out</Text>
+                <Text style={styles.buttonTextLight}>
+                  {loading ? "Loading..." : "Check Out"}
+                </Text>
               </Pressable>
             </View>
           </View>
@@ -263,6 +163,7 @@ const CheckinCheckoutbottomsheet = ({ isVisible }) => {
 };
 
 const styles = StyleSheet.create({
+  // Your existing styles...
   container: {
     position: 'absolute',
     top: 0,

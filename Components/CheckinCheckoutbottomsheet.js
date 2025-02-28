@@ -11,6 +11,8 @@ import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from './Redux/Slices/AuthenticationSlice';
 import { selectTraineeId } from './Redux/Slices/AuthenticationSlice';
+import Toast from "react-native-toast-message";
+
 
 const { height, width } = Dimensions.get('window');
 const SHEET_HEIGHT = height * 0.3;
@@ -31,6 +33,7 @@ const CheckinCheckoutbottomsheet = ({ isVisible }) => {
 
 
   const [lunchStatus, setLunchStatus] = useState("notStarted");
+   const navigation = useNavigation();
 
   useEffect(() => {
     if (isVisible) {
@@ -63,8 +66,52 @@ const CheckinCheckoutbottomsheet = ({ isVisible }) => {
     opacity: overlayOpacity.value,
   }));
 
+
+    HandleCheckInLunch = ()=>{
+
+        Toast.show({
+                type: "success",
+                text1: "Scanned Successfully",
+                text2: "Checked in Successfully for Lunch",
+                position: "top",
+              });
+
+              setTimeout(()=>{
+                navigation.navigate("HomeScreen")
+              }, 2000);
+  }
+
+    HandleCheckOutLunch = ()=>{
+
+        Toast.show({
+                type: "success",
+                text1: "Scanned Successfully",
+                text2: "Checked out Successfully from Lunch",
+                position: "top",
+              });
+
+              setTimeout(()=>{
+                navigation.navigate("HomeScreen")
+              }, 2000);
+  }
+
+    HandleCheckOut = ()=>{
+
+        Toast.show({
+                type: "success",
+                text1: "Scanned Successfully",
+                text2: "Checked Out Successfully",
+                position: "top",
+              });
+
+              setTimeout(()=>{
+                navigation.navigate("HomeScreen")
+              }, 2000);
+  }
+
   return (
     <View style={styles.container}>
+      <Toast/>
       <Animated.View 
         style={[styles.overlay, animatedOverlayStyle]} 
       />
@@ -76,15 +123,15 @@ const CheckinCheckoutbottomsheet = ({ isVisible }) => {
             <View style={styles.buttonsContainer}>
               {/* Check In to Lunch */}
               <Pressable 
-                disabled={lunchStatus !== "notStarted"}
+                // disabled={lunchStatus !== "notStarted"}
                 style={({ pressed }) => [
                   styles.lunchInButton,
                   pressed && { opacity: 0.8 },
-                  lunchStatus !== "notStarted" && { backgroundColor: '#ccc' }
+                  // lunchStatus !== "notStarted" && { backgroundColor: '#ccc' }
                 ]}
                 onPress={() => {
                   setLunchStatus("checkedIn");
-                  Linking.openURL('https://example.com');
+                  HandleCheckInLunch()
                 }}
                 android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}
               >
@@ -93,15 +140,15 @@ const CheckinCheckoutbottomsheet = ({ isVisible }) => {
               
               {/* Check Out of Lunch */}
               <Pressable 
-                disabled={lunchStatus !== "checkedIn"}
+                // disabled={lunchStatus !== "checkedIn"}
                 style={({ pressed }) => [
                   styles.lunchOutButton,
                   pressed && { opacity: 0.8 },
-                  lunchStatus !== "checkedIn" && { backgroundColor: '#ccc' }
+                  // lunchStatus !== "checkedIn" && { backgroundColor: '#ccc' }
                 ]}
                 onPress={() => {
                   setLunchStatus("checkedOut");
-                  Linking.openURL('https://example.com');
+                  HandleCheckOutLunch();
                 }}
                 android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}
               >
@@ -114,7 +161,7 @@ const CheckinCheckoutbottomsheet = ({ isVisible }) => {
                   styles.checkOutButton,
                   pressed && { opacity: 0.8 }
                 ]}
-                onPress={() => Linking.openURL('https://example.com')}
+                onPress={() => HandleCheckOut()}
                 android_ripple={{ color: 'rgba(255, 255, 255, 0.3)' }}
               >
                 <Text style={styles.buttonTextLight}>Check Out</Text>

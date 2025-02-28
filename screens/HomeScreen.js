@@ -104,17 +104,17 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.statsGrid}>
           {activeStats === "monthly" ? (
             <>
-              {renderStatsCard(85, "February", "Your daily attendance rate", "15-20")}
-              {renderStatsCard(92, "February", "Your daily attendance rate", "20-25")}
-              {renderStatsCard(78, "February", "Your daily attendance rate", "12-15")}
-              {renderStatsCard(88, "February", "Your daily attendance rate", "18-22")}
-            </>
-          ) : (
-            <>
-              {renderStatsCard(90, "2024-2025", "Yearly attendance rate", "280-300")}
-              {renderStatsCard(87, "2024-2025", "Yearly attendance rate", "265-285")}
-              {renderStatsCard(93, "2024-2025", "Yearly attendance rate", "290-310")}
-              {renderStatsCard(89, "2024-2025", "Yearly attendance rate", "270-290")}
+             {renderStatsCard(87, "January", "Monthly completion rate", "112-128")}
+{renderStatsCard(93, "February", "Monthly completion rate", "125-141")}
+{renderStatsCard(79, "March", "Monthly completion rate", "104-119")}
+{renderStatsCard(85, "April", "Monthly completion rate", "109-124")}
+</>
+) : (
+<>
+{renderStatsCard(82, "2021", "Annual performance index", "925-1050")}
+{renderStatsCard(88, "2022", "Annual performance index", "990-1120")}
+{renderStatsCard(91, "2023", "Annual performance index", "1025-1160")}
+{renderStatsCard(86, "2024", "Annual performance index", "970-1095")}
             </>
           )}
         </View>

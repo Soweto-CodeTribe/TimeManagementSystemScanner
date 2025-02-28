@@ -11,6 +11,7 @@ import * as Location from "expo-location";
 import { Alert } from 'react-native';
 import { Camera } from "expo-camera";
 import { useNavigation } from '@react-navigation/native';
+import Toast from 'react-native-toast-message'; // Add this import
 
 const { height, width } = Dimensions.get('window');
 const SHEET_HEIGHT = height * 0.5;
@@ -59,7 +60,12 @@ const PermissionsPopup = ({ isVisible }) => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status === "granted") {
-        Alert.alert("Location Permission", "Location access granted.");
+           Toast.show({
+                      type: "success",
+                      text1: "Location Permission Granted",
+                      text2: "Location Granted Successfully",
+                      position: "top",
+                    });
         setCameraPermissions(true);
         
         try {
@@ -129,10 +135,15 @@ const PermissionsPopup = ({ isVisible }) => {
     try {
       const { status } = await Camera.requestCameraPermissionsAsync();
       if (status === "granted") {
-        Alert.alert("Camera Permission", "Camera access granted.");
+        Toast.show({
+          type: "success",
+          text1: "Camera Permissions Granted",
+          text2: "Camera Permission Granted Successfully",
+          position: "top",
+        });
         setTimeout(() => {
           navigation.navigate("ScannerScreen");
-        }, 2000);
+        }, 3000);
       } else {
         Alert.alert("Camera Permission", "Camera access denied.");
         navigation.navigate("GetStartedScreen");
@@ -151,10 +162,11 @@ const PermissionsPopup = ({ isVisible }) => {
       <Animated.View 
         style={[styles.overlay, animatedOverlayStyle]} 
       />
+     
       <GestureDetector gesture={gesture}>
         <Animated.View style={[styles.bottomSheet, animatedSheetStyle]}>
           <View style={styles.handle} />
-          <Text style={styles.getStartedText}>Get Started</Text>
+          <Text style={styles.getStartedText}>Permissions Access</Text>
           
           <View style={styles.permissionButtonsContainer}>
             {!cameraPermissions ? (
@@ -163,7 +175,7 @@ const PermissionsPopup = ({ isVisible }) => {
                   Allow CodeTribe to access your
                 </Text>
                 <Text style={styles.textcontainer}>
-                  location while you use the scanner?
+                 <Text style={{color:"#8AC052"}}>LOCATION</Text> while you use the scanner?
                 </Text>
                 
                 <View style={styles.buttonsContainer}>
@@ -187,6 +199,7 @@ const PermissionsPopup = ({ isVisible }) => {
                     android_ripple={{color: 'rgba(0, 0, 0, 0.1)'}}
                   >
                     <Text style={styles.buttontextDecline}>Decline</Text>
+                    
                   </Pressable>
                 </View>
               </>
@@ -196,7 +209,7 @@ const PermissionsPopup = ({ isVisible }) => {
                   Allow CodeTribe to access your
                 </Text>
                 <Text style={styles.textcontainer}>
-                  camera while you use the scanner?
+                  <Text style={{color:"#8AC052"}}>CAMERA</Text> while you use the scanner?
                 </Text>
 
                 <View style={styles.buttonsContainer}>
@@ -227,7 +240,9 @@ const PermissionsPopup = ({ isVisible }) => {
           </View>
         </Animated.View>
       </GestureDetector>
+      <Toast/>
     </View>
+    
   );
 };
 

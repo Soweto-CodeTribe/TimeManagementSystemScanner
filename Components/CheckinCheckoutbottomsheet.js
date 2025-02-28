@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, Pressable, Linking } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Pressable, Linking, Alert } from 'react-native';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -9,9 +9,9 @@ import Animated, {
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { loginUser } from './Redux/Slices/AuthenticationSlice';
-import { selectTraineeId } from './Redux/Slices/AuthenticationSlice';
 import Toast from "react-native-toast-message";
+import axios from 'axios';
+
 
 
 const { height, width } = Dimensions.get('window');
@@ -21,14 +21,13 @@ const SHEET_OVERFLOW = 20;
 const CheckinCheckoutbottomsheet = ({ isVisible }) => {
   const translateY = useSharedValue(SHEET_HEIGHT);
   const overlayOpacity = useSharedValue(0);
-  const traineeId = useSelector((state) => state.auth.user);
+  // const traineeId = useSelector((state) => state.auth.user);
   const token = useSelector((state) => state.auth.token);
-  const isLoading = useSelector((state) => state.auth.isLoading);
-  const error = useSelector((state) => state.auth.error);
+  const TraineeID = useSelector((state) => state.auth.traineeID);
   
   const dispatch = useDispatch();
   
-  console.log('Current trainee ID:', traineeId);
+  console.log('Current trainee ID:', TraineeID);
   console.log('Auth token:', token);
 
 
@@ -67,23 +66,33 @@ const CheckinCheckoutbottomsheet = ({ isVisible }) => {
   }));
 
 
-    HandleCheckInLunch = ()=>{
+  const  HandleCheckInLunch = async ()=>{
 
-        Toast.show({
-                type: "success",
-                text1: "Scanned Successfully",
-                text2: "Checked in Successfully for Lunch",
-                position: "top",
-              });
+      const now = new Date();
+      let hours = now.getHours();
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12; 
+      const Time = `${hours}:${minutes} ${ampm}`;
 
-              setTimeout(()=>{
-                navigation.navigate("HomeScreen")
-              }, 2000);
-  }
+      console.log(Time);
 
-    HandleCheckOutLunch = ()=>{
+      try {
 
-        Toast.show({
+        const response = await axios.post('https://timemanagementsystemserver.onrender.com/api/session/lunch-start',
+          { 
+            traineeId: TraineeID, 
+            lunchStartTime: Time 
+          },
+          {
+            headers: { 
+              Authorization: `Bearer ${token}`
+            }
+          }
+        )
+
+         Toast.show({
                 type: "success",
                 text1: "Scanned Successfully",
                 text2: "Checked out Successfully from Lunch",
@@ -92,22 +101,101 @@ const CheckinCheckoutbottomsheet = ({ isVisible }) => {
 
               setTimeout(()=>{
                 navigation.navigate("HomeScreen")
-              }, 2000);
+          }, 2000);
+        
+      } catch (error) {
+        console.error("Check-in error", error)
+      Alert.alert("Error" )}
+  
   }
 
-    HandleCheckOut = ()=>{
+  const   HandleCheckOutLunch = async ()=>{
 
-        Toast.show({
+      const now = new Date();
+      let hours = now.getHours();
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12; // the hour '0' should be '12'
+      const Time = `${hours}:${minutes} ${ampm}`;
+
+      console.log(Time);
+
+      try {
+
+        const response = await axios.post('https://timemanagementsystemserver.onrender.com/api/session/lunch-end',
+          { 
+            traineeId: TraineeID, 
+            lunchEndTime: Time  
+          },
+          {
+            headers: { 
+              Authorization: `Bearer ${token}`
+            }
+          }
+        )
+
+         Toast.show({
                 type: "success",
                 text1: "Scanned Successfully",
-                text2: "Checked Out Successfully",
+                text2: "Checked out Successfully from Lunch",
                 position: "top",
               });
 
               setTimeout(()=>{
                 navigation.navigate("HomeScreen")
-              }, 2000);
+          }, 2000);
+        
+      } catch (error) {
+        console.error("Check-in error", error)
+      Alert.alert("Error" )}
+  
   }
+
+
+  const  HandleCheckOut = async ()=>{
+
+      const now = new Date();
+      let hours = now.getHours();
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12; 
+      const Time = `${hours}:${minutes} ${ampm}`;
+
+      console.log(Time);
+
+      try {
+
+        const response = await axios.post('https://timemanagementsystemserver.onrender.com/api/session/check-out',
+          { 
+            traineeId: TraineeID, 
+            checkOutTime: Time  
+          },
+          {
+            headers: { 
+              Authorization: `Bearer ${token}`
+            }
+          }
+        )
+
+        Toast.show({
+          type: "success",
+          text1: "Scanned Successfully",
+          text2: "Checked Out Successfully",
+          position: "top",
+        });
+
+              setTimeout(()=>{
+                navigation.navigate("HomeScreen")
+          }, 2000);
+        
+      } catch (error) {
+        console.error("Check-in error", error)
+      Alert.alert("Error" )}
+  
+  }
+
 
   return (
     <View style={styles.container}>

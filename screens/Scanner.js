@@ -43,6 +43,7 @@ export default function ScannerScreen({ navigation }) {
             text1: "Scanned Successfully",
             text2: "You can now log in to check in",
             position: "top",
+            zIndex:99999
           });
         } else if (captureLocation.rejected.match(locationResult)) {
           Alert.alert(
@@ -67,6 +68,8 @@ export default function ScannerScreen({ navigation }) {
   return (
     <View style={styles.container}>
       {/* Header */}
+
+      
       <View style={styles.header}>
         <Toast/>
 

@@ -140,11 +140,11 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: SHEET_OVERFLOW + 20,
     alignItems: 'center',
-    shadowColor: "#000",
+    // shadowColor: "#000",
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
     shadowRadius: 4.65,
-    elevation: 6,
+    // elevation: 6,
     zIndex: 1002,
   },
   handle: {

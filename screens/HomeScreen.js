@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux'
 
 const HomeScreen = ({ navigation }) => {
   const [activeStats, setActiveStats] = useState("monthly");
-  const [isDayMissed, setIsDayMissed ] = useState(true)
+  const [isDayMissed, setIsDayMissed ] = useState(false)
   const name = useSelector((state)=> state.auth.user)
 
   const weeklyData = {

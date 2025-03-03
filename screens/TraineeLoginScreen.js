@@ -37,7 +37,7 @@ const TraineeLoginScreen = ({ navigation }) => {
     dispatch(loginUser({ email, password, keepSignedIn }))
       .unwrap()
       .then(() => {
-        navigation.replace("HomeScreen");
+        navigation.navigate("MainApp");
       })
       .catch((err) => Alert.alert("Login Failed", err));
   };

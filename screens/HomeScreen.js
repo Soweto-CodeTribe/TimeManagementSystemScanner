@@ -46,7 +46,7 @@ const HomeScreen = ({ navigation }) => {
             <TouchableOpacity onPress={()=> navigation.navigate('NotificationScreen')} style={styles.iconButton}>
               <Text>🔔</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={()=> Alert.alert("Profile Screen will show when developed")} style={styles.iconButton}>
+            <TouchableOpacity onPress={()=> navigation.navigate("TimelineScreen")} style={styles.iconButton}>
               <Text>👤</Text>
             </TouchableOpacity>
           </View>

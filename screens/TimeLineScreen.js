@@ -1,9 +1,98 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import CalendarModal from '../Components/CalendarModal';
 
 const TimelineScreen = () => {
-  const [expandedDay, setExpandedDay] = useState('Monday');
+  const [expandedDay, setExpandedDay] = useState(null);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState('March');
+  const [selectedYear, setSelectedYear] = useState(2025);
+  const [selectedDate, setSelectedDate] = useState(4);
+  const [weekDates, setWeekDates] = useState([]);
+  const [displayDays, setDisplayDays] = useState([]);
+
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  
+  const weekDayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+  // Initialize the week days when component mounts or when selectedDate changes
+  useEffect(() => {
+    calculateWeekDates();
+  }, [selectedDate, selectedMonth, selectedYear]);
+
+  // Calculate the dates for the current week (Mon-Fri) based on selected date
+  const calculateWeekDates = () => {
+    const monthIndex = months.indexOf(selectedMonth);
+    const selectedDateObj = new Date(selectedYear, monthIndex, selectedDate);
+    const dayOfWeek = selectedDateObj.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    
+    // Calculate the Monday date of this week
+    const mondayOffset = dayOfWeek === 0 ? -6 : -(dayOfWeek - 1);
+    const mondayDate = new Date(selectedDateObj);
+    mondayDate.setDate(selectedDateObj.getDate() + mondayOffset);
+    
+    // Generate dates for Monday through Friday
+    const weekDateArray = [];
+    const displayDaysArray = [];
+    
+    for (let i = 0; i < 5; i++) { // Monday to Friday (5 days)
+      const currentDate = new Date(mondayDate);
+      currentDate.setDate(mondayDate.getDate() + i);
+      
+      const day = currentDate.getDate();
+      const month = currentDate.getMonth();
+      const year = currentDate.getFullYear();
+      
+      weekDateArray.push({
+        date: day,
+        month: months[month],
+        year: year,
+        dayName: weekDayNames[i]
+      });
+      
+      // Create display day object with appropriate styling
+      displayDaysArray.push({
+        date: day,
+        dayName: weekDayNames[i],
+        backgroundColor: getBackgroundColorForDay(i),
+        textColor: getTextColorForDay(i),
+        timeRanges: [
+          { start: '08:00', end: '16:02' },
+          { start: '13:00', end: '13:35' }
+        ]
+      });
+    }
+    
+    setWeekDates(weekDateArray);
+    setDisplayDays(displayDaysArray);
+  };
+  
+  // Helper functions for styling
+  const getBackgroundColorForDay = (dayIndex) => {
+    const colors = [
+      '#F3E5F5', // Monday
+      '#FFF8E1', // Tuesday
+      '#99bf71', // Wednesday
+      '#f9ebc4', // Thursday
+      '#E88EA6'  // Friday
+    ];
+    return colors[dayIndex];
+  };
+  
+  const getTextColorForDay = (dayIndex) => {
+    const colors = [
+      '#9C27B0', // Monday
+      '#FFA000', // Tuesday
+      '#72a534', // Wednesday
+      '#ad7c6e', // Thursday
+      '#BF6DA1'  // Friday
+    ];
+    return colors[dayIndex];
+  };
 
   const toggleExpand = (day) => {
     if (expandedDay === day) {
@@ -11,6 +100,21 @@ const TimelineScreen = () => {
     } else {
       setExpandedDay(day);
     }
+  };
+
+  const toggleCalendar = () => {
+    setShowCalendar(!showCalendar);
+  };
+
+  const handleCalendarSelect = (date, month, year) => {
+    setSelectedDate(date);
+    setSelectedMonth(month);
+    setSelectedYear(year);
+  };
+
+  const applyCalendarSelection = () => {
+    calculateWeekDates();
+    setShowCalendar(false);
   };
 
   const renderTimelineItem = (icon, title, time) => (
@@ -30,140 +134,91 @@ const TimelineScreen = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        {/* <TouchableOpacity style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#666" />
-          <Text style={styles.backText}>Back</Text>
-        </TouchableOpacity> */}
         <Text style={styles.headerTitle}>Timeline</Text>
+        <TouchableOpacity style={styles.filterButton} onPress={toggleCalendar}>
+          <Ionicons name="calendar" size={20} color="#4CAF50" />
+          <Text style={styles.filterText}>Filter</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Month Label */}
-      <Text style={styles.monthLabel}>February</Text>
+      {/* Month and Week Label */}
+      <View style={styles.dateIndicator}>
+        <Text style={styles.monthLabel}>
+          {weekDates.length > 0 ? 
+            `${weekDates[0].month} ${weekDates[0].date} - ${
+              weekDates[0].month === weekDates[4].month ? 
+                weekDates[4].date : 
+                `${weekDates[4].month} ${weekDates[4].date}`
+            }, ${weekDates[0].year}` : 
+            selectedMonth
+          }
+        </Text>
+      </View>
+
+      {/* Calendar Modal Component */}
+      <CalendarModal
+        visible={showCalendar}
+        onClose={toggleCalendar}
+        selectedDate={selectedDate}
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
+        weekDates={weekDates}
+        onSelectDate={handleCalendarSelect}
+        onApply={applyCalendarSelection}
+      />
 
       <ScrollView style={styles.scrollView}>
-        {/* Tuesday Card */}
-        <View style={styles.dayCard}>
-          <View style={[styles.dateContainer, { backgroundColor: '#F3E5F5' }]}>
-            <Text style={[styles.dateNumber, { color: '#9C27B0' }]}>23</Text>
+        {/* Dynamic Day Cards based on week selection */}
+        {displayDays.map((day, index) => (
+          <View key={index} style={styles.dayCard}>
+            <View 
+              style={[
+                styles.dateContainer, 
+                { backgroundColor: day.backgroundColor }
+              ]}
+            >
+              <Text 
+                style={[
+                  styles.dateNumber, 
+                  { color: day.textColor }
+                ]}
+              >
+                {day.date}
+              </Text>
+            </View>
+            <View style={styles.dayInfoContainer}>
+              <View style={styles.dayHeaderContainer}>
+                <Text style={styles.dayName}>{day.dayName}</Text>
+                <TouchableOpacity onPress={() => toggleExpand(day.dayName)}>
+                  <Ionicons 
+                    name={expandedDay === day.dayName ? "chevron-down" : "chevron-forward"} 
+                    size={24} 
+                    color="#999" 
+                  />
+                </TouchableOpacity>
+              </View>
+              {day.timeRanges.map((timeRange, timeIndex) => (
+                <View key={timeIndex} style={styles.timeRangeContainer}>
+                  <Ionicons name="time-outline" size={16} color="#999" />
+                  <Text style={styles.timeRange}>
+                    {timeRange.start} - {timeRange.end}
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
-          <View style={styles.dayInfoContainer}>
-            <View style={styles.dayHeaderContainer}>
-              <Text style={styles.dayName}>Monday</Text>
-              <TouchableOpacity onPress={() => toggleExpand('Tuesday')}>
-                <Ionicons name="chevron-forward" size={24} color="#999" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.timeRangeContainer}>
-              <Ionicons name="time-outline" size={16} color="#999" />
-              <Text style={styles.timeRange}>08:00 - 16:02</Text>
-            </View>
-            <View style={styles.timeRangeContainer}>
-              <Ionicons name="time-outline" size={16} color="#999" />
-              <Text style={styles.timeRange}>08:00 - 16:02</Text>
-            </View>
-          </View>
-        </View>
+        ))}
 
-        {/* Monday Card (Expanded) */}
-        <View style={styles.dayCard}>
-          <View style={[styles.dateContainer, { backgroundColor: '#FFF8E1' }]}>
-            <Text style={[styles.dateNumber, { color: '#FFA000' }]}>24</Text>
-          </View>
-          <View style={styles.dayInfoContainer}>
-            <View style={styles.dayHeaderContainer}>
-              <Text style={styles.dayName}>Tuesday</Text>
-              <TouchableOpacity onPress={() => toggleExpand('Monday')}>
-                <Ionicons name="chevron-down" size={24} color="#999" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.timeRangeContainer}>
-              <Ionicons name="time-outline" size={16} color="#999" />
-              <Text style={styles.timeRange}>08:00 - 16:02</Text>
-            </View>
-            <View style={styles.timeRangeContainer}>
-              <Ionicons name="time-outline" size={16} color="#999" />
-              <Text style={styles.timeRange}>13:00 - 13:30</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Timeline for Monday */}
-        {expandedDay === 'Monday' && (
+        {/* Timeline Items (shown when a day is expanded) */}
+        {expandedDay && (
           <View style={styles.timelineContainer}>
             <View style={styles.timelineLine} />
             {renderTimelineItem('enter-outline', 'Check-in', '08:00')}
-            {renderTimelineItem('restaurant-outline', 'Lunch-out', '08:00')}
-            {renderTimelineItem('fast-food-outline', 'Lunch-in', '08:00')}
-            {renderTimelineItem('exit-outline', 'Check-out', '08:00')}
+            {renderTimelineItem('restaurant-outline', 'Lunch-out', '13:00')}
+            {renderTimelineItem('fast-food-outline', 'Lunch-in', '13:35')}
+            {renderTimelineItem('exit-outline', 'Check-out', '16:02')}
           </View>
         )}
-
-        {/* Friday Card */}
-        <View style={styles.dayCard}>
-          <View style={[styles.dateContainer, { backgroundColor: '#99bf71' }]}>
-            <Text style={[styles.dateNumber, { color: '#72a534' }]}>25</Text>
-          </View>
-          <View style={styles.dayInfoContainer}>
-            <View style={styles.dayHeaderContainer}>
-              <Text style={styles.dayName}>Wednesday</Text>
-              <TouchableOpacity onPress={() => toggleExpand('Friday')}>
-                <Ionicons name="chevron-forward" size={24} color="#999" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.timeRangeContainer}>
-              <Ionicons name="time-outline" size={16} color="#999" />
-              <Text style={styles.timeRange}>08:00 - 16:02</Text>
-            </View>
-            <View style={styles.timeRangeContainer}>
-              <Ionicons name="time-outline" size={16} color="#999" />
-              <Text style={styles.timeRange}>13:00 - 13:35</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.dayCard}>
-          <View style={[styles.dateContainer, { backgroundColor: '#f9ebc4' }]}>
-            <Text style={[styles.dateNumber, { color: '#ad7c6e' }]}>26</Text>
-          </View>
-          <View style={styles.dayInfoContainer}>
-            <View style={styles.dayHeaderContainer}>
-              <Text style={styles.dayName}>Thursday</Text>
-              <TouchableOpacity onPress={() => toggleExpand('Friday')}>
-                <Ionicons name="chevron-forward" size={24} color="#999" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.timeRangeContainer}>
-              <Ionicons name="time-outline" size={16} color="#999" />
-              <Text style={styles.timeRange}>08:00 - 16:02</Text>
-            </View>
-            <View style={styles.timeRangeContainer}>
-              <Ionicons name="time-outline" size={16} color="#999" />
-              <Text style={styles.timeRange}>13:00 - 13:35</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.dayCard}>
-          <View style={[styles.dateContainer, { backgroundColor: '#E88EA6' }]}>
-            <Text style={[styles.dateNumber, { color: '#BF6DA1' }]}>27</Text>
-          </View>
-          <View style={styles.dayInfoContainer}>
-            <View style={styles.dayHeaderContainer}>
-              <Text style={styles.dayName}>Friday</Text>
-              <TouchableOpacity onPress={() => toggleExpand('Friday')}>
-                <Ionicons name="chevron-forward" size={24} color="#999" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.timeRangeContainer}>
-              <Ionicons name="time-outline" size={16} color="#999" />
-              <Text style={styles.timeRange}>08:00 - 16:02</Text>
-            </View>
-            <View style={styles.timeRangeContainer}>
-              <Ionicons name="time-outline" size={16} color="#999" />
-              <Text style={styles.timeRange}>13:00 - 13:35</Text>
-            </View>
-          </View>
-        </View>
       </ScrollView>
     </View>
   );
@@ -177,33 +232,38 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent:"cenrter",
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingTop: 40,
     paddingBottom: 16,
   },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  backText: {
-    marginLeft: 4,
-    color: '#666',
-    fontSize: 16,
-  },
   headerTitle: {
-    flex: 1,
-    textAlign: 'center',
     fontSize: 20,
     fontWeight: '500',
     color: '#333',
-    marginRight: 40, // To offset the back button and center the title
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(76, 175, 80, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  filterText: {
+    marginLeft: 4,
+    color: '#4CAF50',
+    fontWeight: '500',
+  },
+  dateIndicator: {
+    paddingHorizontal: 16,
+    marginBottom: 16,
   },
   monthLabel: {
     textAlign: 'center',
     fontSize: 16,
-    color: '#999',
-    marginBottom: 16,
+    color: '#666',
+    fontWeight: '500',
   },
   scrollView: {
     flex: 1,
@@ -306,7 +366,7 @@ const styles = StyleSheet.create({
   timelineTime: {
     fontSize: 14,
     color: '#999',
-  },
+  }
 });
 
 export default TimelineScreen;

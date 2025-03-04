@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import axios from "axios"
+import {useSelector} from 'react-redux'; 
 
 const CalendarModal = ({ 
   visible, 
@@ -10,11 +12,34 @@ const CalendarModal = ({
   selectedYear, 
   weekDates,
   onSelectDate, 
-  onApply 
+  onApply ,
 }) => {
   const [localSelectedDate, setLocalSelectedDate] = useState(selectedDate);
   const [localSelectedMonth, setLocalSelectedMonth] = useState(selectedMonth);
   const [localSelectedYear, setLocalSelectedYear] = useState(selectedYear);
+  const TraineeID = useSelector((state) => state.auth.traineeID);
+  const token = useSelector((state) => state.auth.token);
+
+  console.log("This is the ID.. Hello",TraineeID);
+  console.log("This is the token.. HELLO", token);
+
+  const handleTimeLine = async ()=>{
+    try {
+      const response = await axios.get(`https://timemanagementsystemserver.onrender.com/api/session/weekly-stats?traineeId=${TraineeID}`, {
+        headers:{
+          Authorization: `Bearer ${token}`
+        }
+      });
+      console.log(response.data);
+    } catch (error) {
+      console.log(error);
+      
+    }
+  }
+  
+  useEffect(()=>{
+    handleTimeLine();
+  })
   
   useEffect(() => {
     // Update local state when props change
@@ -27,7 +52,8 @@ const CalendarModal = ({
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
-  
+
+ 
   const weekDayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   const changeMonth = (direction) => {

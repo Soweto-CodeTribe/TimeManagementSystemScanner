@@ -34,17 +34,17 @@ function BottomTabNavigator() {
         tabBarIcon: ({ color, size }) => {
           let iconName;
           if (route.name === "HomeScreen") iconName = "home-outline";
-          else if (route.name === "Profile") iconName = "person-outline";
+          else if (route.name === "ScannerAuth") iconName = "qr-code-outline";
           else if (route.name === "Timeline") iconName = "time-outline";
           return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: "#8BC34A",
         tabBarInactiveTintColor: "gray",
-        tabBarStyle: { backgroundColor: "#FFFFFF", height: 60, paddingBottom: 5 },
+        tabBarStyle: { backgroundColor: "#fff", height: 60, paddingBottom: 5 },
       })}
     >
       <Tab.Screen name="HomeScreen" component={HomeScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="ScannerAuth" component={ScannerAuth} />
       <Tab.Screen name="Timeline" component={TimelineScreen} />
     </Tab.Navigator>
   );
@@ -55,7 +55,7 @@ export default function App() {
   return (
     <Provider store={store}>
       <NavigationContainer>
-        {/* <StatusBar style="auto" /> */}
+        <StatusBar style="red" />
         <Stack.Navigator initialRouteName="SplashScreen" screenOptions={{ headerShown: false }}>
           {/* Authentication and onboarding screens */}
           <Stack.Screen name="SplashScreen" component={SplashScreen} />
@@ -67,9 +67,10 @@ export default function App() {
           <Stack.Screen name="ForgetPasswordScreen" component={ForgetPasswordScreen} />
           <Stack.Screen name="PasswordEmailScreen" component={PasswordEmailScreen} />
           <Stack.Screen name="ScannerScreen" component={ScannerScreen} />
+          <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
           <Stack.Screen name="NotificationScreen" component={NotificationScreen} />
-          <Stack.Screen name="ScannerAuth" component={ScannerAuth} />
-          <Stack.Screen name="HomeScreen" component={HomeScreen} />
+          {/* <Stack.Screen name="ScannerAuth" component={ScannerAuth} /> */}
+          {/* <Stack.Screen name="HomeScreen" component={HomeScreen} /> */}
           
           {/* After authentication, show Bottom Tabs */}
           <Stack.Screen name="MainApp" component={BottomTabNavigator} />

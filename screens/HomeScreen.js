@@ -3,12 +3,14 @@ import { TouchableOpacity, View, Text, StyleSheet, SafeAreaView, ScrollView, Dim
 import { BarChart } from "react-native-chart-kit";
 import DocumentsUpload from "../Components/DocumentsUpload";
 import { useSelector } from 'react-redux'
+import AsyncStorage from "@react-native-async-storage/async-storage";
 // import axios from "axios";
 
 const HomeScreen = ({ navigation }) => {
   const [activeStats, setActiveStats] = useState("monthly");
-  const [isDayMissed, setIsDayMissed ] = useState(true)
-  const name = useSelector((state)=> state.auth.user)
+  const [isDayMissed, setIsDayMissed ] = useState(false)
+  // const name = useSelector((state)=> state.auth.user)
+  const name = AsyncStorage.getItem('name');
 
   const weeklyData = {
     labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
@@ -16,6 +18,8 @@ const HomeScreen = ({ navigation }) => {
       data: [65, 45, 75, 55, 70]
     }]
   };
+
+  const currentDate = new Date().toDateString()
 
   const renderStatsCard = (percentage, title, subtitle, days) => (
     <View style={styles.statsCard}>
@@ -34,19 +38,20 @@ const HomeScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={{flex: 1}}>
     <ScrollView style={styles.container}>
-      <StatusBar barStyle={'light-content'} backgroundColor={'#7C808D'}/>
+      <StatusBar barStyle={'dark-content'}/>
       <SafeAreaView style={styles.safeArea} />
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View>
-            <Text style={styles.greeting}>Hi, {name}! 👋</Text>
-            <Text style={styles.welcomeBack}>Welcome Back!</Text>
+            <Text style={styles.greeting}>Hello, {name} 👋</Text>
+            {/* <Text style={styles.welcomeBack}>Welcome Back!</Text> */}
+            <Text style={styles.currentDate}>{currentDate}</Text>
           </View>
           <View style={styles.headerIcons}>
             <TouchableOpacity onPress={()=> navigation.navigate('NotificationScreen')} style={styles.iconButton}>
               <Text>🔔</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={()=> navigation.navigate("TimelineScreen")} style={styles.iconButton}>
+            <TouchableOpacity onPress={()=> navigation.navigate("ProfileScreen")} style={styles.iconButton}>
               <Text>👤</Text>
             </TouchableOpacity>
           </View>
@@ -58,9 +63,10 @@ const HomeScreen = ({ navigation }) => {
             width={Dimensions.get("window").width - 80}
             height={160}
             chartConfig={{
+              borderWidth: 1,
               backgroundColor: "transparent",
-              backgroundGradientFrom: "#fff",
-              backgroundGradientTo: "#fff",
+              backgroundGradientFrom: "#f8f7fa",
+              backgroundGradientTo: "#f8f7fa",
               decimalPlaces: 0,
               color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
               barPercentage: 0.5,
@@ -85,7 +91,7 @@ const HomeScreen = ({ navigation }) => {
               onPress={() => setActiveStats("monthly")}
             >
               <Text style={[styles.toggleText, activeStats === "monthly" && styles.activeText]}>
-                Monthly Stats
+                Monthly
               </Text>
             </TouchableOpacity>
             <TouchableOpacity 
@@ -93,7 +99,7 @@ const HomeScreen = ({ navigation }) => {
               onPress={() => setActiveStats("yearly")}
             >
               <Text style={[styles.toggleText, activeStats === "yearly" && styles.activeText]}>
-                Yearly Stats
+                Yearly
               </Text>
             </TouchableOpacity>
           </View>
@@ -104,27 +110,20 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.statsGrid}>
           {activeStats === "monthly" ? (
             <>
-             {renderStatsCard(87, "January", "Monthly completion rate", "112-128")}
-{renderStatsCard(93, "February", "Monthly completion rate", "125-141")}
-{renderStatsCard(79, "March", "Monthly completion rate", "104-119")}
-{renderStatsCard(85, "April", "Monthly completion rate", "109-124")}
-</>
-) : (
-<>
-{renderStatsCard(82, "2021", "Annual performance index", "925-1050")}
-{renderStatsCard(88, "2022", "Annual performance index", "990-1120")}
-{renderStatsCard(91, "2023", "Annual performance index", "1025-1160")}
-{renderStatsCard(86, "2024", "Annual performance index", "970-1095")}
+              {renderStatsCard(87, "January", "Monthly completion rate", "112-128")}
+              {renderStatsCard(93, "February", "Monthly completion rate", "125-141")}
+              {renderStatsCard(79, "March", "Monthly completion rate", "104-119")}
+              {renderStatsCard(85, "April", "Monthly completion rate", "109-124")}
+              </>
+              ) : (
+              <>
+              {renderStatsCard(82, "2021", "Annual performance index", "925-1050")}
+              {renderStatsCard(88, "2022", "Annual performance index", "990-1120")}
+              {renderStatsCard(91, "2023", "Annual performance index", "1025-1160")}
+              {renderStatsCard(86, "2024", "Annual performance index", "970-1095")}
             </>
           )}
         </View>
-
-        <TouchableOpacity 
-          style={styles.scanButton}
-          onPress={() => navigation.navigate('ScannerAuth')}
-        >
-          <Text style={styles.scanButtonText}>Let's scan</Text>
-        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -151,22 +150,25 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     padding: 20,
     paddingTop: 40,
-    backgroundColor: "#7c808d",
+    backgroundColor: "#f8f9fa",
     borderRadius: 40,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
-    // elevation: 3,
   },
   greeting: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#fff",
+    color: "#aaa",
   },
   welcomeBack: {
+    fontSize: 12,
+    color: "#444",
+  },
+  currentDate:{
     fontSize: 10,
-    color: "#fff",
+    color: "#aaa"
   },
   headerIcons: {
     flexDirection: "row",
@@ -174,8 +176,8 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     padding: 8,
-    backgroundColor: "#fff",
-    borderRadius: 10,
+    // backgroundColor: "#fff",
+    borderRadius: 100,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -184,7 +186,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   chartCard: {
-    backgroundColor: "#fff",
+    backgroundColor: "#f8f7fa",
     borderRadius: 30,
     padding: 15,
     shadowColor: "#000",
@@ -216,6 +218,10 @@ const styles = StyleSheet.create({
   toggleButtons: {
     flexDirection: "row",
     gap: 12,
+    backgroundColor: 'red',
+    width: 140,
+    borderRadius: 14,
+    padding: 10,
   },
   toggleButton: {
     paddingVertical: 8,
@@ -237,8 +243,7 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   statsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: "column",
     padding: 16,
     gap: 12,
     justifyContent: "space-between",
@@ -247,7 +252,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#8ac05233",
     padding: 15,
     borderRadius: 20,
-    width: "48%",
+    // width: "48%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,

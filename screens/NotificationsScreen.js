@@ -111,31 +111,14 @@ export default function NotificationScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#7c808d" />
       
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color="#fff" />
+          <Ionicons name="chevron-back" size={24} color="#aaa" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Notifications</Text>
-        
-        {/* Search input */}
-        <View style={styles.searchContainer}>
-          <Ionicons name="search-outline" size={20} color="#7f8c8d" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search notifications..."
-            placeholderTextColor="#7f8c8d"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <Ionicons name="close-circle" size={20} color="#7f8c8d" />
-            </TouchableOpacity>
-          )}
-        </View>
+   
       </View>
 
       {/* Notifications list */}
@@ -180,18 +163,17 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    paddingTop: 20,
-    backgroundColor: "#7c808d",
+    paddingTop: 40,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    flexDirection: "row",
   },
   backButton: {
-    padding: 6,
+    paddingTop: 6,
+    paddingHorizontal: 10,
     borderRadius: 12,
     alignSelf: "flex-start",
     marginBottom: 10,
@@ -199,25 +181,8 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#fff",
+    color: "#aaa",
     marginBottom: 16,
-  },
-  searchContainer: {
-    flexDirection: "row",
-    backgroundColor: "#fff",
-    borderRadius: 15,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    alignItems: "center",
-    marginTop: 6,
-  },
-  searchIcon: {
-    marginRight: 10,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: "#2c3e50",
   },
   listContent: {
     padding: 16,
@@ -229,11 +194,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderRadius: 16,
     padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
   },
   avatarContainer: {
     width: 48,

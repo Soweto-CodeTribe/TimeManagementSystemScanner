@@ -160,29 +160,29 @@ useEffect(()=>{
   );
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Timeline</Text>
-        <TouchableOpacity style={styles.filterButton} onPress={toggleCalendar}>
-          <Ionicons name="calendar" size={20} color="#4CAF50" />
-          <Text style={styles.filterText}>Filter</Text>
-        </TouchableOpacity>
-      </View>
+<View style={styles.container}>
+  {/* Header */}
+  <View style={styles.header}>
+    <Text style={styles.headerTitle}>Timeline</Text>
+    <TouchableOpacity style={styles.filterButton} onPress={toggleCalendar}>
+      <Ionicons name="calendar" size={20} color="#4CAF50" />
+      <Text style={styles.filterText}>Filter</Text>
+    </TouchableOpacity>
+  </View>
 
-      {/* Month and Week Label */}
-      <View style={styles.dateIndicator}>
-        <Text style={styles.monthLabel}>
-          {weekDates.length > 0 ? 
-            `${weekDates[0].month} ${weekDates[0].date} - ${
-              weekDates[0].month === weekDates[4].month ? 
-                weekDates[4].date : 
-                `${weekDates[4].month} ${weekDates[4].date}`
-            }, ${weekDates[0].year}` : 
-            selectedMonth
-          }
-        </Text>
-      </View>
+  {/* Month and Week Label */}
+  <View style={styles.dateIndicator}>
+    <Text style={styles.monthLabel}>
+      {weekDates.length > 0 ? 
+        `${weekDates[0].month} ${weekDates[0].date} - ${
+          weekDates[0].month === weekDates[4].month ? 
+            weekDates[4].date : 
+            `${weekDates[4].month} ${weekDates[4].date}`
+        }, ${weekDates[0].year}` : 
+        selectedMonth
+      }
+    </Text>
+  </View>
 
       {/* Calendar Modal Component */}
       <CalendarModal

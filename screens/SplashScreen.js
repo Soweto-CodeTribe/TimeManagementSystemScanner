@@ -269,7 +269,7 @@ const CodeTribeSplash = ({ navigation }) => {
             useNativeDriver: true,
           }),
         ),
-      ]).start(() => navigation.replace("GetStartedScreen"))
+      ]).start(() => navigation.replace("GetStartedScreen"));
     }, 5200)
 
     return () => {

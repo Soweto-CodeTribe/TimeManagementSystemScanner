@@ -227,178 +227,178 @@ useEffect(()=>{
   };
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Timeline</Text>
-        <TouchableOpacity style={styles.filterButton} onPress={toggleCalendar}>
-          <Ionicons name="calendar" size={20} color="#4CAF50" />
-          <Text style={styles.filterText}>Filter</Text>
-        </TouchableOpacity>
-      </View>
+<View style={styles.container}>
+  {/* Header */}
+  <View style={styles.header}>
+    <Text style={styles.headerTitle}>Timeline</Text>
+    <TouchableOpacity style={styles.filterButton} onPress={toggleCalendar}>
+      <Ionicons name="calendar" size={20} color="#4CAF50" />
+      <Text style={styles.filterText}>Filter</Text>
+    </TouchableOpacity>
+  </View>
 
-      {/* Month and Week Label */}
-      <View style={styles.dateIndicator}>
-        <Text style={styles.monthLabel}>
-          {weekDates.length > 0 ? 
-            `${weekDates[0].month} ${weekDates[0].date} - ${
-              weekDates[0].month === weekDates[4].month ? 
-                weekDates[4].date : 
-                `${weekDates[4].month} ${weekDates[4].date}`
-            }, ${weekDates[0].year}` : 
-            selectedMonth
-          }
-        </Text>
-      </View>
+  {/* Month and Week Label */}
+  <View style={styles.dateIndicator}>
+    <Text style={styles.monthLabel}>
+      {weekDates.length > 0 ? 
+        `${weekDates[0].month} ${weekDates[0].date} - ${
+          weekDates[0].month === weekDates[4].month ? 
+            weekDates[4].date : 
+            `${weekDates[4].month} ${weekDates[4].date}`
+        }, ${weekDates[0].year}` : 
+        selectedMonth
+      }
+    </Text>
+  </View>
 
-      {/* Calendar Modal */}
-      <Modal
-        visible={showCalendar}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={toggleCalendar}
-      >
-        <TouchableOpacity 
-          style={styles.modalOverlay} 
-          activeOpacity={1} 
-          onPress={toggleCalendar}
-        >
-          <View style={styles.calendarContainer} onStartShouldSetResponder={() => true}>
-            {/* Calendar Header */}
-            <View style={styles.calendarHeader}>
-              <TouchableOpacity onPress={() => changeMonth('prev')}>
-                <Ionicons name="chevron-back" size={24} color="#4CAF50" />
-              </TouchableOpacity>
-              <Text style={styles.calendarTitle}>{selectedMonth} {selectedYear}</Text>
-              <TouchableOpacity onPress={() => changeMonth('next')}>
-                <Ionicons name="chevron-forward" size={24} color="#4CAF50" />
-              </TouchableOpacity>
-            </View>
-            
-            {/* Weekday Headers */}
-            <View style={styles.weekDaysContainer}>
-              {weekDayLabels.map((day, index) => (
-                <Text key={index} style={styles.weekDayText}>{day}</Text>
+  {/* Calendar Modal */}
+  <Modal
+    visible={showCalendar}
+    transparent={true}
+    animationType="fade"
+    onRequestClose={toggleCalendar}
+  >
+    <TouchableOpacity 
+      style={styles.modalOverlay} 
+      activeOpacity={1} 
+      onPress={toggleCalendar}
+    >
+      <View style={styles.calendarContainer} onStartShouldSetResponder={() => true}>
+        {/* Calendar Header */}
+        <View style={styles.calendarHeader}>
+          <TouchableOpacity onPress={() => changeMonth('prev')}>
+            <Ionicons name="chevron-back" size={24} color="#4CAF50" />
+          </TouchableOpacity>
+          <Text style={styles.calendarTitle}>{selectedMonth} {selectedYear}</Text>
+          <TouchableOpacity onPress={() => changeMonth('next')}>
+            <Ionicons name="chevron-forward" size={24} color="#4CAF50" />
+          </TouchableOpacity>
+        </View>
+        
+        {/* Weekday Headers */}
+        <View style={styles.weekDaysContainer}>
+          {weekDayLabels.map((day, index) => (
+            <Text key={index} style={styles.weekDayText}>{day}</Text>
+          ))}
+        </View>
+        
+        {/* Calendar Days */}
+        <View style={styles.calendarDaysContainer}>
+          {calendarWeeks.map((week, weekIndex) => (
+            <View key={weekIndex} style={styles.weekRow}>
+              {week.map((day, dayIndex) => (
+                <TouchableOpacity
+                  key={dayIndex}
+                  style={[
+                    styles.dayCell,
+                    day === selectedDate ? styles.selectedDay : null,
+                    day === null ? styles.emptyDay : null
+                  ]}
+                  onPress={() => day && selectDate(day)}
+                  disabled={day === null}
+                >
+                  {day !== null && <Text style={[
+                    styles.dayText,
+                    day === selectedDate ? styles.selectedDayText : null
+                  ]}>{day}</Text>}
+                </TouchableOpacity>
               ))}
             </View>
-            
-            {/* Calendar Days */}
-            <View style={styles.calendarDaysContainer}>
-              {calendarWeeks.map((week, weekIndex) => (
-                <View key={weekIndex} style={styles.weekRow}>
-                  {week.map((day, dayIndex) => (
-                    <TouchableOpacity
-                      key={dayIndex}
-                      style={[
-                        styles.dayCell,
-                        day === selectedDate ? styles.selectedDay : null,
-                        day === null ? styles.emptyDay : null
-                      ]}
-                      onPress={() => day && selectDate(day)}
-                      disabled={day === null}
-                    >
-                      {day !== null && <Text style={[
-                        styles.dayText,
-                        day === selectedDate ? styles.selectedDayText : null
-                      ]}>{day}</Text>}
-                    </TouchableOpacity>
-                  ))}
+          ))}
+        </View>
+        
+        {/* Week View Section */}
+        <View style={styles.weekViewSection}>
+          <Text style={styles.weekViewTitle}>Week View</Text>
+          <View style={styles.weekViewDaysContainer}>
+            {weekDayLabels.slice(0, 7).map((day, index) => {
+              const dateToDisplay = weekDates[index] ? weekDates[index].date : '';
+              const isInCurrentMonth = weekDates[index] ? 
+                weekDates[index].month === selectedMonth && 
+                weekDates[index].year === selectedYear : false;
+              
+              return (
+                <View key={index} style={styles.weekViewDay}>
+                  <Text style={styles.weekViewDayName}>{day}</Text>
+                  <TouchableOpacity 
+                    style={[
+                      styles.weekViewDate,
+                      index < 5 ? styles.weekdayDate : styles.weekendDate,
+                      day === weekDayLabels[selectedDate % 7] ? styles.selectedWeekViewDate : null
+                    ]}
+                    disabled={index >= 5} // Disable weekend days
+                  >
+                    <Text style={[
+                      styles.weekViewDateText,
+                      !isInCurrentMonth ? styles.otherMonthDateText : null,
+                      day === weekDayLabels[selectedDate % 7] ? styles.selectedWeekViewDateText : null
+                    ]}>
+                      {dateToDisplay}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-              ))}
-            </View>
-            
-            {/* Week View Section */}
-            <View style={styles.weekViewSection}>
-              <Text style={styles.weekViewTitle}>Week View</Text>
-              <View style={styles.weekViewDaysContainer}>
-                {weekDayLabels.slice(0, 7).map((day, index) => {
-                  const dateToDisplay = weekDates[index] ? weekDates[index].date : '';
-                  const isInCurrentMonth = weekDates[index] ? 
-                    weekDates[index].month === selectedMonth && 
-                    weekDates[index].year === selectedYear : false;
-                  
-                  return (
-                    <View key={index} style={styles.weekViewDay}>
-                      <Text style={styles.weekViewDayName}>{day}</Text>
-                      <TouchableOpacity 
-                        style={[
-                          styles.weekViewDate,
-                          index < 5 ? styles.weekdayDate : styles.weekendDate,
-                          day === weekDayLabels[selectedDate % 7] ? styles.selectedWeekViewDate : null
-                        ]}
-                        disabled={index >= 5} // Disable weekend days
-                      >
-                        <Text style={[
-                          styles.weekViewDateText,
-                          !isInCurrentMonth ? styles.otherMonthDateText : null,
-                          day === weekDayLabels[selectedDate % 7] ? styles.selectedWeekViewDateText : null
-                        ]}>
-                          {dateToDisplay}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  );
-                })}
-              </View>
-            </View>
-            
-            {/* Action Buttons */}
-            <View style={styles.calendarActions}>
-              <TouchableOpacity style={styles.cancelButton} onPress={toggleCalendar}>
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.applyButton} onPress={applyCalendarSelection}>
-                <Text style={styles.applyButtonText}>Apply</Text>
-              </TouchableOpacity>
-            </View>
+              );
+            })}
           </View>
-        </TouchableOpacity>
-      </Modal>
+        </View>
+        
+        {/* Action Buttons */}
+        <View style={styles.calendarActions}>
+          <TouchableOpacity style={styles.cancelButton} onPress={toggleCalendar}>
+            <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.applyButton} onPress={applyCalendarSelection}>
+            <Text style={styles.applyButtonText}>Apply</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </TouchableOpacity>
+  </Modal>
 
-      <ScrollView style={styles.scrollView}>
-        {/* Dynamic Day Cards based on week selection */}
-        {displayDays.map((day, index) => (
-          <View key={index} style={styles.dayCard}>
-            <View 
+  <ScrollView style={styles.scrollView}>
+    {/* Dynamic Day Cards based on week selection */}
+    {displayDays.map((day, index) => (
+      <View key={index}>
+        <View style={styles.dayCard}>
+          <View 
+            style={[
+              styles.dateContainer, 
+              { backgroundColor: day.backgroundColor }
+            ]}
+          >
+            <Text 
               style={[
-                styles.dateContainer, 
-                { backgroundColor: day.backgroundColor }
+                styles.dateNumber, 
+                { color: day.textColor }
               ]}
             >
-              <Text 
-                style={[
-                  styles.dateNumber, 
-                  { color: day.textColor }
-                ]}
-              >
-                {day.date}
-              </Text>
-            </View>
-            <View style={styles.dayInfoContainer}>
-              <View style={styles.dayHeaderContainer}>
-                <Text style={styles.dayName}>{day.dayName}</Text>
-                <TouchableOpacity onPress={() => toggleExpand(day.dayName)}>
-                  <Ionicons 
-                    name={expandedDay === day.dayName ? "chevron-down" : "chevron-forward"} 
-                    size={24} 
-                    color="#999" 
-                  />
-                </TouchableOpacity>
-              </View>
-              {day.timeRanges.map((timeRange, timeIndex) => (
-                <View key={timeIndex} style={styles.timeRangeContainer}>
-                  <Ionicons name="time-outline" size={16} color="#999" />
-                  <Text style={styles.timeRange}>
-                    {timeRange.start} - {timeRange.end}
-                  </Text>
-                </View>
-              ))}
-            </View>
+              {day.date}
+            </Text>
           </View>
-        ))}
+          <View style={styles.dayInfoContainer}>
+            <View style={styles.dayHeaderContainer}>
+              <Text style={styles.dayName}>{day.dayName}</Text>
+              <TouchableOpacity onPress={() => toggleExpand(day.dayName)}>
+                <Ionicons 
+                  name={expandedDay === day.dayName ? "chevron-down" : "chevron-forward"} 
+                  size={24} 
+                  color="#999" 
+                />
+              </TouchableOpacity>
+            </View>
+            {day.timeRanges.map((timeRange, timeIndex) => (
+              <View key={timeIndex} style={styles.timeRangeContainer}>
+                <Ionicons name="time-outline" size={16} color="#999" />
+                <Text style={styles.timeRange}>
+                  {timeRange.start} - {timeRange.end}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
 
         {/* Timeline Items (shown when a day is expanded) */}
-        {expandedDay && (
+        {expandedDay === day.dayName && (
           <View style={styles.timelineContainer}>
             <View style={styles.timelineLine} />
             {renderTimelineItem('enter-outline', 'Check-in', '08:00')}
@@ -407,8 +407,11 @@ useEffect(()=>{
             {renderTimelineItem('exit-outline', 'Check-out', '16:02')}
           </View>
         )}
-      </ScrollView>
-    </View>
+      </View>
+    ))}
+  </ScrollView>
+</View>
+
   );
 };
 

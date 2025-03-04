@@ -1,660 +1,308 @@
-import React, { useState } from "react";
-import { TouchableOpacity, View, Text, StyleSheet, SafeAreaView, ScrollView, Dimensions, Alert, StatusBar } from "react-native";
-import { BarChart } from "react-native-chart-kit";
-import DocumentsUpload from "../Components/DocumentsUpload";
-import { useSelector } from 'react-redux'
-import AsyncStorage from "@react-native-async-storage/async-storage";
-// import axios from "axios";
+"use client"
+
+import { StatusBar } from "expo-status-bar"
+import { useState } from "react"
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, Dimensions, TouchableOpacity } from "react-native"
+import { BarChart } from "react-native-chart-kit"
+import AsyncStorage from "@react-native-async-storage/async-storage"
 
 const HomeScreen = ({ navigation }) => {
-  const [activeStats, setActiveStats] = useState("monthly");
+  const [activeStats, setActiveStats] = useState("monthly")
   const [isDayMissed, setIsDayMissed ] = useState(false)
-  // const name = useSelector((state)=> state.auth.user)
   const name = AsyncStorage.getItem('name');
 
+  // Weekly attendance data for the chart
   const weeklyData = {
-    labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-    datasets: [{
-      data: [65, 45, 75, 55, 70]
-    }]
-  };
+    labels: ["M", "T", "W", "T", "F"],
+    datasets: [
+      {
+        data: [40, 80, 85, 55, 60],
+      },
+    ],
+  }
 
-  const currentDate = new Date().toDateString()
+  // const navigation = useNavigate()
 
-  const renderStatsCard = (percentage, title, subtitle, days) => (
-    <View style={styles.statsCard}>
-      <View style={styles.statsHeader}>
-        <Text style={styles.percentage}>{percentage}%</Text>
-        <View style={styles.trendIndicator}>
-          <Text style={styles.trendText}>↗</Text>
-        </View>
-      </View>
-      <Text style={styles.statsTitle}>{title}</Text>
-      <Text style={styles.statsSubtitle}>{subtitle}</Text>
-      <Text style={styles.statsDays}>{days} Days</Text>
-    </View>
-  );
+  // Current date
+  const today = new Date()
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ]
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+  const currentDate = `${days[today.getDay()]}, ${months[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()}`
 
   return (
-    <SafeAreaView style={{flex: 1}}>
-    <ScrollView style={styles.container}>
-      <StatusBar barStyle={'dark-content'}/>
-      <SafeAreaView style={styles.safeArea} />
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
+    <SafeAreaView style={styles.container}>
+    <StatusBar backgroundColor={'#fff'} style={'dark'}/>
+      
+        {/* Header Section */}
+        <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Hello, {name} 👋</Text>
-            {/* <Text style={styles.welcomeBack}>Welcome Back!</Text> */}
-            <Text style={styles.currentDate}>{currentDate}</Text>
+            <Text style={styles.greeting}>Hello, {name}</Text>
+            <Text style={styles.date}>{currentDate}</Text>
           </View>
-          <View style={styles.headerIcons}>
+          <View style={styles.avatarContainer}>
             <TouchableOpacity onPress={()=> navigation.navigate('NotificationScreen')} style={styles.iconButton}>
-              <Text>🔔</Text>
+              <Text style={{fontSize: 20}}>🔔</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={()=> navigation.navigate("ProfileScreen")} style={styles.iconButton}>
-              <Text>👤</Text>
+              <Text style={{fontSize: 20}}>👤</Text>
             </TouchableOpacity>
           </View>
         </View>
-        <View style={styles.chartCard}>
+       
+        {/* Weekly Attendance Chart */}
+        <View style={styles.chartContainer}>
           <Text style={styles.chartTitle}>Weekly Attendance</Text>
           <BarChart
             data={weeklyData}
-            width={Dimensions.get("window").width - 80}
-            height={160}
+            width={Dimensions.get("window").width - 40}
+            height={180}
+            yAxisSuffix="%"
             chartConfig={{
-              borderWidth: 1,
               backgroundColor: "transparent",
-              backgroundGradientFrom: "#f8f7fa",
-              backgroundGradientTo: "#f8f7fa",
+              backgroundGradientFrom: "white",
+              backgroundGradientTo: "white",
               decimalPlaces: 0,
-              color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
-              barPercentage: 0.5,
-              style: {
-                borderRadius: 16
-              }
+              color: (opacity = 1) => `rgba(107, 189, 49, ${opacity})`,
+              labelColor: () => "#ADADAD",
+              barPercentage: 0.6,
+              propsForBackgroundLines: {
+                strokeDasharray: "",
+                stroke: "#EEEEEE",
+                strokeWidth: 1,
+              },
             }}
             style={styles.chart}
-            showValuesOnTopOfBars={true}
-            fromZero={true}
-            withInnerLines={false}
-            withHorizontalLabels={false}
+            fromZero
+            showValuesOnTopOfBars={false}
+            withInnerLines={true}
+            withHorizontalLabels={true}
           />
         </View>
-      </View>
 
-        <View style={styles.statsToggle}>
-          <Text style={styles.overviewText}>Overview Stats</Text>
-          <View style={styles.toggleButtons}>
-            <TouchableOpacity 
+        {/* Overview Stats Section */}
+        <View style={styles.statsSection}>
+          <Text style={styles.statsTitle}>Overview Stats</Text>
+
+          {/* Toggle Buttons */}
+          <View style={styles.toggleContainer}>
+            <TouchableOpacity
               style={[styles.toggleButton, activeStats === "monthly" && styles.activeToggle]}
               onPress={() => setActiveStats("monthly")}
             >
-              <Text style={[styles.toggleText, activeStats === "monthly" && styles.activeText]}>
-                Monthly
-              </Text>
+              <Text style={[styles.toggleText, activeStats === "monthly" && styles.activeToggleText]}>Weekly</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.toggleButton, activeStats === "yearly" && styles.activeToggle]}
               onPress={() => setActiveStats("yearly")}
             >
-              <Text style={[styles.toggleText, activeStats === "yearly" && styles.activeText]}>
-                Yearly
-              </Text>
+              <Text style={[styles.toggleText, activeStats === "yearly" && styles.activeToggleText]}>Monthly</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {isDayMissed && <DocumentsUpload isVisible={isDayMissed} onClose={() => setIsDayMissed(false)} />}
+        {isDayMissed && <DocumentsUpload isVisible={isDayMissed} onClose={() => setIsDayMissed(false)}/>}
+        <ScrollView>
+        {/* Monthly Stats Cards */}
+        <View style={styles.statsCards}>
+          {/* July Card */}
+          <View style={styles.statCard}>
+            <Text style={styles.monthTitle}>July</Text>
+            <Text style={styles.attendanceText}>89 of 92 days</Text>
+            <View style={styles.progressContainer}>
+              <View style={[styles.progressBar, { width: "96%", backgroundColor: "#4A90E2" }]} />
+            </View>
+            <Text style={styles.percentageText}>96%</Text>
+          </View>
 
-        <View style={styles.statsGrid}>
-          {activeStats === "monthly" ? (
-            <>
-              {renderStatsCard(87, "January", "Monthly completion rate", "112-128")}
-              {renderStatsCard(93, "February", "Monthly completion rate", "125-141")}
-              {renderStatsCard(79, "March", "Monthly completion rate", "104-119")}
-              {renderStatsCard(85, "April", "Monthly completion rate", "109-124")}
-              </>
-              ) : (
-              <>
-              {renderStatsCard(82, "2021", "Annual performance index", "925-1050")}
-              {renderStatsCard(88, "2022", "Annual performance index", "990-1120")}
-              {renderStatsCard(91, "2023", "Annual performance index", "1025-1160")}
-              {renderStatsCard(86, "2024", "Annual performance index", "970-1095")}
-            </>
-          )}
+          {/* August Card */}
+          <View style={styles.statCard}>
+            <Text style={styles.monthTitle}>August</Text>
+            <Text style={styles.attendanceText}>87 of 92 days</Text>
+            <View style={styles.progressContainer}>
+              <View style={[styles.progressBar, { width: "92%", backgroundColor: "#E25B4A" }]} />
+            </View>
+            <Text style={styles.percentageText}>92%</Text>
+          </View>
+
+          {/* September Card */}
+          <View style={styles.statCard}>
+            <Text style={styles.monthTitle}>September</Text>
+            <Text style={styles.attendanceText}>22 of 30 days</Text>
+            <View style={styles.progressContainer}>
+              <View style={[styles.progressBar, { width: "73%", backgroundColor: "#E25B4A" }]} />
+            </View>
+            <Text style={styles.percentageText}>73%</Text>
+          </View>
         </View>
+
+        {/* Spacer for bottom tabs */}
+        <View style={styles.bottomSpacer} />
       </ScrollView>
     </SafeAreaView>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
-  },
-  scrollView: {
-    flex: 1,
-    backgroundColor: "#f8f9fa",
-  },
-  scrollContent: {
-    paddingBottom: 20,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
+    backgroundColor: "#FFFFFF",
   },
   header: {
-    flexDirection: "column",
-    padding: 20,
-    paddingTop: 40,
-    backgroundColor: "#f8f9fa",
-    borderRadius: 40,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    // paddingBottom: 10,
+    position: 'fixed',
+    top: 0
   },
   greeting: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#aaa",
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333333",
   },
-  welcomeBack: {
+  date: {
     fontSize: 12,
-    color: "#444",
+    color: "#888888",
+    marginTop: 4,
   },
-  currentDate:{
-    fontSize: 10,
-    color: "#aaa"
-  },
-  headerIcons: {
+  avatarContainer: {
     flexDirection: "row",
-    gap: 12,
+    gap: 10,
   },
-  iconButton: {
-    padding: 8,
-    // backgroundColor: "#fff",
-    borderRadius: 100,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    alignSelf: 'center',
-    shadowRadius: 2,
-    elevation: 2,
+
+  iconButton:{
+    padding: 5,
+    borderRadius: '25%',
+    borderRadius: 50,
+    backgroundColor: 'orange',
+    gap: 12
   },
-  chartCard: {
-    backgroundColor: "#f8f7fa",
-    borderRadius: 30,
+  avatarCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    gap: 10,
+    backgroundColor: "#F5F5F5",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  chartContainer: {
+    marginHorizontal: 20,
+    marginTop: 20,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
     padding: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
   },
   chartTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#2c3e50",
+    color: "#333333",
     marginBottom: 10,
   },
   chart: {
-    borderRadius: 16,
+    borderRadius: 12,
     marginLeft: -15,
   },
-  statsToggle: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    marginTop: 10,
+  statsSection: {
+    marginHorizontal: 20,
+    marginTop: 20,
   },
-  overviewText: {
+  statsTitle: {
     fontSize: 16,
-    fontWeight: "700",
-    color: "#2c3e50",
-    marginBottom: 12,
+    fontWeight: "600",
+    color: "#333333",
+    marginBottom: 10,
   },
-  toggleButtons: {
+  toggleContainer: {
     flexDirection: "row",
-    gap: 12,
-    backgroundColor: 'red',
-    width: 140,
-    borderRadius: 14,
-    padding: 10,
+    backgroundColor: "#F5F5F5",
+    borderRadius: 20,
+    padding: 4,
+    width: 200,
   },
   toggleButton: {
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 10,
-    borderColor: '#7c808d',
-    borderWidth: 1,
-    backgroundColor: "#f8f9fa",
+    borderRadius: 16,
+    flex: 1,
+    alignItems: "center",
   },
   activeToggle: {
-    backgroundColor: "#7c808d",
-  },
-  toggleText: {
-    color: "#7f8c8d",
-    fontWeight: "500",
-    fontSize: 12
-  },
-  activeText: {
-    color: "#fff",
-  },
-  statsGrid: {
-    flexDirection: "column",
-    padding: 16,
-    gap: 12,
-    justifyContent: "space-between",
-  },
-  statsCard: {
-    backgroundColor: "#8ac05233",
-    padding: 15,
-    borderRadius: 20,
-    // width: "48%",
+    backgroundColor: "#FFFFFF",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    borderWidth: 1,
-    borderColor: "#00000015"
-  },
-  statsHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  percentage: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#4CAF50",
-  },
-  trendIndicator: {
-    padding: 4,
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  trendText: {
-    color: "#4CAF50",
-    fontSize: 15,
-  },
-  statsTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#2c3e50",
-    marginBottom: 4,
-  },
-  statsSubtitle: {
-    fontSize: 12,
-    color: "#7f8c8d",
-    marginBottom: 4,
-  },
-  statsDays: {
-    fontSize: 12,
-    color: "#7f8c8d",
-  },
-  scanButton: {
-    backgroundColor: "#4CAF50",
-    margin: 16,
-    padding: 16,
-    borderRadius: 20,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  scanButtonText: {
-    color: "#fff",
+  toggleText: {
+    fontSize: 14,
+    color: "#888888",
+  },
+  activeToggleText: {
+    color: "#333333",
+    fontWeight: "500",
+  },
+  statsCards: {
+    marginHorizontal: 20,
+    marginTop: 20,
+  },
+  statCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  monthTitle: {
     fontSize: 16,
     fontWeight: "600",
+    color: "#333333",
   },
-});
+  attendanceText: {
+    fontSize: 12,
+    color: "#888888",
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  progressContainer: {
+    height: 8,
+    backgroundColor: "#F5F5F5",
+    borderRadius: 4,
+    marginVertical: 8,
+  },
+  progressBar: {
+    height: 8,
+    borderRadius: 4,
+  },
+  percentageText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#333333",
+    alignSelf: "flex-end",
+  },
+  bottomSpacer: {
+    height: 80, // Space for bottom tabs
+  },
+})
 
 export default HomeScreen;
-
-
-
-
-
-
-// import React, { useState, useEffect, useCallback } from "react";
-// import { 
-//   TouchableOpacity, View, Text, StyleSheet, SafeAreaView, ScrollView, 
-//   Dimensions, Alert, StatusBar 
-// } from "react-native";
-// import { BarChart } from "react-native-chart-kit";
-// import DocumentsUpload from "../Components/DocumentsUpload";
-// import axios from "axios";
-// import { useSelector } from 'react-redux';
-// import LoaderPopup from "../Components/LoaderPopup";
-
-// const BASE_URL = 'https://timemanagementsystemserver.onrender.com';
-
-// const HomeScreen = ({ navigation }) => {
-//   const [activeStats, setActiveStats] = useState("monthly");
-//   const [isDayMissed, setIsDayMissed] = useState(false);
-//   const [statsData, setStatsData] = useState(null);
-//   const [isLoading, setIsLoading] = useState(false);
-
-//   const token = useSelector((state) => state.auth.token);
-//   const traineeID = useSelector((state) => state.auth.traineeID);
-//   const name = useSelector((state) => state.auth.user);
-
-//   const fetchData = useCallback(async () => {
-//     if (!token) return;
-//     try {
-//       setIsLoading(true);
-//       const response = await axios.get(`${BASE_URL}/api/session/monthly-stats?traineeId=${traineeID}`, {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-//       setStatsData(response.data);
-//     } catch (error) {
-//       console.error("Error fetching data:", error);
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   }, [token, traineeID]);
-
-//   useEffect(() => {
-//     fetchData();
-//   }, [fetchData]);
-
-//   const weeklyData = {
-//     labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-//     datasets: [{ data: [65, 45, 75, 55, 70] }]
-//   };
-
-//   return (
-//     <SafeAreaView style={{ flex: 1 }}>
-//       <ScrollView style={styles.container}>
-//         <StatusBar barStyle={'light-content'} backgroundColor={'#7C808D'} />
-        
-//         <View style={styles.header}>
-//           <View style={styles.headerContent}>
-//             <View>
-//               <Text style={styles.greeting}>Hi, {name}! 👋</Text>
-//               <Text style={styles.welcomeBack}>Welcome Back!</Text>
-//             </View>
-//             <View style={styles.headerIcons}>
-//               <TouchableOpacity onPress={() => navigation.navigate('NotificationScreen')} style={styles.iconButton}>
-//                 <Text>🔔</Text>
-//               </TouchableOpacity>
-//               <TouchableOpacity onPress={() => Alert.alert("Profile Screen will show when developed")} style={styles.iconButton}>
-//                 <Text>👤</Text>
-//               </TouchableOpacity>
-//             </View>
-//           </View>
-//           <View style={styles.chartCard}>
-//             <Text style={styles.chartTitle}>Weekly Attendance</Text>
-//             <BarChart
-//               data={weeklyData}
-//               width={Dimensions.get("window").width - 80}
-//               height={160}
-//               chartConfig={chartConfig}
-//               style={styles.chart}
-//               fromZero
-//               showValuesOnTopOfBars
-//             />
-//           </View>
-//         </View>
-
-//         <View style={styles.statsToggle}>
-//           <Text style={styles.overviewText}>Overview Stats</Text>
-//           <View style={styles.toggleButtons}>
-//             {["monthly", "yearly"].map((type) => (
-//               <TouchableOpacity 
-//                 key={type}
-//                 style={[styles.toggleButton, activeStats === type && styles.activeToggle]}
-//                 onPress={() => setActiveStats(type)}
-//               >
-//                 <Text style={[styles.toggleText, activeStats === type && styles.activeText]}>
-//                   {type.charAt(0).toUpperCase() + type.slice(1)} Stats
-//                 </Text>
-//               </TouchableOpacity>
-//             ))}
-//           </View>
-//         </View>
-
-//         {isDayMissed && <DocumentsUpload isVisible={isDayMissed} onClose={() => setIsDayMissed(false)} />}
-
-//         <View style={styles.statsGrid}>
-//           {(statsData?.[activeStats] || []).map((stat, index) => (
-//             <StatsCard key={index} {...stat} />
-//           ))}
-//         </View>
-
-//         <TouchableOpacity 
-//           style={styles.scanButton}
-//           onPress={() => navigation.navigate('ScannerAuth')}
-//         >
-//           <Text style={styles.scanButtonText}>Let's scan</Text>
-//         </TouchableOpacity>
-//         {isLoading && <LoaderPopup visible={isLoading}/>}
-//       </ScrollView>
-//     </SafeAreaView>
-//   );
-// };
-
-// const StatsCard = ({ percentage, title, subtitle, days }) => (
-//   <View style={styles.statsCard}>
-//     <View style={styles.statsHeader}>
-//       <Text style={styles.percentage}>{percentage}%</Text>
-//       <Text style={styles.trendText}>↗</Text>
-//     </View>
-//     <Text style={styles.statsTitle}>{title}</Text>
-//     <Text style={styles.statsSubtitle}>{subtitle}</Text>
-//     <Text style={styles.statsDays}>{days} Days</Text>
-//   </View>
-// );
-
-// // const StatsCard = ({ percentage, title, subtitle, days }) => (
-// //   <View style={styles.statsCard}>
-// //     <View style={styles.statsHeader}>
-// //       <Text style={styles.percentage}>{percentage}%</Text>
-// //       <Text style={styles.trendText}>↗</Text>
-// //     </View>
-// //     <Text style={styles.statsTitle}>{title}</Text>
-// //     <Text style={styles.statsSubtitle}>{subtitle}</Text>
-// //     <Text style={styles.statsDays}>{days} Days</Text>
-// //   </View>
-// // );
-
-// const chartConfig = {
-//   backgroundColor: "transparent",
-//   backgroundGradientFrom: "#fff",
-//   backgroundGradientTo: "#fff",
-//   decimalPlaces: 0,
-//   color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
-//   barPercentage: 0.5,
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     backgroundColor: "#f8f9fa",
-//   },
-//   scrollView: {
-//     flex: 1,
-//     backgroundColor: "#f8f9fa",
-//   },
-//   scrollContent: {
-//     paddingBottom: 20,
-//   },
-//   headerContent: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-between',
-//     marginBottom: 20,
-//   },
-//   header: {
-//     flexDirection: "column",
-//     padding: 20,
-//     paddingTop: 40,
-//     backgroundColor: "#7c808d",
-//     borderRadius: 40,
-//     shadowColor: "#000",
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.05,
-//     shadowRadius: 8,
-//     // elevation: 3,
-//   },
-//   greeting: {
-//     fontSize: 16,
-//     fontWeight: "700",
-//     color: "#fff",
-//   },
-//   welcomeBack: {
-//     fontSize: 10,
-//     color: "#fff",
-//   },
-//   headerIcons: {
-//     flexDirection: "row",
-//     gap: 12,
-//   },
-//   iconButton: {
-//     padding: 8,
-//     backgroundColor: "#fff",
-//     borderRadius: 10,
-//     shadowColor: "#000",
-//     shadowOffset: { width: 0, height: 1 },
-//     shadowOpacity: 0.05,
-//     alignSelf: 'center',
-//     shadowRadius: 2,
-//     elevation: 2,
-//   },
-//   chartCard: {
-//     backgroundColor: "#fff",
-//     borderRadius: 30,
-//     padding: 15,
-//     shadowColor: "#000",
-//     shadowOffset: { width: 0, height: 1 },
-//     shadowOpacity: 0.05,
-//     shadowRadius: 2,
-//   },
-//   chartTitle: {
-//     fontSize: 16,
-//     fontWeight: "600",
-//     color: "#2c3e50",
-//     marginBottom: 10,
-//   },
-//   chart: {
-//     borderRadius: 16,
-//     marginLeft: -15,
-//   },
-//   statsToggle: {
-//     paddingHorizontal: 20,
-//     paddingVertical: 10,
-//     marginTop: 10,
-//   },
-//   overviewText: {
-//     fontSize: 16,
-//     fontWeight: "700",
-//     color: "#2c3e50",
-//     marginBottom: 12,
-//   },
-//   toggleButtons: {
-//     flexDirection: "row",
-//     gap: 12,
-//   },
-//   toggleButton: {
-//     paddingVertical: 8,
-//     paddingHorizontal: 16,
-//     borderRadius: 10,
-//     borderColor: '#7c808d',
-//     borderWidth: 1,
-//     backgroundColor: "#f8f9fa",
-//   },
-//   activeToggle: {
-//     backgroundColor: "#7c808d",
-//   },
-//   toggleText: {
-//     color: "#7f8c8d",
-//     fontWeight: "500",
-//     fontSize: 12
-//   },
-//   activeText: {
-//     color: "#fff",
-//   },
-//   statsGrid: {
-//     flexDirection: "row",
-//     flexWrap: "wrap",
-//     padding: 16,
-//     gap: 12,
-//     justifyContent: "space-between",
-//   },
-//   statsCard: {
-//     backgroundColor: "#8ac05233",
-//     padding: 15,
-//     borderRadius: 20,
-//     width: "48%",
-//     shadowColor: "#000",
-//     shadowOffset: { width: 0, height: 1 },
-//     shadowOpacity: 0.05,
-//     shadowRadius: 2,
-//     borderWidth: 1,
-//     borderColor: "#00000015"
-//   },
-//   statsHeader: {
-//     flexDirection: "row",
-//     justifyContent: "space-between",
-//     alignItems: "center",
-//     marginBottom: 8,
-//   },
-//   percentage: {
-//     fontSize: 22,
-//     fontWeight: "bold",
-//     color: "#4CAF50",
-//   },
-//   trendIndicator: {
-//     padding: 4,
-//     borderRadius: 12,
-//     width: 24,
-//     height: 24,
-//     alignItems: "center",
-//     justifyContent: "center",
-//   },
-//   trendText: {
-//     color: "#4CAF50",
-//     fontSize: 15,
-//   },
-//   statsTitle: {
-//     fontSize: 15,
-//     fontWeight: "600",
-//     color: "#2c3e50",
-//     marginBottom: 4,
-//   },
-//   statsSubtitle: {
-//     fontSize: 12,
-//     color: "#7f8c8d",
-//     marginBottom: 4,
-//   },
-//   statsDays: {
-//     fontSize: 12,
-//     color: "#7f8c8d",
-//   },
-//   scanButton: {
-//     backgroundColor: "#4CAF50",
-//     margin: 16,
-//     padding: 16,
-//     borderRadius: 20,
-//     alignItems: "center",
-//     shadowColor: "#000",
-//     shadowOffset: { width: 0, height: 2 },
-//     shadowOpacity: 0.1,
-//     shadowRadius: 4,
-//     elevation: 3,
-//   },
-//   scanButtonText: {
-//     color: "#fff",
-//     fontSize: 16,
-//     fontWeight: "600",
-//   },
-// });
-
-// export default HomeScreen;

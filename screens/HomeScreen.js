@@ -3,12 +3,14 @@ import { TouchableOpacity, View, Text, StyleSheet, SafeAreaView, ScrollView, Dim
 import { BarChart } from "react-native-chart-kit";
 import DocumentsUpload from "../Components/DocumentsUpload";
 import { useSelector } from 'react-redux'
+import AsyncStorage from "@react-native-async-storage/async-storage";
 // import axios from "axios";
 
 const HomeScreen = ({ navigation }) => {
   const [activeStats, setActiveStats] = useState("monthly");
   const [isDayMissed, setIsDayMissed ] = useState(false)
-  const name = useSelector((state)=> state.auth.user)
+  // const name = useSelector((state)=> state.auth.user)
+  const name = AsyncStorage.getItem('name');
 
   const weeklyData = {
     labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
@@ -34,7 +36,7 @@ const HomeScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={{flex: 1}}>
     <ScrollView style={styles.container}>
-      <StatusBar barStyle={'light-content'} backgroundColor={'#7C808D'}/>
+      <StatusBar barStyle={'light-content'}/>
       <SafeAreaView style={styles.safeArea} />
       <View style={styles.header}>
         <View style={styles.headerContent}>
@@ -46,7 +48,7 @@ const HomeScreen = ({ navigation }) => {
             <TouchableOpacity onPress={()=> navigation.navigate('NotificationScreen')} style={styles.iconButton}>
               <Text>🔔</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={()=> navigation.navigate("TimelineScreen")} style={styles.iconButton}>
+            <TouchableOpacity onPress={()=> navigation.navigate("ProfileScreen")} style={styles.iconButton}>
               <Text>👤</Text>
             </TouchableOpacity>
           </View>
@@ -104,17 +106,17 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.statsGrid}>
           {activeStats === "monthly" ? (
             <>
-             {renderStatsCard(87, "January", "Monthly completion rate", "112-128")}
-{renderStatsCard(93, "February", "Monthly completion rate", "125-141")}
-{renderStatsCard(79, "March", "Monthly completion rate", "104-119")}
-{renderStatsCard(85, "April", "Monthly completion rate", "109-124")}
-</>
-) : (
-<>
-{renderStatsCard(82, "2021", "Annual performance index", "925-1050")}
-{renderStatsCard(88, "2022", "Annual performance index", "990-1120")}
-{renderStatsCard(91, "2023", "Annual performance index", "1025-1160")}
-{renderStatsCard(86, "2024", "Annual performance index", "970-1095")}
+              {renderStatsCard(87, "January", "Monthly completion rate", "112-128")}
+              {renderStatsCard(93, "February", "Monthly completion rate", "125-141")}
+              {renderStatsCard(79, "March", "Monthly completion rate", "104-119")}
+              {renderStatsCard(85, "April", "Monthly completion rate", "109-124")}
+              </>
+              ) : (
+              <>
+              {renderStatsCard(82, "2021", "Annual performance index", "925-1050")}
+              {renderStatsCard(88, "2022", "Annual performance index", "990-1120")}
+              {renderStatsCard(91, "2023", "Annual performance index", "1025-1160")}
+              {renderStatsCard(86, "2024", "Annual performance index", "970-1095")}
             </>
           )}
         </View>

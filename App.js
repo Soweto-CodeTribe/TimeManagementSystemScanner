@@ -116,6 +116,7 @@ function AuthNavigator() {
       <Stack.Screen name="PermissionsScreen" component={PermissionsScreen} />
       <Stack.Screen name="ScannerScreen" component={ScannerScreen} />
       <Stack.Screen name="MainApp" component={BottomTabNavigator} />
+      <Stack.Screen name="HomeScreen" component={HomeScreen} />
     </Stack.Navigator>
   );
 }

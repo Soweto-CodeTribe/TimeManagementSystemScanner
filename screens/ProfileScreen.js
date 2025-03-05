@@ -1,28 +1,105 @@
-import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, SafeAreaView, StatusBar } from "react-native";
+import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, SafeAreaView, StatusBar, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useState, useEffect } from "react";
+import * as ImagePicker from "expo-image-picker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ActivityIndicator } from "react-native";
+import ProfileButtomSheet from "../Components/ProfileSheet";
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ navigation }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [image, setImage] = useState(null);
+  const [name, setName] = useState("");
+  const [openProfileSheet, setOpenProfileSheet] = useState(false);
+
+  const defaultImage = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-Z6HPIGZArOlwZgZRYD64JxoekuRd7t.png";
+
+
+
+  // Fetch user Data from Async Storage on componenet Mount such as name and picked image for persistancy 
+  useEffect(() => {
+
+    const loadProfileData = async () => {
+
+      try {
+        const storedImage = await AsyncStorage.getItem("profileImage");
+        const storedName = await AsyncStorage.getItem("name");
+
+        if (storedImage) 
+          {setImage(storedImage);}
+
+        if (storedName) 
+          {setName(storedName);}
+
+      } catch (error) {
+        console.error("Error loading profile data:", error);
+      }
+    };
+
+    // Run the function on component mount
+    loadProfileData();
+  }, []);
+
+  // Function to handle navigation back to the home screen with the delay of 2 seconds for navigation
+  const handleNavigation = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      navigation.goBack();
+    }, 2000);
+  };
+
+
+// Function to pick an image from the Gallery 
+  const pickImage = async () => {
+    // Request permission to access the gallery
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    // If the user cancels the image picker, return null
+    if (!result.canceled) {
+      const selectedImage = result.assets[0].uri;
+      setImage(selectedImage);
+      await AsyncStorage.setItem("profileImage", selectedImage);
+    }
+  };
+
+
+//  Loader layout if the state is true
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#8BC34A" />
+      </View>
+    );
+  }
+
+
+// Layout of the Profile Screen
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+
       <View style={styles.container}>
         <View style={styles.navBar}>
-          {/* <TouchableOpacity style={styles.backButton}>
-            <Ionicons name="chevron-back" size={24} color="#333333" /> <Text>Back</Text>
-          </TouchableOpacity> */}
+          <Pressable style={styles.backButton} onPress={handleNavigation}>
+            <Ionicons name="chevron-back" size={24} color="#999999" />
+          </Pressable>
           <Text style={styles.navBarTitle}>Profile</Text>
-          <View style={styles.placeholderView} />
         </View>
+
         <ScrollView>
           <View style={styles.profileHeader}>
-            <Image
-              source={{
-                uri: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-Z6HPIGZArOlwZgZRYD64JxoekuRd7t.png",
-              }}
-              style={styles.profileImage}
-            />
+            <Image source={{ uri: image || defaultImage }} style={styles.profileImage} />
+            <TouchableOpacity style={styles.imagePickerButton} onPress={pickImage}>
+              <Ionicons name="camera-outline" size={24} color="#fff" />
+            </TouchableOpacity>
             <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>Oscar Smith</Text>
+              <Text style={styles.profileName}>{name || "User"}</Text>
               <View style={styles.locationContainer}>
                 <Ionicons name="location" size={16} color="#8BC34A" />
                 <Text style={styles.locationText}>Soweto, Gauteng</Text>
@@ -30,7 +107,7 @@ const ProfileScreen = () => {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.editProfileButton}>
+          <TouchableOpacity style={styles.editProfileButton} onPress={()=> setOpenProfileSheet(true)}>
             <Text style={styles.editProfileText}>Edit Profile</Text>
           </TouchableOpacity>
 
@@ -43,10 +120,16 @@ const ProfileScreen = () => {
           </View>
         </ScrollView>
       </View>
+      
+      {
+        openProfileSheet && <ProfileButtomSheet setOpenProfileSheet={setOpenProfileSheet} openProfileSheet={openProfileSheet}/>
+      }
     </SafeAreaView>
   );
 };
 
+
+// Menu Item Component 
 const MenuItem = ({ icon, title, iconColor }) => {
   return (
     <TouchableOpacity style={styles.menuItem}>
@@ -61,6 +144,9 @@ const MenuItem = ({ icon, title, iconColor }) => {
   );
 };
 
+
+
+// Styles for the Profile SCREEN
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -73,26 +159,24 @@ const styles = StyleSheet.create({
   navBar: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    paddingTop: 30,
+    justifyContent: "space-between",
     paddingHorizontal: 20,
     backgroundColor: "#F5F5F5",
-    
-    // borderBottomWidth: 1,
-    // borderBottomColor: "#E0E0E0",
+    marginTop: 40,
   },
   backButton: {
     padding: 5,
-    display:"flex",
-    flexDirection:"row"
   },
   navBarTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#333333",
-  },
-  placeholderView: {
-    width: 24,
+    color: "#999999",
+    textAlign: "center",
+    flex: 1,
+    position: "absolute",
+    left: 0,
+    right: 0,
+    textAlign: "center",
   },
   profileHeader: {
     flexDirection: "row",
@@ -100,12 +184,21 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 15,
     paddingHorizontal: 20,
+    position: "relative",
   },
   profileImage: {
     width: 80,
     height: 80,
     borderRadius: 40,
     marginRight: 15,
+  },
+  imagePickerButton: {
+    position: "absolute",
+    bottom: 10,
+    left: 60,
+    backgroundColor: "#8BC34A",
+    borderRadius: 20,
+    padding: 5,
   },
   profileInfo: {
     flexDirection: "column",
@@ -171,6 +264,12 @@ const styles = StyleSheet.create({
   menuItemText: {
     fontSize: 16,
     color: "#666666",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
   },
 });
 

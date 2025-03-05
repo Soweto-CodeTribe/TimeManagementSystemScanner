@@ -5,12 +5,14 @@ import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ActivityIndicator } from "react-native";
 import ProfileButtomSheet from "../Components/ProfileSheet";
+import FeedbackBottomSheet from "../Components/FeedbackSheet";
 
 const ProfileScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [image, setImage] = useState(null);
   const [name, setName] = useState("");
   const [openProfileSheet, setOpenProfileSheet] = useState(false);
+  const [openFeedbacksheet,setOpenFeedbackSheet] = useState(false);
 
   const defaultImage = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-Z6HPIGZArOlwZgZRYD64JxoekuRd7t.png";
 
@@ -114,15 +116,19 @@ const ProfileScreen = ({ navigation }) => {
           <View style={styles.menuContainer}>
             <MenuItem icon="document-text-outline" title="Documents and Tasks" iconColor="#8BC34A" />
             <MenuItem icon="settings-outline" title="Settings" iconColor="#8BC34A" />
-            <MenuItem icon="alert-circle-outline" title="Report Issue" iconColor="#8BC34A" />
+            <MenuItem icon="alert-circle-outline" title="Report Issue" iconColor="#8BC34A" onPress={()=>setOpenFeedbackSheet(true)}/>
             <MenuItem icon="document-outline" title="Terms and Conditions" iconColor="#8BC34A" />
             <MenuItem icon="log-out-outline" title="Sign out" iconColor="#FF5252" />
           </View>
+          {/* <FeedbackBottomSheet/> */}
         </ScrollView>
       </View>
       
       {
         openProfileSheet && <ProfileButtomSheet setOpenProfileSheet={setOpenProfileSheet} openProfileSheet={openProfileSheet}/>
+      }
+      {
+        openFeedbacksheet && <FeedbackBottomSheet setOpenFeedbackSheet={setOpenFeedbackSheet} openFeedbacksheet={openFeedbacksheet}/>
       }
     </SafeAreaView>
   );
@@ -130,9 +136,9 @@ const ProfileScreen = ({ navigation }) => {
 
 
 // Menu Item Component 
-const MenuItem = ({ icon, title, iconColor }) => {
+const MenuItem = ({ icon, title, iconColor, onPress }) => {
   return (
-    <TouchableOpacity style={styles.menuItem}>
+    <TouchableOpacity style={styles.menuItem} onPress={onPress}>
       <View style={styles.menuItemLeft}>
         <View style={[styles.iconContainer, { backgroundColor: `${iconColor}20` }]}>
           <Ionicons name={icon} size={20} color={iconColor} />

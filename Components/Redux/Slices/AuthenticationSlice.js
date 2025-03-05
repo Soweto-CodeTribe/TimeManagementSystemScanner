@@ -84,7 +84,15 @@ export const loginUser = createAsyncThunk(
       // Extract trainee details from user data
       const traineeID = data.trainee?.traineeId?.toString();
       const name = data.trainee?.name;
+      const cellphone = data.trainee?.phoneNumber;
+      const idNumber = data.trainee?.idNumber;
+      const location = data.trainee?.location;
+
+      console.log("Name:", name);
       console.log("Trainee ID:", traineeID);
+      console.log("Cell Phone: ",cellphone);
+      console.log("ID Number: ",idNumber);
+      console.log("Location: ", location);
 
       if (keepSignedIn) {
         await AsyncStorage.setItem("token", data.token);
@@ -96,6 +104,11 @@ export const loginUser = createAsyncThunk(
         if (name) {
           await AsyncStorage.setItem("name", name);
         }
+        if(cellphone){
+          await AsyncStorage.setItem("cellphone", cellphone);
+        }
+        
+
       } else {
         await AsyncStorage.removeItem("token");
         await AsyncStorage.removeItem("email");
@@ -142,6 +155,23 @@ export const fetchUserData = createAsyncThunk(
       console.log("Fetched User Data:", userData);
       await AsyncStorage.setItem("user", JSON.stringify(userData));
 
+      await AsyncStorage.setItem("cell Number", data.trainee.phoneNumber);
+      await AsyncStorage.setItem("email", data.trainee.email);
+      await AsyncStorage.setItem("id Number", data.trainee.idNumber);
+      await AsyncStorage.setItem("Location", data.trainee.location);
+
+      console.log("cell Number", data.trainee.phoneNumber);
+      console.log("email", data.trainee.email);
+      console.log("id Number", data.trainee.idNumber);
+      console.log("Location", data.trainee.location);
+
+
+      //store email if available
+       const email = userData.trainee?.email?.toString();
+       if (email) {
+         await AsyncStorage.setItem("email", email);
+       }
+
       // Store traineeID if available
       const traineeID = userData.trainee?.traineeId?.toString();
       if (traineeID) {
@@ -161,6 +191,7 @@ const authSlice = createSlice({
     user: null,
     token: null,
     traineeID: null,
+    email:null,
     checkInData: null,
     isLoading: false,
     isCheckingIn: false,
@@ -172,6 +203,7 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.traineeID = null;
+      state.email=null;
       state.checkInData = null;
       AsyncStorage.removeItem("token");
       AsyncStorage.removeItem("user");
@@ -193,9 +225,13 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.token = action.payload.token;
         state.traineeID = action.payload.traineeID;
+        state.email=action.payload.email;
+        state.name=action.payload.name;
 
         console.log("Token after Login:", action.payload.token);
         console.log("Trainee ID after Login:", action.payload.traineeID);
+        console.log("email after Login:", action.payload.email);
+        console.log("Name of who logged in is:",action.payload.name);
 
         if (action.payload.user) {
           state.user = action.payload.user;
@@ -226,9 +262,14 @@ const authSlice = createSlice({
       .addCase(fetchUserData.fulfilled, (state, action) => {
         state.user = action.payload;
         const traineeID = action.payload.trainee?.traineeId?.toString();
+        const email=action.payload?.email;
         state.traineeID = traineeID || state.traineeID;
+        state.email=email || state.email;
+
         console.log("Updated Redux State - User:", state.user);
         console.log("Updated Redux State - Trainee ID:", state.traineeID);
+        console.log("Updated Redux State - Email", state.email);
+
       })
       .addCase(fetchUserData.rejected, (state, action) => {
         state.error = action.payload;

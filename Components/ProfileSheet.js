@@ -7,7 +7,8 @@ import {
   TouchableOpacity, 
   TouchableWithoutFeedback,
   Animated,
-  Dimensions 
+  Dimensions,
+  Pressable
 } from 'react-native';
 import { Feather, FontAwesome } from '@expo/vector-icons';
 
@@ -80,9 +81,9 @@ const ProfileBottomSheet = ({ openProfileSheet, setOpenProfileSheet }) => {
                 <FontAwesome name="phone" size={20} color="#6B7280" />
               </View>
               <Text style={styles.fieldText}>0660850741</Text>
-              <View style={styles.actionIcon}>
+              <Pressable style={styles.actionIcon} onPress={()=>console.log("Edit Number")}>
                 <Feather name="edit-2" size={20} color="#6B7280" />
-              </View>
+              </ Pressable>
             </View>
             
             <View style={styles.field}>
@@ -141,7 +142,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Dark transparent overlay
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', 
     justifyContent: 'flex-end',
   },
   bottomSheet: {

@@ -11,12 +11,52 @@ import {
   Pressable
 } from 'react-native';
 import { Feather, FontAwesome } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useState } from 'react';
 
 const { height } = Dimensions.get('window');
 
 const ProfileBottomSheet = ({ openProfileSheet, setOpenProfileSheet }) => {
+  const [number, setNumber]= useState("");
+  const [usersurname, setSurname]= useState('');
+  const [email, setEmail]= useState("");
+  const [name, setName]= useState("");
+  const [id,setId]= useState("");
+  const [location, setLocation] = useState("");
+
+
   // Animation value
   const slideAnim = useRef(new Animated.Value(height)).current;
+
+
+  const GetUserDetails = async ()=>{
+    try {
+      const userName = await AsyncStorage.getItem("name");
+      const userSurname = await AsyncStorage.getItem("Surname");
+      const userEmail = await AsyncStorage.getItem("email");
+      const userid = await AsyncStorage.getItem("ID Number");
+      const Location = await AsyncStorage.getItem("Location");
+      const userCellNumber = await AsyncStorage.getItem("cellphone");
+
+      setName(userName)
+      setNumber(userCellNumber);
+      setEmail(userEmail);
+      setId(userid);
+      setLocation(Location);
+      setSurname(userSurname);
+      console.log(Location)
+
+    } catch (error) {
+      console.error("Error loading Profile Data", error)
+    }
+  }
+
+  useEffect(()=>{
+    GetUserDetails();
+  },[]);
+
+  
+ 
 
   // Slide in animation
   useEffect(() => {
@@ -80,7 +120,7 @@ const ProfileBottomSheet = ({ openProfileSheet, setOpenProfileSheet }) => {
               <View style={styles.iconContainer}>
                 <FontAwesome name="phone" size={20} color="#6B7280" />
               </View>
-              <Text style={styles.fieldText}>0660850741</Text>
+              <Text style={styles.fieldText}>{number}</Text>
               <Pressable style={styles.actionIcon} onPress={()=>console.log("Edit Number")}>
                 <Feather name="edit-2" size={20} color="#6B7280" />
               </ Pressable>
@@ -90,7 +130,7 @@ const ProfileBottomSheet = ({ openProfileSheet, setOpenProfileSheet }) => {
               <View style={styles.iconContainer}>
                 <FontAwesome name="at" size={20} color="#6B7280" />
               </View>
-              <Text style={styles.fieldText}>oscar@gmail.com</Text>
+              <Text style={styles.fieldText}>{email}</Text>
               <View style={styles.actionIcon}>
                 <Feather name="lock" size={20} color="#6B7280" />
               </View>
@@ -100,7 +140,7 @@ const ProfileBottomSheet = ({ openProfileSheet, setOpenProfileSheet }) => {
               <View style={styles.iconContainer}>
                 <FontAwesome name="user" size={20} color="#6B7280" />
               </View>
-              <Text style={styles.fieldText}>Oscar Poco</Text>
+              <Text style={styles.fieldText}>{name} {usersurname}</Text>
               <View style={styles.actionIcon}>
                 <Feather name="lock" size={20} color="#6B7280" />
               </View>
@@ -110,7 +150,7 @@ const ProfileBottomSheet = ({ openProfileSheet, setOpenProfileSheet }) => {
               <View style={styles.iconContainer}>
                 <FontAwesome name="id-card" size={20} color="#6B7280" />
               </View>
-              <Text style={styles.fieldText}>123456789123456</Text>
+              <Text style={styles.fieldText}>{id}</Text>
               <View style={styles.actionIcon}>
                 <Feather name="lock" size={20} color="#6B7280" />
               </View>
@@ -120,7 +160,7 @@ const ProfileBottomSheet = ({ openProfileSheet, setOpenProfileSheet }) => {
               <View style={styles.iconContainer}>
                 <FontAwesome name="map-marker" size={20} color="#6B7280" />
               </View>
-              <Text style={styles.fieldText}>Soweto Lab</Text>
+              <Text style={styles.fieldText}>{location} Lab</Text>
               <View style={styles.actionIcon}>
                 <Feather name="lock" size={20} color="#6B7280" />
               </View>
@@ -193,6 +233,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: '#6B7280',
+    fontSize:13
   },
   actionIcon: {
     width: 40,

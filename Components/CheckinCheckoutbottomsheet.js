@@ -22,7 +22,7 @@ const { height, width } = Dimensions.get('window');
 const SHEET_HEIGHT = height * .42;
 const SHEET_OVERFLOW = 20;
 
-const CheckinCheckoutbottomsheet = ({ isVisible }) => {
+const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet}) => {
   const translateY = useSharedValue(SHEET_HEIGHT);
   const overlayOpacity = useSharedValue(0);
   
@@ -44,17 +44,36 @@ const CheckinCheckoutbottomsheet = ({ isVisible }) => {
     }
   }, [isVisible]);
 
+  const closeSheet = () => {
+    translateY.value = withSpring(SHEET_HEIGHT, {
+      damping: 20,
+      stiffness: 90
+    });
+    overlayOpacity.value = withTiming(0, { duration: 200 });
+    
+    // Call the parent's closeBottomSheet function after animation
+    setTimeout(() => {
+      closeBottomSheet && closeBottomSheet();
+    }, 300);
+  };
+
   const gesture = Gesture.Pan()
     .onUpdate((event) => {
       if (event.translationY > 0) {
         translateY.value = event.translationY * 0.2;
       }
     })
-    .onEnd(() => {
-      translateY.value = withSpring(0, {
-        damping: 20,
-        stiffness: 90
-      });
+    .onEnd((event) => {
+      if (event.translationY > 100) {
+        // Close the sheet if dragged down far enough
+        closeSheet();
+      } else {
+        // Snap back to open position
+        translateY.value = withSpring(0, {
+          damping: 20,
+          stiffness: 90
+        });
+      }
     });
 
   const animatedSheetStyle = useAnimatedStyle(() => ({
@@ -65,13 +84,19 @@ const CheckinCheckoutbottomsheet = ({ isVisible }) => {
     opacity: overlayOpacity.value,
   }));
 
+  const closeSheetAndNavigate = () => {
+    closeSheet();
+    // Navigate after a delay to allow the sheet to close
+    setTimeout(() => {
+      navigation.navigate("HomeScreen");
+    }, 400);
+  };
+
   const handleCheckInLunch = async () => {
     dispatch(startLunch({ traineeId, token }))
       .unwrap()
       .then(() => {
-        setTimeout(() => {
-          navigation.navigate("HomeScreen");
-        }, 3000);
+        closeSheetAndNavigate();
       });
   };
 
@@ -79,9 +104,7 @@ const CheckinCheckoutbottomsheet = ({ isVisible }) => {
     dispatch(endLunch({ traineeId, token }))
       .unwrap()
       .then(() => {
-        setTimeout(() => {
-          navigation.navigate("HomeScreen");
-        }, 3000);
+        closeSheetAndNavigate();
       });
   };
 
@@ -89,18 +112,21 @@ const CheckinCheckoutbottomsheet = ({ isVisible }) => {
     dispatch(checkOut({ traineeId, token }))
       .unwrap()
       .then(() => {
-        setTimeout(() => {
-          navigation.navigate("HomeScreen");
-        }, 3000);
+        closeSheetAndNavigate();
       });
   };
 
   return (
     <View style={styles.container}>
       <Toast/>
-      <Animated.View 
-        style={[styles.overlay, animatedOverlayStyle]} 
-      />
+      <Pressable
+        onPress={closeSheet}
+        style={StyleSheet.absoluteFill}
+      >
+        <Animated.View 
+          style={[styles.overlay, animatedOverlayStyle]} 
+        />
+      </Pressable>
       <GestureDetector gesture={gesture}>
         <Animated.View style={[styles.bottomSheet, animatedSheetStyle]}>
           <View style={styles.handle} />
@@ -163,7 +189,6 @@ const CheckinCheckoutbottomsheet = ({ isVisible }) => {
 };
 
 const styles = StyleSheet.create({
-  // Your existing styles...
   container: {
     position: 'absolute',
     top: 0,

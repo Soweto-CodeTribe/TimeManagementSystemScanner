@@ -126,7 +126,7 @@ const GetStartedAttendance = ({ navigation, onComplete }) => {
               { opacity: fadeAnim }
             ]}
           >
-            <Text style={styles.heading}>Check In Seamlessly With Just a Tap</Text>
+            <Text style={styles.heading}>See Your <Text style={{color:"#86E524"}}>Attendance </Text>{'\n'} Records</Text>
             <Text style={styles.subheading}>
               Use QR codes, GPS, or biometrics to log attendance quickly and securely.
             </Text>
@@ -250,13 +250,13 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#333333',
+    color: '#808080',
     textAlign: 'center',
     marginBottom: 14,
   },
   subheading: {
     fontSize: 16,
-    color: '#777777',
+    color: '#B3B3B3',
     textAlign: 'center',
     lineHeight: 24,
   },

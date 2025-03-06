@@ -126,7 +126,7 @@ const GetStartedVerified = ({ navigation, onComplete }) => {
               { opacity: fadeAnim }
             ]}
           >
-            <Text style={styles.heading}>Check In Seamlessly With Just a Tap</Text>
+            <Text style={styles.heading}>Your Attendance,{'\n'} <Text style={{color:"#86E524"}}>Verified</Text> </Text>
             <Text style={styles.subheading}>
               Use QR codes, GPS, or biometrics to log attendance quickly and securely.
             </Text>
@@ -250,13 +250,13 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#333333',
+    color: '#909090',
     textAlign: 'center',
     marginBottom: 14,
   },
   subheading: {
     fontSize: 16,
-    color: '#777777',
+    color: '#B3B3B3',
     textAlign: 'center',
     lineHeight: 24,
   },

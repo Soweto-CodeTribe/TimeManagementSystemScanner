@@ -25,6 +25,7 @@ import TimelineScreen from "./screens/TimeLineScreen.js";
 import GetStartedSeamlessly from "./screens/GetStartedSeamlessly.js";
 import GetStartedAttendance from "./screens/GetStartedAttendance.js";
 import GetStartedVerified from "./screens/GetStartedVerified.js";
+import SettingsScreen from "./screens/SettingsScreen.js";
 
 
 const Stack = createStackNavigator();
@@ -124,6 +125,7 @@ function AuthNavigator() {
       <Stack.Screen name="GetStartedSeamlessly" component={GetStartedSeamlessly} />
       <Stack.Screen name="GetStartedAttendance" component={GetStartedAttendance} />
       <Stack.Screen name="GetStartedVerified" component={GetStartedVerified} />
+      <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
     </Stack.Navigator>
   );
 }

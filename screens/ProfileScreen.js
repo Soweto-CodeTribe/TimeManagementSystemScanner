@@ -1,4 +1,14 @@
-import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, SafeAreaView, StatusBar, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  SafeAreaView,
+  StatusBar,
+  Pressable,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect } from "react";
 import * as ImagePicker from "expo-image-picker";
@@ -12,27 +22,25 @@ const ProfileScreen = ({ navigation }) => {
   const [image, setImage] = useState(null);
   const [name, setName] = useState("");
   const [openProfileSheet, setOpenProfileSheet] = useState(false);
-  const [openFeedbacksheet,setOpenFeedbackSheet] = useState(false);
+  const [openFeedbacksheet, setOpenFeedbackSheet] = useState(false);
 
-  const defaultImage = "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-Z6HPIGZArOlwZgZRYD64JxoekuRd7t.png";
+  const defaultImage =
+    "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-Z6HPIGZArOlwZgZRYD64JxoekuRd7t.png";
 
-
-
-  // Fetch user Data from Async Storage on componenet Mount such as name and picked image for persistancy 
+  // Fetch user Data from Async Storage on componenet Mount such as name and picked image for persistancy
   useEffect(() => {
-
     const loadProfileData = async () => {
-
       try {
         const storedImage = await AsyncStorage.getItem("profileImage");
         const storedName = await AsyncStorage.getItem("name");
 
-        if (storedImage) 
-          {setImage(storedImage);}
+        if (storedImage) {
+          setImage(storedImage);
+        }
 
-        if (storedName) 
-          {setName(storedName);}
-
+        if (storedName) {
+          setName(storedName);
+        }
       } catch (error) {
         console.error("Error loading profile data:", error);
       }
@@ -42,17 +50,7 @@ const ProfileScreen = ({ navigation }) => {
     loadProfileData();
   }, []);
 
-  // Function to handle navigation back to the home screen with the delay of 2 seconds for navigation
-  const handleNavigation = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      navigation.goBack();
-    }, 2000);
-  };
-
-
-// Function to pick an image from the Gallery 
+  // Function to pick an image from the Gallery
   const pickImage = async () => {
     // Request permission to access the gallery
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -70,8 +68,7 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
-
-//  Loader layout if the state is true
+  //  Loader layout if the state is true
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -80,24 +77,32 @@ const ProfileScreen = ({ navigation }) => {
     );
   }
 
-
-// Layout of the Profile Screen
+  // Layout of the Profile Screen
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       <View style={styles.container}>
         <View style={styles.navBar}>
-          <Pressable style={styles.backButton} onPress={handleNavigation}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()} // Direct navigation without delay
+          >
             <Ionicons name="chevron-back" size={24} color="#999999" />
-          </Pressable>
+          </TouchableOpacity>
           <Text style={styles.navBarTitle}>Profile</Text>
         </View>
 
         <ScrollView>
           <View style={styles.profileHeader}>
-            <Image source={{ uri: image || defaultImage }} style={styles.profileImage} />
-            <TouchableOpacity style={styles.imagePickerButton} onPress={pickImage}>
+            <Image
+              source={{ uri: image || defaultImage }}
+              style={styles.profileImage}
+            />
+            <TouchableOpacity
+              style={styles.imagePickerButton}
+              onPress={pickImage}
+            >
               <Ionicons name="camera-outline" size={24} color="#fff" />
             </TouchableOpacity>
             <View style={styles.profileInfo}>
@@ -109,38 +114,70 @@ const ProfileScreen = ({ navigation }) => {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.editProfileButton} onPress={()=> setOpenProfileSheet(true)}>
+          <TouchableOpacity
+            style={styles.editProfileButton}
+            onPress={() => setOpenProfileSheet(true)}
+          >
             <Text style={styles.editProfileText}>Edit Profile</Text>
           </TouchableOpacity>
 
           <View style={styles.menuContainer}>
-            <MenuItem icon="document-text-outline" title="Documents and Tasks" iconColor="#8BC34A" />
-            <MenuItem icon="settings-outline" title="Settings" iconColor="#8BC34A" />
-            <MenuItem icon="alert-circle-outline" title="Report Issue" iconColor="#8BC34A" onPress={()=>setOpenFeedbackSheet(true)}/>
-            <MenuItem icon="document-outline" title="Terms and Conditions" iconColor="#8BC34A" />
-            <MenuItem icon="log-out-outline" title="Sign out" iconColor="#FF5252" />
+            <MenuItem
+              icon="document-text-outline"
+              title="Documents and Tasks"
+              iconColor="#8BC34A"
+            />
+            <MenuItem
+              icon="settings-outline"
+              title="Settings"
+              iconColor="#8BC34A"
+              onPress={() => navigation.navigate("SettingsScreen")}
+            />
+            <MenuItem
+              icon="alert-circle-outline"
+              title="Report Issue"
+              iconColor="#8BC34A"
+              onPress={() => setOpenFeedbackSheet(true)}
+            />
+            <MenuItem
+              icon="document-outline"
+              title="Terms and Conditions"
+              iconColor="#8BC34A"
+            />
+            <MenuItem
+              icon="log-out-outline"
+              title="Sign out"
+              iconColor="#FF5252"
+            />
           </View>
           {/* <FeedbackBottomSheet/> */}
         </ScrollView>
       </View>
-      
-      {
-        openProfileSheet && <ProfileButtomSheet setOpenProfileSheet={setOpenProfileSheet} openProfileSheet={openProfileSheet}/>
-      }
-      {
-        openFeedbacksheet && <FeedbackBottomSheet setOpenFeedbackSheet={setOpenFeedbackSheet} openFeedbacksheet={openFeedbacksheet}/>
-      }
+
+      {openProfileSheet && (
+        <ProfileButtomSheet
+          setOpenProfileSheet={setOpenProfileSheet}
+          openProfileSheet={openProfileSheet}
+        />
+      )}
+      {openFeedbacksheet && (
+        <FeedbackBottomSheet
+          setOpenFeedbackSheet={setOpenFeedbackSheet}
+          openFeedbacksheet={openFeedbacksheet}
+        />
+      )}
     </SafeAreaView>
   );
 };
 
-
-// Menu Item Component 
+// Menu Item Component
 const MenuItem = ({ icon, title, iconColor, onPress }) => {
   return (
     <TouchableOpacity style={styles.menuItem} onPress={onPress}>
       <View style={styles.menuItemLeft}>
-        <View style={[styles.iconContainer, { backgroundColor: `${iconColor}20` }]}>
+        <View
+          style={[styles.iconContainer, { backgroundColor: `${iconColor}20` }]}
+        >
           <Ionicons name={icon} size={20} color={iconColor} />
         </View>
         <Text style={styles.menuItemText}>{title}</Text>
@@ -149,8 +186,6 @@ const MenuItem = ({ icon, title, iconColor, onPress }) => {
     </TouchableOpacity>
   );
 };
-
-
 
 // Styles for the Profile SCREEN
 const styles = StyleSheet.create({
@@ -276,6 +311,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
+  },
+  backButton: {
+    padding: 10,
+    zIndex: 10,
   },
 });
 

@@ -1,178 +1,140 @@
-import { StatusBar } from 'expo-status-bar';
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions, Pressable, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
-import QRcode from "../assets/qrcode.png";
-import CodeTribeText from "../assets/codetribetext.png"
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  Image, 
+  TouchableOpacity, 
+  SafeAreaView, 
+  Dimensions 
+} from 'react-native';
+import CodeTribe from "../assets/codetribetext.png";
+import GetStartedImage from "../assets/getstarted.png"
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
-// Constants for consistent styling
-const COLORS = {
-  primary: '#8AC052',
-  secondary: '#7C808D',
-  white: '#FFFFFF',
-  shadow: '#000000',
-};
-
-const SPACING = {
-  xs: 10,
-  sm: 12,
-  md: 20,
-  lg: 30,
-  xl: 40,
-};
-
-const GetStartedScreen = () => {
-  const navigation = useNavigation();
-
-  const handleGetStarted = () => {
-    navigation.navigate("PermissionsScreen");
-  };
-
+const GetStartedScreen = ({navigation}) => {
   return (
-    <>
-      <StatusBar style="dark" />
-      <SafeAreaView style={styles.container}>
-        <View style={styles.wrapper}>
-          {/* Decorative top gradient */}
-          <LinearGradient
-            colors={[
-              'rgba(138, 192, 82, 0.15)',
-              'rgba(138, 192, 82, 0.1)',
-              'rgba(138, 192, 82, 0)',
-            ]}
-            start={{ x: 0.1, y: 0.1 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.cornerGradient}
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        {/* Logo - Now as an image and centered */}
+        <View style={styles.logoContainer}>
+          <Image 
+            source= {CodeTribe}
+            style={styles.logo}
+            resizeMode="contain"
           />
-
-           
-          {/* Main content */}
-          <View style={styles.contentContainer}>
-            
-            <Image
-              source={CodeTribeText}
-              style={styles.qrImage}
-              resizeMode="contain"
-            />
-            <Image
-              source={QRcode}
-              style={styles.qrImage}
-              resizeMode="contain"
-            />
-          </View>
-
-          {/* Bottom section */}
-          <LinearGradient
-            colors={[COLORS.secondary, COLORS.secondary]}
-            style={styles.bottomContainer}
-          >
-            <View style={styles.textGroup}>
-              <Text style={styles.heading}>Get Started</Text>
-              <Text style={styles.subheading}>
-                Track Time effortlessly, work brilliantly,
-              </Text>
-              <Text style={styles.subheading}>
-                eliminate the need of a pen.
-              </Text>
-            </View>
-
-            <Pressable
-              style={styles.button}
-              onPress={handleGetStarted}
-              android_ripple={{ color: 'rgba(255, 255, 255, 0.2)' }}
-            >
-              <Text style={styles.buttonText}>Let's Go</Text>
-            </Pressable>
-          </LinearGradient>
         </View>
-      </SafeAreaView>
-    </>
+        
+        {/* Illustration */}
+        <View style={styles.illustrationContainer}>
+          <Image 
+            source={GetStartedImage} 
+            style={styles.illustration}
+            resizeMode="contain"
+          />
+        </View>
+        
+        {/* Text Content - Now centered */}
+        <View style={styles.textContainer}>
+          <Text style={styles.heading}>
+            <Text style={styles.headingGreen}>Track Attendance</Text>
+            <Text style={styles.headingGray}>, {'\n'}Stay Accountable</Text>
+          </Text>
+          <Text style={styles.subheading}>
+            Secure check-ins and accurate records{'\n'}for every session.
+          </Text>
+        </View>
+        
+        {/* Progress Indicator */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressDot} />
+        </View>
+        
+        {/* Button */}
+        <TouchableOpacity style={styles.button} onPress={()=>navigation.navigate("GetStartedSeamlessly")}>
+          <Text style={styles.buttonText}>Get Started</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.white,
+    backgroundColor: 'white',
   },
-  wrapper: {
+  content: {
     flex: 1,
-    alignItems: 'center',
-  },
-  contentContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-    
-  },
-  qrImage: {
-    width: width * 0.5,
-    height: width * 0.4,
-    borderRadius: SPACING.sm,
-  },
-  cornerGradient: {
-    width: width * 0.8,
-    height: width * 0.7,
-    borderRadius: width * 0.4,
-    position: 'absolute',
-    top: -width * 0.4,
-    right: -width * 0.4,
-  },
-  bottomContainer: {
-    width: '100%',
-    height: height * 0.4,
-    paddingVertical: SPACING.xl,
-    paddingHorizontal: SPACING.lg,
+    paddingHorizontal: 20,
+    paddingVertical: 30,
     justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTopRightRadius: SPACING.xl,
-    borderTopLeftRadius: SPACING.xl,
-    shadowColor: COLORS.shadow,
-    shadowOffset: {
-      width: 0,
-      height: -3,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4.65,
-    elevation: 6,
   },
-  textGroup: {
+  logoContainer: {
+    alignItems: 'center', // Center the logo
+    marginTop: 20,
+    width: '100%',
+  },
+  logo: {
+    width: 150,
+    height: 40,
+  },
+  illustrationContainer: {
     alignItems: 'center',
-    gap: SPACING.xs,
+    justifyContent: 'center',
+    height: width * 0.7,
+    marginVertical: 20,
+  },
+  illustration: {
+    width: width * 0.8,
+    height: width * 0.8,
+  },
+  textContainer: {
+    marginBottom: 40,
+    alignItems: 'center', // Center the text
   },
   heading: {
-    color: COLORS.white,
-    fontSize: 42,
+    fontSize: 32, // Increased font size
     fontWeight: 'bold',
-    lineHeight: 53,
-    marginBottom: SPACING.xs,
+    marginBottom: 12,
+    lineHeight: 38,
+    textAlign: 'center', // Center text alignment
+  },
+  headingGreen: {
+    color: '#8CD136',
+  },
+  headingGray: {
+    color: '#555555',
   },
   subheading: {
-    color: COLORS.white,
-    fontSize: 17,
-    fontWeight: '400',
-    lineHeight: 21,
+    fontSize: 16, // Increased font size
+    color: '#999999',
+    lineHeight: 22,
+    textAlign: 'center', // Center text alignment
+  },
+  progressContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  progressDot: {
+    width: 30,
+    height: 4,
+    backgroundColor: '#8CD136',
+    borderRadius: 2,
   },
   button: {
-    width: '100%',
-    maxWidth: 352,
-    height: 44,
-    backgroundColor: COLORS.primary,
-    borderRadius: SPACING.xs,
-    justifyContent: 'center',
+    backgroundColor: '#8CD136',
+    borderRadius: 10,
+    paddingVertical: 16,
     alignItems: 'center',
-    marginTop: SPACING.lg,
+    marginBottom: 20,
   },
   buttonText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: '600',
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
 
-export default GetStartedScreen;
+export default GetStartedScreen ;

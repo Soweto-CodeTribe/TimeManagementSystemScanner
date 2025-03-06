@@ -22,6 +22,10 @@ import NotificationScreen from "./screens/NotificationsScreen.js";
 import ScannerAuth from "./screens/AuthScanner.js";
 import ProfileScreen from "./screens/ProfileScreen.js";
 import TimelineScreen from "./screens/TimeLineScreen.js";
+import GetStartedSeamlessly from "./screens/GetStartedSeamlessly.js";
+import GetStartedAttendance from "./screens/GetStartedAttendance.js";
+import GetStartedVerified from "./screens/GetStartedVerified.js";
+
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -117,6 +121,9 @@ function AuthNavigator() {
       <Stack.Screen name="ScannerScreen" component={ScannerScreen} />
       <Stack.Screen name="MainApp" component={BottomTabNavigator} />
       <Stack.Screen name="HomeScreen" component={HomeScreen} />
+      <Stack.Screen name="GetStartedSeamlessly" component={GetStartedSeamlessly} />
+      <Stack.Screen name="GetStartedAttendance" component={GetStartedAttendance} />
+      <Stack.Screen name="GetStartedVerified" component={GetStartedVerified} />
     </Stack.Navigator>
   );
 }

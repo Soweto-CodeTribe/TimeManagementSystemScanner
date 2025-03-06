@@ -89,6 +89,7 @@ export default function ScannerAuth({ navigation }) {
         Alert.alert("Error", "Invalid QR Code");
     } finally {
         setLoading(false);
+        
     }
   }
 
@@ -147,7 +148,7 @@ export default function ScannerAuth({ navigation }) {
 
       <CheckinCheckoutbottomsheet 
         isVisible={isBottomSheetVisible}
-        onClose={closeBottomSheet}
+        closeBottomSheet={closeBottomSheet}
       />
       
       {/* Toast component needs to be at the root level */}

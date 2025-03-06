@@ -1,5 +1,5 @@
 import React, { useEffect, useState} from 'react';
-import { View, Text, StyleSheet, Dimensions, Pressable } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Pressable, Image } from 'react-native';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -12,6 +12,8 @@ import { Alert } from 'react-native';
 import { Camera } from "expo-camera";
 import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message'; // Add this import
+import locationsImage from "../assets/permissionsImage.png"
+import CameraImage from "../assets/permissionscamera.png"
 
 const { height, width } = Dimensions.get('window');
 const SHEET_HEIGHT = height * 0.5;
@@ -166,11 +168,11 @@ const PermissionsPopup = ({ isVisible }) => {
       <GestureDetector gesture={gesture}>
         <Animated.View style={[styles.bottomSheet, animatedSheetStyle]}>
           <View style={styles.handle} />
-          <Text style={styles.getStartedText}>Permissions Access</Text>
           
           <View style={styles.permissionButtonsContainer}>
             {!cameraPermissions ? (
               <>
+              <Image source={locationsImage}/>
                 <Text style={styles.textcontainer}>
                   Allow CodeTribe to access your
                 </Text>
@@ -205,6 +207,7 @@ const PermissionsPopup = ({ isVisible }) => {
               </>
             ) : (
               <>
+                <Image source={CameraImage}/>
                 <Text style={styles.textcontainer}>
                   Allow CodeTribe to access your
                 </Text>

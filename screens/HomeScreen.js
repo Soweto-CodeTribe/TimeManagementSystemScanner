@@ -2,14 +2,67 @@
 
 import { StatusBar } from "expo-status-bar"
 import { useState } from "react"
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, Dimensions, TouchableOpacity } from "react-native"
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, Dimensions, TouchableOpacity, Image } from "react-native"
 import { BarChart } from "react-native-chart-kit"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 
+// Progress Guide component based on the screenshot
+const AttendanceProgressBar = ({ percentage, showLabel = false }) => {
+  // Determine the color based on percentage thresholds
+  const getBarColor = (percent) => {
+    if (percent > 80) return "#007BFF"; // Blue
+    if (percent >= 60) return "#FF9800"; // Orange
+    return "#FF0000"; // Red
+  };
+
+  const barColor = getBarColor(percentage);
+
+  return (
+    <View style={styles.progressContainer}>
+      <View 
+        style={[
+          styles.progressBar, 
+          { 
+            width: `${percentage}%`,
+            backgroundColor: barColor 
+          }
+        ]} 
+      />
+      {showLabel && (
+        <View style={styles.progressGuideContainer}>
+          <Text style={styles.progressGuideText}>
+            {percentage > 80 
+              ? "If A Monthly/Yearly Attendance is Over 80%, The Progress Bar Must Be Blue"
+              : percentage >= 60 
+                ? "If A Monthly/Yearly Attendance is Between 60% And 80%, The Progress Bar Must Be Orange"
+                : "If A Monthly/Yearly Attendance is Under 60%, The Progress Bar Must Be Red"
+            }
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+};
+
 const HomeScreen = ({ navigation }) => {
   const [activeStats, setActiveStats] = useState("monthly")
-  const [isDayMissed, setIsDayMissed ] = useState(false)
-  const name = AsyncStorage.getItem('name');
+  const [isDayMissed, setIsDayMissed] = useState(false)
+  const [name, setName] = useState("User") // Default value
+  
+  // Fetch name from AsyncStorage
+  const fetchName = async () => {
+    try {
+      const storedName = await AsyncStorage.getItem('name');
+      if (storedName) setName(storedName);
+    } catch (error) {
+      console.log("Error fetching name:", error);
+    }
+  };
+  
+  // Call fetchName when component mounts
+  useState(() => {
+    fetchName();
+  }, []);
 
   // Weekly attendance data for the chart
   const weeklyData = {
@@ -20,8 +73,6 @@ const HomeScreen = ({ navigation }) => {
       },
     ],
   }
-
-  // const navigation = useNavigate()
 
   // Current date
   const today = new Date()
@@ -42,110 +93,120 @@ const HomeScreen = ({ navigation }) => {
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
   const currentDate = `${days[today.getDay()]}, ${months[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()}`
 
+  // Monthly stats data
+  const monthlyStats = [
+    // Excellent attendance (>80%) - Blue progress bars
+    { month: "January", attended: 28, total: 31, percentage: 90 },
+    { month: "February", attended: 27, total: 28, percentage: 96 },
+    { month: "March", attended: 29, total: 31, percentage: 94 },
+    
+    // Moderate attendance (60-80%) - Orange progress bars
+    { month: "April", attended: 21, total: 30, percentage: 70 },
+    { month: "May", attended: 22, total: 31, percentage: 71 },
+    { month: "June", attended: 24, total: 30, percentage: 80 },
+    
+    // Poor attendance (<60%) - Red progress bars
+    { month: "July", attended: 15, total: 31, percentage: 48 },
+    { month: "August", attended: 17, total: 31, percentage: 55 },
+    { month: "September", attended: 16, total: 30, percentage: 53 },
+    
+    // Mixed recent months
+    { month: "October", attended: 28, total: 31, percentage: 90 }, // Good - Blue
+    { month: "November", attended: 19, total: 30, percentage: 63 }, // Moderate - Orange
+    { month: "December", attended: 12, total: 31, percentage: 39 }  // Poor - Red
+  ]
+
   return (
     <SafeAreaView style={styles.container}>
-    <StatusBar backgroundColor={'#fff'} style={'dark'}/>
+      <StatusBar backgroundColor={'#fff'} style={'dark'}/>
       
-        {/* Header Section */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Hello, {name}</Text>
-            <Text style={styles.date}>{currentDate}</Text>
-          </View>
-          <View style={styles.avatarContainer}>
-            <TouchableOpacity onPress={()=> navigation.navigate('NotificationScreen')} style={styles.iconButton}>
-              <Text style={{fontSize: 20}}>🔔</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={()=> navigation.navigate("ProfileScreen")} style={styles.iconButton}>
-              <Text style={{fontSize: 20}}>👤</Text>
-            </TouchableOpacity>
-          </View>
+      {/* Header Section */}
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.greeting}>Hello, {name}</Text>
+          <Text style={styles.date}>{currentDate}</Text>
         </View>
-       
-        {/* Weekly Attendance Chart */}
-        <View style={styles.chartContainer}>
-          <Text style={styles.chartTitle}>Weekly Attendance</Text>
-          <BarChart
-            data={weeklyData}
-            width={Dimensions.get("window").width - 40}
-            height={180}
-            yAxisSuffix="%"
-            chartConfig={{
-              backgroundColor: "transparent",
-              backgroundGradientFrom: "white",
-              backgroundGradientTo: "white",
-              decimalPlaces: 0,
-              color: (opacity = 1) => `rgba(107, 189, 49, ${opacity})`,
-              labelColor: () => "#ADADAD",
-              barPercentage: 0.6,
-              propsForBackgroundLines: {
-                strokeDasharray: "",
-                stroke: "#EEEEEE",
-                strokeWidth: 1,
-              },
-            }}
-            style={styles.chart}
-            fromZero
-            showValuesOnTopOfBars={false}
-            withInnerLines={true}
-            withHorizontalLabels={true}
-          />
+        <View style={styles.avatarContainer}>
+          <TouchableOpacity onPress={()=> navigation.navigate('NotificationScreen')} style={styles.iconButton}>
+            <Text style={{fontSize: 20}}>🔔</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={()=> navigation.navigate("ProfileScreen")} style={styles.iconButton}>
+          <Image
+              source={{
+                uri: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-Z6HPIGZArOlwZgZRYD64JxoekuRd7t.png",
+              }}
+              style={styles.profileImage}
+            />
+          </TouchableOpacity>
         </View>
+      </View>
+     
+      {/* Weekly Attendance Chart */}
+      <View style={styles.chartContainer}>
+        <Text style={styles.chartTitle}>Weekly Attendance</Text>
+        <BarChart
+          data={weeklyData}
+          width={Dimensions.get("window").width - 40}
+          height={180}
+          yAxisSuffix="%"
+          chartConfig={{
+            backgroundColor: "transparent",
+            backgroundGradientFrom: "white",
+            backgroundGradientTo: "white",
+            decimalPlaces: 0,
+            color: (opacity = 1) => `rgba(107, 189, 49, ${opacity})`,
+            labelColor: () => "#ADADAD",
+            barPercentage: 0.6,
+            propsForBackgroundLines: {
+              strokeDasharray: "",
+              stroke: "#EEEEEE",
+              strokeWidth: 1,
+            },
+          }}
+          style={styles.chart}
+          fromZero
+          showValuesOnTopOfBars={false}
+          withInnerLines={true}
+          withHorizontalLabels={true}
+        />
+      </View>
 
-        {/* Overview Stats Section */}
-        <View style={styles.statsSection}>
-          <Text style={styles.statsTitle}>Overview Stats</Text>
+      {/* Overview Stats Section */}
+      <View style={styles.statsSection}>
+        <Text style={styles.statsTitle}>Overview Stats</Text>
 
-          {/* Toggle Buttons */}
-          <View style={styles.toggleContainer}>
-            <TouchableOpacity
-              style={[styles.toggleButton, activeStats === "monthly" && styles.activeToggle]}
-              onPress={() => setActiveStats("monthly")}
-            >
-              <Text style={[styles.toggleText, activeStats === "monthly" && styles.activeToggleText]}>Weekly</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.toggleButton, activeStats === "yearly" && styles.activeToggle]}
-              onPress={() => setActiveStats("yearly")}
-            >
-              <Text style={[styles.toggleText, activeStats === "yearly" && styles.activeToggleText]}>Monthly</Text>
-            </TouchableOpacity>
-          </View>
+        {/* Toggle Buttons */}
+        <View style={styles.toggleContainer}>
+          <TouchableOpacity
+            style={[styles.toggleButton, activeStats === "monthly" && styles.activeToggle]}
+            onPress={() => setActiveStats("monthly")}
+          >
+            <Text style={[styles.toggleText, activeStats === "monthly" && styles.activeToggleText]}>Monthly</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.toggleButton, activeStats === "yearly" && styles.activeToggle]}
+            onPress={() => setActiveStats("yearly")}
+          >
+            <Text style={[styles.toggleText, activeStats === "yearly" && styles.activeToggleText]}>Weekly</Text>
+          </TouchableOpacity>
         </View>
+      </View>
 
-        {isDayMissed && <DocumentsUpload isVisible={isDayMissed} onClose={() => setIsDayMissed(false)}/>}
-        <ScrollView>
+      {isDayMissed && <DocumentsUpload isVisible={isDayMissed} onClose={() => setIsDayMissed(false)}/>}
+      <ScrollView>
         {/* Monthly Stats Cards */}
         <View style={styles.statsCards}>
-          {/* July Card */}
-          <View style={styles.statCard}>
-            <Text style={styles.monthTitle}>July</Text>
-            <Text style={styles.attendanceText}>89 of 92 days</Text>
-            <View style={styles.progressContainer}>
-              <View style={[styles.progressBar, { width: "96%", backgroundColor: "#4A90E2" }]} />
+          {monthlyStats.map((stat, index) => (
+            <View key={index} style={styles.statCard}>
+              <Text style={styles.monthTitle}>{stat.month}</Text>
+              <Text style={styles.attendanceText}>{stat.attended} of {stat.total} days</Text>
+              
+              {/* Using the new AttendanceProgressBar component */}
+              <AttendanceProgressBar percentage={stat.percentage} />
+              
+              <Text style={styles.percentageText}>{stat.percentage}%</Text>
             </View>
-            <Text style={styles.percentageText}>96%</Text>
-          </View>
-
-          {/* August Card */}
-          <View style={styles.statCard}>
-            <Text style={styles.monthTitle}>August</Text>
-            <Text style={styles.attendanceText}>87 of 92 days</Text>
-            <View style={styles.progressContainer}>
-              <View style={[styles.progressBar, { width: "92%", backgroundColor: "#E25B4A" }]} />
-            </View>
-            <Text style={styles.percentageText}>92%</Text>
-          </View>
-
-          {/* September Card */}
-          <View style={styles.statCard}>
-            <Text style={styles.monthTitle}>September</Text>
-            <Text style={styles.attendanceText}>22 of 30 days</Text>
-            <View style={styles.progressContainer}>
-              <View style={[styles.progressBar, { width: "73%", backgroundColor: "#E25B4A" }]} />
-            </View>
-            <Text style={styles.percentageText}>73%</Text>
-          </View>
+          ))}
         </View>
 
         {/* Spacer for bottom tabs */}
@@ -166,9 +227,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 60,
-    // paddingBottom: 10,
-    position: 'fixed',
-    top: 0
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    zIndex: 1000,
   },
   greeting: {
     fontSize: 18,
@@ -184,29 +248,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 10,
   },
-
   iconButton:{
     padding: 5,
-    borderRadius: '25%',
     borderRadius: 50,
-    backgroundColor: 'orange',
     gap: 12
-  },
-  avatarCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    gap: 10,
-    backgroundColor: "#F5F5F5",
-    justifyContent: "center",
-    alignItems: "center",
   },
   chartContainer: {
     marginHorizontal: 20,
-    marginTop: 20,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 15,
+    marginTop: 100, 
+    paddingVertical: 15,
+  },
+  profileImage:{
+    width: 40,
+    height: 40,
+    borderRadius: 50,
   },
   chartTitle: {
     fontSize: 16,
@@ -220,7 +275,7 @@ const styles = StyleSheet.create({
   },
   statsSection: {
     marginHorizontal: 20,
-    marginTop: 20,
+    marginTop: 10,
   },
   statsTitle: {
     fontSize: 16,
@@ -260,13 +315,13 @@ const styles = StyleSheet.create({
   },
   statsCards: {
     marginHorizontal: 20,
-    marginTop: 20,
+    marginTop: 15,
+    gap: 15,
   },
   statCard: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#fff",
     borderRadius: 12,
-    padding: 15,
-    marginBottom: 10,
+    padding: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -301,7 +356,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
   },
   bottomSpacer: {
-    height: 80, // Space for bottom tabs
+    height: 80, 
   },
 })
 

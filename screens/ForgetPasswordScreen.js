@@ -31,7 +31,7 @@ const ForgetPasswordScreen = ({ navigation }) => {
       setLoading(false);
       
       if (response.data.message === "Password reset link sent successfully") {
-        navigation.navigate('PasswordEmailScreen', { email });
+        navigation.navigate('PasswordEmail', { email });
       } else {
         setError(response.data.message || 'An error occurred');
       }

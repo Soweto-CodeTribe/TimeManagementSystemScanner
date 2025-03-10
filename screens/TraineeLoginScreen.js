@@ -82,7 +82,7 @@ const TraineeLoginScreen = ({ navigation }) => {
             />
             <Text style={styles.checkboxLabel}>Keep me signed in</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.replace("ForgetPasswordScreen")}>
+          <TouchableOpacity onPress={() => navigation.replace("ForgetPassword")}>
             <Text style={styles.forgotPassword}>Forgot Password?</Text>
           </TouchableOpacity>
         </View>

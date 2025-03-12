@@ -14,14 +14,16 @@ import { useSelector } from "react-redux";
 const TimelineScreen = () => {
   const [expandedDay, setExpandedDay] = useState(null);
   const [showCalendar, setShowCalendar] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState("February");
-  const [selectedYear, setSelectedYear] = useState(2025);
-  const [selectedDate, setSelectedDate] = useState(24);
+  const currentDate = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(currentDate.toLocaleString("en-US", { month: "long" }));
+  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+  const [selectedDate, setSelectedDate] = useState(currentDate.getDate());
   const [weekDates, setWeekDates] = useState([]);
   const [displayDays, setDisplayDays] = useState([]);
   const TraineeID = useSelector((state) => state.auth.traineeID);
   const token = useSelector((state) => state.auth.token);
-  const [dayDetails, setDayDetails] = useState(null);
+  const [weeklyData, setWeeklyData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const months = [
     "January",
@@ -37,16 +39,23 @@ const TimelineScreen = () => {
     "November",
     "December",
   ];
-
+  
   const weekDayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
-  console.log("This is the ID.. Hello", TraineeID);
-  console.log("This is the token.. HELLO", token);
-
-  const handleTimeLine = async () => {
+  const fetchWeeklyData = async () => {
+    setIsLoading(true);
     try {
+      // Format the date parameter for the API
+      const monthIndex = months.indexOf(selectedMonth) + 1;
+      const formattedMonth = monthIndex.toString().padStart(2, "0");
+      const formattedDay = selectedDate.toString().padStart(2, "0");
+      const formattedDate = `${selectedYear}-${formattedMonth}-${formattedDay}`;
+      
+      console.log("Fetching data for date:", formattedDate);
+      
+      // Pass the selected date to the API
       const response = await axios.get(
-        `https://timemanagementsystemserver.onrender.com/api/session/weekly-stats?traineeId=${TraineeID}`,
+        `https://timemanagementsystemserver.onrender.com/api/session/weekly-stats?traineeId=${TraineeID}&date=${formattedDate}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -54,59 +63,32 @@ const TimelineScreen = () => {
         }
       );
 
-      const Data = response.data;
-      const weeklyData = Data.dailyBreakdown;
-
-      const weekly = JSON.stringify(weeklyData, null, 2)
+      const data = response.data;
+      const weeklyDataResponse = data.dailyBreakdown;
       
-      console.log(weekly);
-
-      const monthIndex = months.indexOf(selectedMonth) + 1;
-      const formattedMonth = monthIndex.toString().padStart(2, "0");
-      const formattedDate = selectedDate.toString().padStart(2, "0");
-
-      const formattedDateString = `${selectedYear}-${formattedMonth}-${formattedDate}`;
-
-      const matchedDayData = weeklyData.find(
-        (day) => day.date === formattedDateString
-      );
-
-      if (matchedDayData) {
-        const extractedData = {
-          dayOfWeek: matchedDayData.dayOfWeek,
-          lunchStartTime: matchedDayData.lunchStartTime,
-          lunchEndTime: matchedDayData.lunchEndTime,
-          checkInTime: matchedDayData.checkInTime,
-          checkOutTime: matchedDayData.checkOutTime,
-          status: matchedDayData.status,
-        };
-
-        return extractedData;
-      } else {
-        return null;
-      }
+      console.log("Weekly data fetched:", JSON.stringify(weeklyDataResponse, null, 2));
+      setWeeklyData(weeklyDataResponse);
+      return weeklyDataResponse;
     } catch (error) {
       console.log("Error fetching timeline:", error);
-      return null;
+      return [];
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    const fetchTimelineData = async () => {
-      const result = await handleTimeLine();
-      setDayDetails(result);
-    };
-
-    fetchTimelineData();
-  }, [selectedMonth, selectedYear, selectedDate]);
-
   // Initialize the week days when component mounts or when selectedDate changes
   useEffect(() => {
-    calculateWeekDates();
+    const loadData = async () => {
+      const data = await fetchWeeklyData();
+      calculateWeekDates(data);
+    };
+    
+    loadData();
   }, [selectedDate, selectedMonth, selectedYear]);
 
   // Calculate the dates for the current week (Mon-Fri) based on selected date
-  const calculateWeekDates = () => {
+  const calculateWeekDates = (weeklyDataArray = []) => {
     const monthIndex = months.indexOf(selectedMonth);
     const selectedDateObj = new Date(selectedYear, monthIndex, selectedDate);
     const dayOfWeek = selectedDateObj.getDay(); // 0 = Sunday, 1 = Monday, etc.
@@ -128,6 +110,15 @@ const TimelineScreen = () => {
       const day = currentDate.getDate();
       const month = currentDate.getMonth();
       const year = currentDate.getFullYear();
+      
+      // Format the date string to match API response format (YYYY-MM-DD)
+      const monthNum = month + 1;
+      const formattedMonth = monthNum.toString().padStart(2, "0");
+      const formattedDay = day.toString().padStart(2, "0");
+      const formattedDate = `${year}-${formattedMonth}-${formattedDay}`;
+      
+      // Find data for this day in the weekly data
+      const dayData = weeklyDataArray.find(data => data.date === formattedDate);
 
       weekDateArray.push({
         date: day,
@@ -136,21 +127,59 @@ const TimelineScreen = () => {
         dayName: weekDayNames[i],
       });
 
+      // Create time ranges based on actual data or default
+      let timeRanges = [];
+      if (dayData) {
+        if (dayData.checkInTime && dayData.checkOutTime) {
+          timeRanges.push({ 
+            start: formatTime(dayData.checkInTime), 
+            end: formatTime(dayData.checkOutTime)
+          });
+        }
+        if (dayData.lunchStartTime && dayData.lunchEndTime) {
+          timeRanges.push({ 
+            start: formatTime(dayData.lunchStartTime), 
+            end: formatTime(dayData.lunchEndTime)
+          });
+        }
+      }
+      
+      // If no time ranges were added, add default
+      if (timeRanges.length === 0) {
+        timeRanges = [{ start: "N/A", end: "N/A" }];
+      }
+
       // Create display day object with appropriate styling
       displayDaysArray.push({
         date: day,
+        month: months[month],
+        year: year,
         dayName: weekDayNames[i],
         backgroundColor: getBackgroundColorForDay(i),
         textColor: getTextColorForDay(i),
-        timeRanges: [
-          { start: "08:00", end: "16:02" },
-          { start: "13:00", end: "13:35" },
-        ],
+        timeRanges: timeRanges,
+        dayData: dayData || null, // Store the full day data
+        formattedDate: formattedDate
       });
     }
 
     setWeekDates(weekDateArray);
     setDisplayDays(displayDaysArray);
+  };
+  
+  // Helper function to format time from API
+  const formatTime = (timeString) => {
+    if (!timeString) return "N/A";
+    // If timeString is already in a good format, return it
+    if (timeString.includes(":")) return timeString;
+    
+    // Otherwise, try to format it
+    try {
+      const timeDate = new Date(timeString);
+      return timeDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (error) {
+      return timeString; // Return original if parsing fails
+    }
   };
 
   // Helper functions for styling
@@ -192,26 +221,15 @@ const TimelineScreen = () => {
     setSelectedDate(date);
     setSelectedMonth(month);
     setSelectedYear(year);
-
-    // Convert the month name to an index using months.indexOf(month) + 1
-    const monthIndex = months.indexOf(month) + 1; // Convert to 1-based index
-    const formattedMonth = monthIndex.toString().padStart(2, "0"); // Ensure two digits
-    const formattedDate = date.toString().padStart(2, "0"); // Ensure two digits
-
-    // Ensure two-digit formatting for months and dates using
-    const formattedDateString = `${year}-${formattedMonth}-${formattedDate}`;
-
-    console.log("Formatted Date:", formattedDateString);
   };
 
-  console.log(selectedMonth, selectedYear, selectedDate);
-
-  const applyCalendarSelection = () => {
-    calculateWeekDates();
+  const applyCalendarSelection = async () => {
+    const data = await fetchWeeklyData();
+    calculateWeekDates(data);
     setShowCalendar(false);
   };
 
-  const renderTimelineItem = (icon, title, time) => (
+  const renderTimelineItem = (icon, title, time, dayData) => (
     <View style={styles.timelineItem}>
       <View style={styles.timelineDot} />
       <View style={styles.timelineIconContainer}>
@@ -219,7 +237,7 @@ const TimelineScreen = () => {
       </View>
       <View style={styles.timelineContent}>
         <Text style={styles.timelineTitle}>{title}</Text>
-        <Text style={styles.timelineTime}>{time}</Text>
+        <Text style={styles.timelineTime}>{time || "Data not available"}</Text>
       </View>
     </View>
   );
@@ -258,81 +276,100 @@ const TimelineScreen = () => {
         weekDates={weekDates}
         onSelectDate={handleCalendarSelect}
         onApply={applyCalendarSelection}
-        handleTimeLine={handleTimeLine}
       />
 
-      <ScrollView style={styles.scrollView}>
-        {displayDays.map((day, index) => (
-          <View key={index}>
-            <View style={styles.dayCard}>
-              <View
-                style={[
-                  styles.dateContainer,
-                  { backgroundColor: day.backgroundColor },
-                ]}
-              >
-                <Text style={[styles.dateNumber, { color: day.textColor }]}>
-                  {day.date}
-                </Text>
-              </View>
-              <View style={styles.dayInfoContainer}>
-                <View style={styles.dayHeaderContainer}>
-                  <Text style={styles.dayName}>{day.dayName}</Text>
-                  <TouchableOpacity onPress={() => toggleExpand(day.dayName)}>
-                    <Ionicons
-                      name={
-                        expandedDay === day.dayName
-                          ? "chevron-down"
-                          : "chevron-forward"
-                      }
-                      size={24}
-                      color="#999"
-                    />
-                  </TouchableOpacity>
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <Text>Loading timeline data...</Text>
+        </View>
+      ) : (
+        <ScrollView style={styles.scrollView}>
+          {displayDays.map((day, index) => (
+            <View key={index}>
+              <View style={styles.dayCard}>
+                <View
+                  style={[
+                    styles.dateContainer,
+                    { backgroundColor: day.backgroundColor },
+                  ]}
+                >
+                  <Text style={[styles.dateNumber, { color: day.textColor }]}>
+                    {day.date}
+                  </Text>
                 </View>
-                {day.timeRanges.map((timeRange, timeIndex) => (
-                  <View key={timeIndex} style={styles.timeRangeContainer}>
-                    <Ionicons name="time-outline" size={16} color="#999" />
-                    <Text style={styles.timeRange}>
-                      {timeRange.start} - {timeRange.end}
-                    </Text>
+                <View style={styles.dayInfoContainer}>
+                  <View style={styles.dayHeaderContainer}>
+                    <Text style={styles.dayName}>{day.dayName}</Text>
+                    <TouchableOpacity onPress={() => toggleExpand(day.dayName)}>
+                      <Ionicons
+                        name={
+                          expandedDay === day.dayName
+                            ? "chevron-down"
+                            : "chevron-forward"
+                        }
+                        size={24}
+                        color="#999"
+                      />
+                    </TouchableOpacity>
                   </View>
-                ))}
+                  {day.timeRanges.map((timeRange, timeIndex) => (
+                    <View key={timeIndex} style={styles.timeRangeContainer}>
+                      <Ionicons name="time-outline" size={16} color="#999" />
+                      <Text style={styles.timeRange}>
+                        {timeRange.start === "N/A" ? 
+                          "No data available" : 
+                          `${timeRange.start} - ${timeRange.end}`}
+                      </Text>
+                    </View>
+                  ))}
+                  {day.dayData?.status && (
+                    <View style={styles.statusContainer}>
+                      <Text style={[
+                        styles.statusText, 
+                        { color: day.dayData.status === "Present" ? "#4CAF50" : "#F44336" }
+                      ]}>
+                        {day.dayData.status}
+                      </Text>
+                    </View>
+                  )}
+                </View>
               </View>
-            </View>
 
-            {/* Expanded Timeline Under the Day */}
-            {expandedDay === day.dayName && (
-              <View style={styles.timelineContainer}>
-                <View style={styles.timelineLine} />
-                {renderTimelineItem(
-                  "enter-outline",
-                  "Check-in",
-                  dayDetails?.checkInTime || "Data not available"
-                )}
-                {renderTimelineItem(
-                  "restaurant-outline",
-                  "Lunch-out",
-                  dayDetails?.lunchStartTime || "Data not available"
-                )}
-                {renderTimelineItem(
-                  "fast-food-outline",
-                  "Lunch-in",
-                  dayDetails?.lunchEndTime || "Data not available"
-                )}
-                {renderTimelineItem(
-                  "exit-outline",
-                  "Check-out",
-                  dayDetails?.checkOutTime || "Data not available"
-                )}
-              </View>
-            )}
-          </View>
-        ))}
-      </ScrollView>
+              {/* Expanded Timeline Under the Day */}
+              {expandedDay === day.dayName && (
+                <View style={styles.timelineContainer}>
+                  <View style={styles.timelineLine} />
+                  {renderTimelineItem(
+                    "enter-outline",
+                    "Check-in",
+                    day.dayData?.checkInTime ? formatTime(day.dayData.checkInTime) : "Data not available"
+                  )}
+                  {renderTimelineItem(
+                    "restaurant-outline",
+                    "Lunch-in",
+                    day.dayData?.lunchStartTime ? formatTime(day.dayData.lunchStartTime) : "Data not available"
+                  )}
+                  {renderTimelineItem(
+                    "fast-food-outline",
+                    "Lunch-out",
+                    day.dayData?.lunchEndTime ? formatTime(day.dayData.lunchEndTime) : "Data not available"
+                  )}
+                  {renderTimelineItem(
+                    "exit-outline",
+                    "Check-out",
+                    day.dayData?.checkOutTime ? formatTime(day.dayData.checkOutTime) : "Data not available"
+                  )}
+                </View>
+              )}
+            </View>
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 };
+
+// Styling
 
 const styles = StyleSheet.create({
   container: {
@@ -374,6 +411,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
     fontWeight: "500",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   scrollView: {
     flex: 1,
@@ -425,6 +467,13 @@ const styles = StyleSheet.create({
   timeRange: {
     marginLeft: 6,
     color: "#666",
+    fontSize: 14,
+  },
+  statusContainer: {
+    marginTop: 4,
+  },
+  statusText: {
+    fontWeight: "500",
     fontSize: 14,
   },
   timelineContainer: {

@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   StatusBar,
   Pressable,
+  Alert
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect } from "react";
@@ -16,6 +17,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ActivityIndicator } from "react-native";
 import ProfileButtomSheet from "../Components/ProfileSheet";
 import FeedbackBottomSheet from "../Components/FeedbackSheet";
+import { useDispatch, useSelector } from 'react-redux';
+import { logout } from "../Components/Redux/Slices/AuthenticationSlice";
 
 const ProfileScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -23,6 +26,7 @@ const ProfileScreen = ({ navigation }) => {
   const [name, setName] = useState("");
   const [openProfileSheet, setOpenProfileSheet] = useState(false);
   const [openFeedbacksheet, setOpenFeedbackSheet] = useState(false);
+  const dispatch = useDispatch();
 
   const defaultImage =
     "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-Z6HPIGZArOlwZgZRYD64JxoekuRd7t.png";
@@ -75,6 +79,29 @@ const ProfileScreen = ({ navigation }) => {
         <ActivityIndicator size="large" color="#8BC34A" />
       </View>
     );
+  }
+
+  const Logout = ()=>{
+    dispatch(logout());
+
+    setTimeout(()=>{
+      navigation.navigate('SplashScreen')
+    }, 3000)
+  }
+
+
+  const HandleLogout = ()=>{
+    Alert.alert('Are you sure you want to logout', 'Please note you will be screwed!!!', [
+      {
+        text: 'No',
+        onPress: () => console.log('Cancel Pressed'),
+        style: 'cancel',
+      },
+
+      {text: 'Yes', 
+       onPress: () => Logout()
+      },
+    ]);
   }
 
   // Layout of the Profile Screen
@@ -148,6 +175,7 @@ const ProfileScreen = ({ navigation }) => {
               icon="log-out-outline"
               title="Sign out"
               iconColor="#FF5252"
+              onPress={()=> HandleLogout()}
             />
           </View>
           {/* <FeedbackBottomSheet/> */}

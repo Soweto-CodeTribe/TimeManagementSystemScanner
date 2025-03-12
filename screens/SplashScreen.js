@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { View, Animated, StyleSheet, Dimensions, Easing } from "react-native"
 import { Svg, Text, Defs, RadialGradient, Stop, Circle } from "react-native-svg"
 
@@ -8,7 +8,9 @@ const { width, height } = Dimensions.get("window")
 const CONTAINER_WIDTH = width * 0.9
 const LETTER_WIDTH = CONTAINER_WIDTH / 9
 
-const CodeTribeSplash = ({ navigation }) => {
+const SplashScreen = ({ navigation }) => {
+  const [isInitialized, setIsInitialized] = useState(false)
+  
   const letters = [
     { text: "C", color: "#8CC63F" }, 
     { text: "o", color: "#8CC63F" }, 
@@ -21,6 +23,7 @@ const CodeTribeSplash = ({ navigation }) => {
     { text: "e", color: "#808285" }
   ]
 
+  // Create animated values only once
   const animValues = useRef(
     letters.map(() => ({
       x: new Animated.Value(0),
@@ -28,11 +31,11 @@ const CodeTribeSplash = ({ navigation }) => {
       rotate: new Animated.Value(0),
       scale: new Animated.Value(0),
       opacity: new Animated.Value(0),
-    })),
+    }))
   ).current
 
   const particleAnimValues = useRef(
-    Array(20).fill().map(() => ({
+    Array(15).fill().map(() => ({
       x: new Animated.Value(0),
       y: new Animated.Value(0),
       scale: new Animated.Value(0),
@@ -43,12 +46,15 @@ const CodeTribeSplash = ({ navigation }) => {
   const glowAnim = useRef(new Animated.Value(0)).current
   const glowSizeAnim = useRef(new Animated.Value(0)).current
 
+  // Initialize animation values before starting animations
   useEffect(() => {
-    // Initial setup - random positions outside the screen
+    if (isInitialized) return
+
+    // Initialize letter animations with more consistent starting positions
     const randomPositions = letters.map(() => ({
-      x: (Math.random() > 0.5 ? 1 : -1) * (width * 0.5 + Math.random() * width * 0.5),
-      y: (Math.random() > 0.5 ? 1 : -1) * (height * 0.5 + Math.random() * height * 0.5),
-      rotate: Math.random() * 720 - 360,
+      x: (Math.random() > 0.5 ? 1 : -1) * (width * 0.5 + Math.random() * width * 0.3),
+      y: (Math.random() > 0.5 ? 1 : -1) * (height * 0.5 + Math.random() * height * 0.3),
+      rotate: Math.random() * 360 - 180, // Reduced rotation range for smoother animation
     }))
 
     animValues.forEach((anim, i) => {
@@ -59,150 +65,177 @@ const CodeTribeSplash = ({ navigation }) => {
       anim.opacity.setValue(0)
     })
 
-    // Create particle initial states
-    particleAnimValues.forEach((particle) => {
-      particle.x.setValue((Math.random() * 2 - 1) * width * 0.8)
-      particle.y.setValue((Math.random() * 2 - 1) * height * 0.8)
+    // Initialize particle animations with better distribution
+    particleAnimValues.forEach((particle, i) => {
+      // Distribute particles more evenly
+      const angle = (i / particleAnimValues.length) * Math.PI * 2
+      const distance = Math.random() * width * 0.4
+      particle.x.setValue(Math.cos(angle) * distance)
+      particle.y.setValue(Math.sin(angle) * distance)
       particle.scale.setValue(0)
       particle.opacity.setValue(0)
     })
 
+    setIsInitialized(true)
+  }, [animValues, particleAnimValues, width, height, letters.length, isInitialized])
+
+  // Run animations after initialization
+  useEffect(() => {
+    if (!isInitialized) return
+
     const animations = []
 
-    // Glow animation
-    animations.push(
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(glowAnim, {
-            toValue: 1,
-            duration: 2000,
-            useNativeDriver: true,
-            easing: Easing.inOut(Easing.sin),
-          }),
-          Animated.timing(glowAnim, {
-            toValue: 0.3,
-            duration: 2000,
-            useNativeDriver: true,
-            easing: Easing.inOut(Easing.sin),
-          }),
-        ]),
-      ),
+    // Glow animation with improved timing
+    const glowSequence = Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+          easing: Easing.inOut(Easing.sin),
+        }),
+        Animated.timing(glowAnim, {
+          toValue: 0.3,
+          duration: 2000,
+          useNativeDriver: true,
+          easing: Easing.inOut(Easing.sin),
+        }),
+      ])
     )
     
-    animations.push(
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(glowSizeAnim, {
-            toValue: 1,
-            duration: 3000,
-            useNativeDriver: true,
-            easing: Easing.inOut(Easing.sin),
-          }),
-          Animated.timing(glowSizeAnim, {
-            toValue: 0.85,
-            duration: 3000,
-            useNativeDriver: true,
-            easing: Easing.inOut(Easing.sin),
-          }),
-        ]),
-      ),
+    const glowSizeSequence = Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowSizeAnim, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: true,
+          easing: Easing.inOut(Easing.sin),
+        }),
+        Animated.timing(glowSizeAnim, {
+          toValue: 0.85,
+          duration: 3000,
+          useNativeDriver: true,
+          easing: Easing.inOut(Easing.sin),
+        }),
+      ])
     )
 
-    // Letter animations with smoother easing
+    animations.push(glowSequence)
+    animations.push(glowSizeSequence)
+
+    // Letter animations with improved staggered start
+    const letterAnimations = []
+    
     animValues.forEach((anim, index) => {
-      animations.push(
+      letterAnimations.push(
         Animated.sequence([
-          Animated.delay(index * 100),
+          Animated.delay(index * 80), // Slightly faster stagger for smoother appearance
           Animated.parallel([
             Animated.timing(anim.opacity, {
               toValue: 1,
-              duration: 1200,
+              duration: 1000, // Slightly faster for smoother appearance
               useNativeDriver: true,
               easing: Easing.bezier(0.25, 0.1, 0.25, 1),
             }),
             Animated.spring(anim.x, {
               toValue: 0,
-              friction: 6.5,
-              tension: 45,
+              friction: 7, // Increased friction for less bouncing
+              tension: 50, // Adjusted tension for smoother movement
               useNativeDriver: true,
             }),
             Animated.spring(anim.y, {
               toValue: 0,
-              friction: 6.5,
-              tension: 45,
+              friction: 7, // Increased friction for less bouncing
+              tension: 50, // Adjusted tension for smoother movement
               useNativeDriver: true,
             }),
             Animated.timing(anim.rotate, {
               toValue: 0,
-              duration: 1800,
+              duration: 1500, // Slightly faster rotation
               useNativeDriver: true,
               easing: Easing.bezier(0.215, 0.61, 0.355, 1),
             }),
             Animated.spring(anim.scale, {
               toValue: 1,
-              friction: 6,
+              friction: 7, // Increased friction for less bouncing
               tension: 60,
-              useNativeDriver: true,
-            }),
-          ]),
-        ]),
-      )
-    })
-
-    // Particle animations
-    particleAnimValues.forEach((particle, i) => {
-      const delay = 1500 + Math.random() * 1000
-      const duration = 3000 + Math.random() * 2000
-      
-      animations.push(
-        Animated.sequence([
-          Animated.delay(delay),
-          Animated.parallel([
-            Animated.timing(particle.opacity, {
-              toValue: 0.7,
-              duration: duration / 4,
-              useNativeDriver: true,
-              easing: Easing.bezier(0.4, 0, 0.2, 1),
-            }),
-            Animated.timing(particle.scale, {
-              toValue: 0.3 + Math.random() * 0.7,
-              duration: duration / 3,
-              useNativeDriver: true,
-              easing: Easing.bezier(0.4, 0, 0.2, 1),
-            }),
-            Animated.timing(particle.x, {
-              toValue: particle.x._value + (Math.random() * 2 - 1) * width * 0.3,
-              duration: duration,
-              useNativeDriver: true,
-              easing: Easing.bezier(0.4, 0, 0.2, 1),
-            }),
-            Animated.timing(particle.y, {
-              toValue: particle.y._value + (Math.random() * 2 - 1) * height * 0.3,
-              duration: duration,
-              useNativeDriver: true,
-              easing: Easing.bezier(0.4, 0, 0.2, 1),
-            }),
-          ]),
-          Animated.parallel([
-            Animated.timing(particle.opacity, {
-              toValue: 0,
-              duration: duration / 4,
-              useNativeDriver: true,
-            }),
-            Animated.timing(particle.scale, {
-              toValue: 0,
-              duration: duration / 4,
               useNativeDriver: true,
             }),
           ]),
         ])
       )
     })
+    
+    animations.push(Animated.parallel(letterAnimations))
 
-    // Pulse effect with better timing and smoother animation
+    // Particle animations with improved timing and reduced simultaneous animations
+    const particleAnimations = particleAnimValues.map((particle, i) => {
+      // More consistent timing with less randomness to avoid glitches
+      const delay = 1200 + (i % 5) * 200
+      const duration = 2500 + (i % 3) * 500
+      
+      // More controlled movement paths
+      const angle = Math.random() * Math.PI * 2
+      const distance = width * 0.2 + Math.random() * width * 0.1
+      const randomXDest = Math.cos(angle) * distance
+      const randomYDest = Math.sin(angle) * distance
+      
+      return Animated.sequence([
+        Animated.delay(delay),
+        Animated.parallel([
+          Animated.timing(particle.opacity, {
+            toValue: 0.7,
+            duration: duration / 4,
+            useNativeDriver: true,
+            easing: Easing.bezier(0.4, 0, 0.2, 1),
+          }),
+          Animated.timing(particle.scale, {
+            toValue: 0.3 + (i % 5) * 0.1, // More consistent sizes
+            duration: duration / 3,
+            useNativeDriver: true,
+            easing: Easing.bezier(0.4, 0, 0.2, 1),
+          }),
+          Animated.timing(particle.x, {
+            toValue: randomXDest,
+            duration: duration,
+            useNativeDriver: true,
+            easing: Easing.bezier(0.4, 0, 0.2, 1),
+          }),
+          Animated.timing(particle.y, {
+            toValue: randomYDest,
+            duration: duration,
+            useNativeDriver: true,
+            easing: Easing.bezier(0.4, 0, 0.2, 1),
+          }),
+        ]),
+        Animated.parallel([
+          Animated.timing(particle.opacity, {
+            toValue: 0,
+            duration: duration / 4,
+            useNativeDriver: true,
+          }),
+          Animated.timing(particle.scale, {
+            toValue: 0,
+            duration: duration / 4,
+            useNativeDriver: true,
+          }),
+        ]),
+      ])
+    })
+    
+    // Group particles in smaller batches (3 at a time) to avoid performance issues
+    const particleBatches = []
+    for (let i = 0; i < particleAnimValues.length; i += 3) {
+      particleBatches.push(
+        Animated.stagger(25, particleAnimations.slice(i, i + 3))
+      )
+    }
+    animations.push(...particleBatches)
+
+    // Pulse effect with smoother timing
     const pulseAnimation = Animated.sequence([
       Animated.delay(2200),
-      Animated.stagger(60, 
+      Animated.stagger(35, 
         animValues.map((anim) =>
           Animated.sequence([
             Animated.spring(anim.scale, {
@@ -224,10 +257,10 @@ const CodeTribeSplash = ({ navigation }) => {
 
     animations.push(pulseAnimation)
 
-    // Final scale-up animation with smoother transition
+    // Final scale-up animation
     const finalScaleUp = Animated.sequence([
       Animated.delay(3800),
-      Animated.stagger(40,
+      Animated.stagger(35, // Slightly faster stagger
         animValues.map((anim) =>
           Animated.timing(anim.scale, {
             toValue: 1.5,
@@ -242,11 +275,12 @@ const CodeTribeSplash = ({ navigation }) => {
     animations.push(finalScaleUp)
 
     // Start all animations
-    Animated.parallel(animations).start()
+    const masterAnimation = Animated.parallel(animations)
+    masterAnimation.start()
 
-    // Transition to the main app after animations with fade out
+    // Handle navigation with fade out
     const timer = setTimeout(() => {
-      Animated.parallel([
+      const fadeOutAnims = [
         Animated.timing(glowAnim, {
           toValue: 0,
           duration: 800,
@@ -257,7 +291,7 @@ const CodeTribeSplash = ({ navigation }) => {
           Animated.timing(anim.opacity, {
             toValue: 0,
             duration: 800,
-            delay: i * 50,
+            delay: i * 40, // Slightly faster stagger for smoother fade out
             easing: Easing.bezier(0.4, 0, 0.2, 1),
             useNativeDriver: true,
           }),
@@ -269,13 +303,32 @@ const CodeTribeSplash = ({ navigation }) => {
             useNativeDriver: true,
           }),
         ),
-      ]).start(() => navigation.replace("GetStartedScreen"));
+      ]
+      
+      Animated.parallel(fadeOutAnims).start(() => {
+        if (navigation && navigation.replace) {
+          navigation.replace("GetStartedScreen")
+        }
+      })
     }, 5200)
 
+    // Cleanup function
     return () => {
+      masterAnimation.stop()
+      glowSequence.stop()
+      glowSizeSequence.stop()
       clearTimeout(timer)
     }
-  }, [animValues, navigation, glowAnim, glowSizeAnim, particleAnimValues])
+  }, [
+    animValues, 
+    particleAnimValues, 
+    glowAnim, 
+    glowSizeAnim, 
+    navigation, 
+    isInitialized, 
+    width, 
+    height
+  ])
 
   return (
     <View style={styles.container}>
@@ -285,10 +338,12 @@ const CodeTribeSplash = ({ navigation }) => {
           styles.glowContainer,
           {
             opacity: glowAnim,
-            transform: [{ scale: glowSizeAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0.85, 1]
-            }) }]
+            transform: [{ 
+              scale: glowSizeAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.85, 1]
+              }) 
+            }]
           },
         ]}
       >
@@ -321,7 +376,7 @@ const CodeTribeSplash = ({ navigation }) => {
 
           return (
             <Animated.View
-              key={index}
+              key={`letter-${index}`}
               style={[
                 styles.letterContainer,
                 {
@@ -388,7 +443,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
     height: "100%",
-    backgroundColor: "#000000",
+    backgroundColor: "#fff",
     overflow: "hidden",
   },
   glowContainer: {
@@ -437,4 +492,4 @@ const styles = StyleSheet.create({
   },
 })
 
-export default CodeTribeSplash
+export default SplashScreen

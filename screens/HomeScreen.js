@@ -1,7 +1,7 @@
 "use client"
 
 import { StatusBar } from "expo-status-bar"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, Dimensions, TouchableOpacity, Image } from "react-native"
 import { BarChart } from "react-native-chart-kit"
 import AsyncStorage from "@react-native-async-storage/async-storage"
@@ -15,6 +15,7 @@ const AttendanceProgressBar = ({ percentage, showLabel = false }) => {
     return "#FF0000"; // Red
   };
 
+ 
   const barColor = getBarColor(percentage);
 
   return (
@@ -48,6 +49,24 @@ const HomeScreen = ({ navigation }) => {
   const [activeStats, setActiveStats] = useState("monthly")
   const [isDayMissed, setIsDayMissed] = useState(false)
   const [name, setName] = useState("User") // Default value
+  const [image, setImage] = useState(null)
+
+
+  useEffect(()=>{
+    const getProfile = async ()=>{
+      try {
+        const ProfileImage = await AsyncStorage.getItem('profileImage');
+        setImage(ProfileImage);
+  
+        console.log("This is the image",ProfileImage)
+        
+      } catch (error) {
+        console.error("Error Loading Image", error)
+      }
+    }
+    
+    getProfile();
+  },[]);
   
   // Fetch name from AsyncStorage
   const fetchName = async () => {
@@ -133,7 +152,7 @@ const HomeScreen = ({ navigation }) => {
           <TouchableOpacity onPress={()=> navigation.navigate("ProfileScreen")} style={styles.iconButton}>
           <Image
               source={{
-                uri: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-Z6HPIGZArOlwZgZRYD64JxoekuRd7t.png",
+                 uri: image 
               }}
               style={styles.profileImage}
             />

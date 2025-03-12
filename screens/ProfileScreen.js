@@ -19,6 +19,7 @@ import ProfileButtomSheet from "../Components/ProfileSheet";
 import FeedbackBottomSheet from "../Components/FeedbackSheet";
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from "../Components/Redux/Slices/AuthenticationSlice";
+import DocumentsUpload from "../Components/DocumentsUpload";
 
 const ProfileScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -26,6 +27,7 @@ const ProfileScreen = ({ navigation }) => {
   const [name, setName] = useState("");
   const [openProfileSheet, setOpenProfileSheet] = useState(false);
   const [openFeedbacksheet, setOpenFeedbackSheet] = useState(false);
+  const [openDocumentsheet, setDocumentsheet] = useState(false);
   const dispatch = useDispatch();
 
   const defaultImage =
@@ -151,8 +153,9 @@ const ProfileScreen = ({ navigation }) => {
           <View style={styles.menuContainer}>
             <MenuItem
               icon="document-text-outline"
-              title="Documents and Tasks"
+              title="Documents"
               iconColor="#8BC34A"
+              onPress={()=> setDocumentsheet(true)}
             />
             <MenuItem
               icon="settings-outline"
@@ -170,6 +173,7 @@ const ProfileScreen = ({ navigation }) => {
               icon="document-outline"
               title="Terms and Conditions"
               iconColor="#8BC34A"
+              
             />
             <MenuItem
               icon="log-out-outline"
@@ -194,6 +198,14 @@ const ProfileScreen = ({ navigation }) => {
           openFeedbacksheet={openFeedbacksheet}
         />
       )}
+      {
+        openDocumentsheet && (
+          <DocumentsUpload
+          openDocumentsheet={openDocumentsheet}
+          onClose={() => setDocumentsheet(false)}
+          />
+        )
+      }
     </SafeAreaView>
   );
 };

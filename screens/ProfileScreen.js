@@ -28,6 +28,7 @@ const ProfileScreen = ({ navigation }) => {
   const [openProfileSheet, setOpenProfileSheet] = useState(false);
   const [openFeedbacksheet, setOpenFeedbackSheet] = useState(false);
   const [openDocumentsheet, setDocumentsheet] = useState(false);
+  const [activity, setActivity]= useState(false);
   const dispatch = useDispatch();
 
   const defaultImage =
@@ -83,27 +84,38 @@ const ProfileScreen = ({ navigation }) => {
     );
   }
 
-  const Logout = ()=>{
-    dispatch(logout());
-
-    setTimeout(()=>{
-      navigation.navigate('SplashScreen')
-    }, 3000)
-  }
-
-
-  const HandleLogout = ()=>{
+  
+  const HandleLogout = () => {
     Alert.alert('Are you sure you want to logout', 'Please note you will be screwed!!!', [
       {
         text: 'No',
         onPress: () => console.log('Cancel Pressed'),
         style: 'cancel',
       },
-
-      {text: 'Yes', 
-       onPress: () => Logout()
+      {
+        text: 'Yes', 
+        onPress: () => {
+          // Set activity to true and wait for state update to complete
+          setActivity(true);
+          // Use setTimeout to ensure the state update has time to propagate
+          setTimeout(() => {
+            dispatch(logout()); // Dispatch logout action
+            setTimeout(() => {
+              setActivity(false);
+              navigation.navigate("SplashScreen");
+            }, 3000);
+          }, 100); // Small delay to ensure state update completes
+        }
       },
     ]);
+  }
+  
+  if (activity) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#8BC34A" />
+      </View>
+    );
   }
 
   // Layout of the Profile Screen

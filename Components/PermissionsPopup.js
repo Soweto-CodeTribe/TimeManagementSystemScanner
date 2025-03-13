@@ -145,7 +145,7 @@ const PermissionsPopup = ({ isVisible }) => {
         });
         setTimeout(() => {
           navigation.navigate("ScannerScreen");
-        }, 3000);
+        }, 100);
       } else {
         Alert.alert("Camera Permission", "Camera access denied.");
         navigation.navigate("GetStartedScreen");

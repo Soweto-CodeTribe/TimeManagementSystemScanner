@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   StatusBar,
   Pressable,
+  Alert
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect } from "react";
@@ -16,6 +17,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ActivityIndicator } from "react-native";
 import ProfileButtomSheet from "../Components/ProfileSheet";
 import FeedbackBottomSheet from "../Components/FeedbackSheet";
+import { useDispatch, useSelector } from 'react-redux';
+import { logout } from "../Components/Redux/Slices/AuthenticationSlice";
+import DocumentsUpload from "../Components/DocumentsUpload";
 
 const ProfileScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -23,6 +27,9 @@ const ProfileScreen = ({ navigation }) => {
   const [name, setName] = useState("");
   const [openProfileSheet, setOpenProfileSheet] = useState(false);
   const [openFeedbacksheet, setOpenFeedbackSheet] = useState(false);
+  const [openDocumentsheet, setDocumentsheet] = useState(false);
+  const [activity, setActivity]= useState(false);
+  const dispatch = useDispatch();
 
   const defaultImage =
     "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-Z6HPIGZArOlwZgZRYD64JxoekuRd7t.png";
@@ -77,6 +84,40 @@ const ProfileScreen = ({ navigation }) => {
     );
   }
 
+  
+  const HandleLogout = () => {
+    Alert.alert('Are you sure you want to logout ?', 'See you next time ❤️', [
+      {
+        text: 'No',
+        onPress: () => console.log('Cancel Pressed'),
+        style: 'cancel',
+      },
+      {
+        text: 'Yes', 
+        onPress: () => {
+          // Set activity to true and wait for state update to complete
+          setActivity(true);
+          // Use setTimeout to ensure the state update has time to propagate
+          setTimeout(() => {
+            dispatch(logout()); // Dispatch logout action
+            setTimeout(() => {
+              setActivity(false);
+              navigation.navigate("GetStartedScreen");
+            }, 3000);
+          }, 100); // Small delay to ensure state update completes
+        }
+      },
+    ]);
+  }
+
+  if (activity) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#8BC34A" />
+      </View>
+    );
+  }
+
   // Layout of the Profile Screen
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -124,8 +165,9 @@ const ProfileScreen = ({ navigation }) => {
           <View style={styles.menuContainer}>
             <MenuItem
               icon="document-text-outline"
-              title="Documents and Tasks"
+              title="Documents"
               iconColor="#8BC34A"
+              onPress={()=> setDocumentsheet(true)}
             />
             <MenuItem
               icon="settings-outline"
@@ -143,11 +185,13 @@ const ProfileScreen = ({ navigation }) => {
               icon="document-outline"
               title="Terms and Conditions"
               iconColor="#8BC34A"
+              
             />
             <MenuItem
               icon="log-out-outline"
               title="Sign out"
               iconColor="#FF5252"
+              onPress={()=> HandleLogout()}
             />
           </View>
           {/* <FeedbackBottomSheet/> */}
@@ -166,6 +210,14 @@ const ProfileScreen = ({ navigation }) => {
           openFeedbacksheet={openFeedbacksheet}
         />
       )}
+      {
+        openDocumentsheet && (
+          <DocumentsUpload
+          openDocumentsheet={openDocumentsheet}
+          onClose={() => setDocumentsheet(false)}
+          />
+        )
+      }
     </SafeAreaView>
   );
 };
@@ -261,7 +313,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   editProfileButton: {
-    backgroundColor: "#8BC34A",
+    backgroundColor: "#8CD136",
     borderRadius: 8,
     paddingVertical: 15,
     marginHorizontal: 20,

@@ -89,7 +89,7 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet}) => {
     // Navigate after a delay to allow the sheet to close
     setTimeout(() => {
       navigation.navigate("HomeScreen");
-    }, 400);
+    }, 3000);
   };
 
   const handleCheckInLunch = async () => {

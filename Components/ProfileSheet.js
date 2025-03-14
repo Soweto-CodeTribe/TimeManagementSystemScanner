@@ -140,7 +140,7 @@ const ProfileBottomSheet = ({ openProfileSheet, setOpenProfileSheet }) => {
               <View style={styles.iconContainer}>
                 <FontAwesome name="user" size={20} color="#6B7280" />
               </View>
-              <Text style={styles.fieldText}>{name} {usersurname}</Text>
+              <Text style={styles.fieldText}>{name || "User"} {usersurname}</Text>
               <View style={styles.actionIcon}>
                 <Feather name="lock" size={20} color="#6B7280" />
               </View>

@@ -10,7 +10,7 @@ const getCurrentTime = () => {
   const ampm = hours >= 12 ? 'PM' : 'AM';
   hours = hours % 12;
   hours = hours ? hours : 12; // the hour '0' should be '12'
-  return `${hours}:${minutes}`;
+  return `${hours}:${minutes} ${ampm}`;
   // ${ampm}
 };
 
@@ -83,11 +83,12 @@ export const loginUser = createAsyncThunk(
 
       // Extract trainee details from user data
       const traineeID = data.trainee?.traineeId?.toString();
-      const name = data.trainee?.name;
+      const name = data.trainee?.name || data.trainee?.fullName;
       const cellphone = data.trainee?.phoneNumber;
       const idNumber = data.trainee?.idNumber;
       const location = data.trainee?.location;
       const surname =data.trainee?.surname;
+      
 
       console.log("Name:", name);
       console.log("Surname:",surname);
@@ -117,7 +118,7 @@ export const loginUser = createAsyncThunk(
           await AsyncStorage.setItem("ID Number",idNumber);
         }
         if(location){
-          await AsyncStorage.setItem("Location ",location)
+          await AsyncStorage.setItem("Location",location)
         }
         
 

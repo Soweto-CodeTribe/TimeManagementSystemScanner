@@ -119,12 +119,12 @@ export default function ScannerAuth({ navigation }) {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.closeButton}
           onPress={() => navigation.goBack()}
         >
           <AntDesign name="close" size={24} color="red" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <Text style={styles.headerText}>Scan QR Code</Text>
       </View>
 

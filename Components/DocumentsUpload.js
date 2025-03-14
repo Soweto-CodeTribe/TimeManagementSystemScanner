@@ -13,19 +13,20 @@ const { height, width } = Dimensions.get('window');
 const SHEET_HEIGHT = height * 0.3;
 const SHEET_OVERFLOW = 20;
 
-const DocumentsUpload = ({ isVisible, onClose }) => {
+const DocumentsUpload = ({ openDocumentsheet, onClose }) => {
   const translateY = useSharedValue(SHEET_HEIGHT);
   const overlayOpacity = useSharedValue(0);
 
   useEffect(() => {
-    if (isVisible) {
+    if (openDocumentsheet) {
       overlayOpacity.value = withTiming(1, { duration: 200 });
       translateY.value = withSpring(0, { damping: 20, stiffness: 90 });
     } else {
-      overlayOpacity.value = withTiming(0, { duration: 200 });
-      translateY.value = withSpring(SHEET_HEIGHT, { damping: 20, stiffness: 90 });
+      translateY.value = withSpring(SHEET_HEIGHT, { damping: 20, stiffness: 90 }, () => {
+        overlayOpacity.value = withTiming(0, { duration: 200 });
+      });
     }
-  }, [isVisible]);
+  }, [openDocumentsheet]);
 
   const gesture = Gesture.Pan()
     .onUpdate((event) => {
@@ -35,7 +36,9 @@ const DocumentsUpload = ({ isVisible, onClose }) => {
     })
     .onEnd(() => {
       if (translateY.value > SHEET_HEIGHT / 3) {
-        onClose();
+        translateY.value = withSpring(SHEET_HEIGHT, { damping: 20, stiffness: 90 }, () => {
+          onClose(); // Ensure smooth closing animation before closing
+        });
       } else {
         translateY.value = withSpring(0, { damping: 20, stiffness: 90 });
       }
@@ -48,7 +51,7 @@ const DocumentsUpload = ({ isVisible, onClose }) => {
         copyToCacheDirectory: true,
       });
 
-      if (result.canceled) {
+      if (!result?.assets?.length) {
         Alert.alert('Upload canceled');
       } else {
         Alert.alert('File Selected', `Name: ${result.assets[0].name}`);
@@ -68,7 +71,7 @@ const DocumentsUpload = ({ isVisible, onClose }) => {
     opacity: overlayOpacity.value,
   }));
 
-  if (!isVisible) return null;
+  if (!openDocumentsheet) return null;
 
   return (
     <View style={styles.container}>
@@ -140,11 +143,9 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: SHEET_OVERFLOW + 20,
     alignItems: 'center',
-    // shadowColor: "#000",
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
     shadowRadius: 4.65,
-    // elevation: 6,
     zIndex: 1002,
   },
   handle: {
@@ -173,8 +174,8 @@ const styles = StyleSheet.create({
   acceptButton: {
     width: '100%',
     height: 44,
-    backgroundColor: "#8AC052",
-    borderRadius: 20,
+    backgroundColor: "#8CD136",
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
@@ -184,7 +185,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 44,
     backgroundColor: "white",
-    borderRadius: 20,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,

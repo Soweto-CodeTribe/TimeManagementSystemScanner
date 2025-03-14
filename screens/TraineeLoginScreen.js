@@ -87,7 +87,7 @@ const TraineeLoginScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
         <TouchableOpacity
-          style={[styles.button, { backgroundColor: isLoading ? "#88879C" : "#8AC052" }]}
+          style={[styles.button, { backgroundColor: isLoading ? "#88879C" : "#8CD136" }]}
           onPress={handleLogin}
           disabled={isLoading}
         >
@@ -108,6 +108,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     gap: 20,
+    marginTop:30
   },
   backButton: {
     flexDirection: "row",
@@ -173,7 +174,7 @@ const styles = StyleSheet.create({
     height: 52,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 25,
+    borderRadius: 10,
   },
   buttonText: {
     fontSize: 16,

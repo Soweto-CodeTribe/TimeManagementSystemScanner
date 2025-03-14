@@ -133,6 +133,7 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 8,
+    zIndex:-1
   },
   loadingText: {
     color: 'white',

@@ -78,7 +78,7 @@ function BottomTabNavigator() {
                     width: 70,
                     height: 70,
                     borderRadius: 35,
-                    backgroundColor: '#8BC34A',
+                    backgroundColor: '#8CD136',
                     justifyContent: 'center',
                     alignItems: 'center',
                     shadowColor: '#000',

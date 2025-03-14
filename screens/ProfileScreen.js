@@ -86,7 +86,7 @@ const ProfileScreen = ({ navigation }) => {
 
   
   const HandleLogout = () => {
-    Alert.alert('Are you sure you want to logout', [
+    Alert.alert('Are you sure you want to logout ?', 'See you next time ❤️', [
       {
         text: 'No',
         onPress: () => console.log('Cancel Pressed'),
@@ -313,7 +313,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   editProfileButton: {
-    backgroundColor: "#8BC34A",
+    backgroundColor: "#8CD136",
     borderRadius: 8,
     paddingVertical: 15,
     marginHorizontal: 20,

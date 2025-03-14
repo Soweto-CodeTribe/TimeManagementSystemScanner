@@ -59,6 +59,7 @@ const HomeScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true)
   const [token, setToken] = useState("")
   const [dataInitialized, setDataInitialized] = useState(false)
+  const [image, setImage] = useState(null)
 
   // Fetch name and token from AsyncStorage
   const fetchNameAndToken = async () => {
@@ -75,6 +76,22 @@ const HomeScreen = ({ navigation }) => {
       return null
     }
   }
+
+  useEffect(()=>{
+    const getProfile = async ()=>{
+      try {
+        const ProfileImage = await AsyncStorage.getItem('profileImage');
+        setImage(ProfileImage);
+  
+        console.log("This is the image",ProfileImage)
+        
+      } catch (error) {
+        console.error("Error Loading Image", error)
+      }
+    }
+    
+    getProfile();
+  },[]);
 
   // Fetch program information
   const fetchProgramInfo = async (authToken) => {
@@ -323,7 +340,7 @@ const HomeScreen = ({ navigation }) => {
 
   // Weekly attendance data for the chart
   const weeklyData = {
-    labels: ["M", "T", "W", "T", "F"],
+    labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
     datasets: [
       {
         data: [40, 80, 85, 55, 60],
@@ -366,7 +383,7 @@ const HomeScreen = ({ navigation }) => {
           data={weeklyData}
           width={Dimensions.get("window").width - 40}
           height={180}
-          yAxisSuffix="%"
+          yAxisSuffix=""
           chartConfig={{
             backgroundColor: "transparent",
             backgroundGradientFrom: "white",

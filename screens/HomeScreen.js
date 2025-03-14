@@ -405,7 +405,7 @@ const HomeScreen = ({ navigation }) => {
             style={[styles.toggleButton, activeStats === "weekly" && styles.activeToggle]}
             onPress={() => setActiveStats("weekly")}
           >
-            <Text style={[styles.toggleText, activeStats === "weekly" && styles.activeToggleText]}>Hourly</Text>
+            <Text style={[styles.toggleText, activeStats === "weekly" && styles.activeToggleText]}>Daily</Text>
           </TouchableOpacity>
         </View>
       </View>

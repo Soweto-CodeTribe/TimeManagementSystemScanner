@@ -86,7 +86,7 @@ const ProfileScreen = ({ navigation }) => {
 
   
   const HandleLogout = () => {
-    Alert.alert('Are you sure you want to logout', 'Please note you will be screwed!!!', [
+    Alert.alert('Are you sure you want to logout', [
       {
         text: 'No',
         onPress: () => console.log('Cancel Pressed'),
@@ -102,14 +102,14 @@ const ProfileScreen = ({ navigation }) => {
             dispatch(logout()); // Dispatch logout action
             setTimeout(() => {
               setActivity(false);
-              navigation.navigate("SplashScreen");
+              navigation.navigate("GetStartedScreen");
             }, 3000);
           }, 100); // Small delay to ensure state update completes
         }
       },
     ]);
   }
-  
+
   if (activity) {
     return (
       <View style={styles.loadingContainer}>

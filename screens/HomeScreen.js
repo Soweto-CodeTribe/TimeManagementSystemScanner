@@ -1,97 +1,306 @@
 "use client"
 
 import { StatusBar } from "expo-status-bar"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, Dimensions, TouchableOpacity, Image } from "react-native"
 import { BarChart } from "react-native-chart-kit"
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import LoaderPopup, { Loader } from "../Components/LoaderPopup"
+import axios from "axios"
+import DocumentsUpload from "../Components/DocumentsUpload"
 
-// Progress Guide component based on the screenshot
+// Import the function to get all months
+import { getAllProgramMonths } from "./DateUtils" // Make sure to create this file
+
+// Progress Guide component
 const AttendanceProgressBar = ({ percentage, showLabel = false }) => {
-  // Determine the color based on percentage thresholds
   const getBarColor = (percent) => {
-    if (percent > 80) return "#007BFF"; // Blue
-    if (percent >= 60) return "#FF9800"; // Orange
-    return "#FF0000"; // Red
-  };
+    if (percent > 80) return "#007BFF" // Blue
+    if (percent >= 60) return "#FF9800" // Orange
+    return "#FF0000" // Red
+  }
 
- 
-  const barColor = getBarColor(percentage);
+  const barColor = getBarColor(percentage)
 
   return (
     <View style={styles.progressContainer}>
-      <View 
+      <View
         style={[
-          styles.progressBar, 
-          { 
+          styles.progressBar,
+          {
             width: `${percentage}%`,
-            backgroundColor: barColor 
-          }
-        ]} 
+            backgroundColor: barColor,
+          },
+        ]}
       />
       {showLabel && (
         <View style={styles.progressGuideContainer}>
           <Text style={styles.progressGuideText}>
-            {percentage > 80 
+            {percentage > 80
               ? "If A Monthly/Yearly Attendance is Over 80%, The Progress Bar Must Be Blue"
-              : percentage >= 60 
+              : percentage >= 60
                 ? "If A Monthly/Yearly Attendance is Between 60% And 80%, The Progress Bar Must Be Orange"
-                : "If A Monthly/Yearly Attendance is Under 60%, The Progress Bar Must Be Red"
-            }
+                : "If A Monthly/Yearly Attendance is Under 60%, The Progress Bar Must Be Red"}
           </Text>
         </View>
       )}
     </View>
-  );
-};
+  )
+}
 
 const HomeScreen = ({ navigation }) => {
   const [activeStats, setActiveStats] = useState("monthly")
   const [isDayMissed, setIsDayMissed] = useState(false)
   const [name, setName] = useState("User") // Default value
-  const [image, setImage] = useState(null)
+  const [myWeeklyData, setMyWeeklyData] = useState([])
+  const [monthlyStats, setMonthlyStats] = useState([])
+  const [programMonths, setProgramMonths] = useState([])
+  const [programInfo, setProgramInfo] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [token, setToken] = useState("")
+  const [dataInitialized, setDataInitialized] = useState(false)
 
-
-  useEffect(()=>{
-    const getProfile = async ()=>{
-      try {
-        const ProfileImage = await AsyncStorage.getItem('profileImage');
-        setImage(ProfileImage);
-  
-        console.log("This is the image",ProfileImage)
-        
-      } catch (error) {
-        console.error("Error Loading Image", error)
-      }
-    }
-    
-    getProfile();
-  },[]);
-  
-  // Fetch name from AsyncStorage
-  const fetchName = async () => {
+  // Fetch name and token from AsyncStorage
+  const fetchNameAndToken = async () => {
     try {
-      const storedName = await AsyncStorage.getItem('name');
-      if (storedName) setName(storedName);
-    } catch (error) {
-      console.log("Error fetching name:", error);
-    }
-  };
-  
-  // Call fetchName when component mounts
-  useState(() => {
-    fetchName();
-  }, []);
+      const storedName = await AsyncStorage.getItem("name")
+      if (storedName) setName(storedName)
 
-  // Weekly attendance data for the chart
-  const weeklyData = {
-    labels: ["M", "T", "W", "T", "F"],
-    datasets: [
-      {
-        data: [40, 80, 85, 55, 60],
-      },
-    ],
+      const storedToken = await AsyncStorage.getItem("token")
+      if (storedToken) setToken(storedToken)
+
+      return storedToken
+    } catch (error) {
+      console.log("Error fetching data from storage:", error)
+      return null
+    }
   }
+
+  // Fetch program information
+  const fetchProgramInfo = async (authToken) => {
+    try {
+      const traineeId = (await AsyncStorage.getItem("traineeId")) || "18"
+      if (!authToken) {
+        console.error("Token is missing.")
+        return null
+      }
+
+      const response = await axios.get(
+        `https://timemanagementsystemserver.onrender.com/api/session/trainee-program-info/${traineeId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        },
+      )
+
+      if (response.data) {
+        setProgramInfo(response.data)
+
+        // Get all months for the program duration
+        const allMonths = getAllProgramMonths(response.data.programStartDate, response.data.programEndDate)
+        setProgramMonths(allMonths)
+
+        return { traineeId, allMonths }
+      }
+
+      return null
+    } catch (error) {
+      console.error("Error fetching program info:", error.response?.data || error.message)
+      return null
+    }
+  }
+
+  // Fetch weekly data
+  const fetchWeeklyData = async (authToken, traineeId) => {
+    try {
+      if (!authToken || !traineeId) {
+        console.error("Token or traineeId is missing.")
+        return
+      }
+
+      const weeklyResponse = await axios.get(
+        `https://timemanagementsystemserver.onrender.com/api/session/weekly-stats?traineeId=${traineeId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        },
+      )
+
+      if (weeklyResponse.data) {
+        setMyWeeklyData(weeklyResponse.data.dailyBreakdown)
+      }
+    } catch (error) {
+      console.error("Error fetching weekly data:", error.response?.data || error.message)
+    }
+  }
+
+  // Fetch monthly stats for a specific month
+  const fetchMonthlyStatsForMonth = async (authToken, traineeId, month, year) => {
+    try {
+      if (!authToken) {
+        console.error("Token is missing.")
+        return
+      }
+
+      const monthlyResponse = await axios.get(
+        `https://timemanagementsystemserver.onrender.com/api/session/monthly-stats?traineeId=${traineeId}&month=${month}&year=${year}`,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        },
+      )
+
+      if (monthlyResponse.data) {
+        const stats = monthlyResponse.data.monthlyStats
+        const percentage = Number.parseFloat(stats.attendanceRate)
+
+        // Update or add the monthly stats
+        setMonthlyStats((prevStats) => {
+          // Find if we already have this month in our stats
+          const existingIndex = prevStats.findIndex((s) => s.month === stats.monthName && s.year === year)
+
+          const newStat = {
+            month: stats.monthName,
+            year: year,
+            monthYear: `${stats.monthName} ${year}`,
+            attended: stats.attendedDays,
+            total: stats.workingDaysInMonth,
+            percentage: isNaN(percentage) ? 0 : percentage,
+            sortDate: new Date(year, month - 1, 1).getTime(), // Add timestamp for sorting
+          }
+
+          if (existingIndex >= 0) {
+            // Update existing entry
+            const newStats = [...prevStats]
+            newStats[existingIndex] = newStat
+            return newStats
+          } else {
+            // Add new entry
+            return [...prevStats, newStat]
+          }
+        })
+      }
+    } catch (error) {
+      console.error("Error fetching monthly data:", error.response?.data || error.message)
+      // For months with no data, add an empty record
+      const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ]
+
+      setMonthlyStats((prevStats) => {
+        const monthName = monthNames[month - 1]
+        // Check if we already have this month
+        if (!prevStats.some((s) => s.month === monthName && s.year === year)) {
+          return [
+            ...prevStats,
+            {
+              month: monthName,
+              year: year,
+              monthYear: `${monthName} ${year}`,
+              attended: 0,
+              total: 0,
+              percentage: 0,
+              noData: true, // Flag to indicate this month has no data
+              sortDate: new Date(year, month - 1, 1).getTime(), // Add timestamp for sorting
+            },
+          ]
+        }
+        return prevStats
+      })
+    }
+  }
+
+  // Fetch all monthly stats for the program duration
+  const fetchAllMonthlyStats = async (authToken, traineeId, months) => {
+    if (!months || months.length === 0) return
+
+    try {
+      // Clear previous stats
+      setMonthlyStats([])
+
+      // For each month in the program, fetch stats
+      const fetchPromises = months.map((monthInfo) =>
+        fetchMonthlyStatsForMonth(authToken, traineeId, monthInfo.month, monthInfo.year),
+      )
+
+      await Promise.all(fetchPromises)
+    } catch (error) {
+      console.error("Error fetching all monthly stats:", error)
+    }
+  }
+
+  // Initialize all data with a single loader
+  const initializeData = useCallback(async () => {
+    if (dataInitialized) return
+
+    try {
+      // Show loader only once at the beginning
+      Loader.show()
+
+      // Step 1: Get authentication token
+      const authToken = await fetchNameAndToken()
+      if (!authToken) {
+        console.error("Failed to get authentication token")
+        return
+      }
+
+      // Step 2: Fetch program info
+      const programData = await fetchProgramInfo(authToken)
+      if (!programData) {
+        console.error("Failed to fetch program info")
+        return
+      }
+
+      // Step 3: Fetch weekly data
+      await fetchWeeklyData(authToken, programData.traineeId)
+
+      // Step 4: Fetch monthly stats
+      if (programData.allMonths.length > 0) {
+        await fetchAllMonthlyStats(authToken, programData.traineeId, programData.allMonths)
+      }
+
+      // Mark data as initialized
+      setDataInitialized(true)
+    } catch (error) {
+      console.error("Error initializing data:", error)
+    } finally {
+      // Hide loader when all data is loaded
+      setLoading(false)
+      Loader.hide()
+    }
+  }, [dataInitialized])
+
+  // Initialize data on component mount
+  useEffect(() => {
+    initializeData()
+  }, [initializeData])
+
+  // Sort and organize monthly stats
+  const sortedMonthlyStats = useMemo(() => {
+    // First, sort by date (newest first)
+    const sorted = [...monthlyStats].sort((a, b) => b.sortDate - a.sortDate)
+
+    // Then, prioritize months with data
+    return sorted.sort((a, b) => {
+      if (a.noData && !b.noData) return 1 // a has no data, b has data, b comes first
+      if (!a.noData && b.noData) return -1 // a has data, b has no data, a comes first
+      return 0 // both have data or both don't have data, maintain date sort
+    })
+  }, [monthlyStats])
 
   // Current date
   const today = new Date()
@@ -112,33 +321,23 @@ const HomeScreen = ({ navigation }) => {
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
   const currentDate = `${days[today.getDay()]}, ${months[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()}`
 
-  // Monthly stats data
-  const monthlyStats = [
-    // Excellent attendance (>80%) - Blue progress bars
-    { month: "January", attended: 28, total: 31, percentage: 90 },
-    { month: "February", attended: 27, total: 28, percentage: 96 },
-    { month: "March", attended: 29, total: 31, percentage: 94 },
-    
-    // Moderate attendance (60-80%) - Orange progress bars
-    { month: "April", attended: 21, total: 30, percentage: 70 },
-    { month: "May", attended: 22, total: 31, percentage: 71 },
-    { month: "June", attended: 24, total: 30, percentage: 80 },
-    
-    // Poor attendance (<60%) - Red progress bars
-    { month: "July", attended: 15, total: 31, percentage: 48 },
-    { month: "August", attended: 17, total: 31, percentage: 55 },
-    { month: "September", attended: 16, total: 30, percentage: 53 },
-    
-    // Mixed recent months
-    { month: "October", attended: 28, total: 31, percentage: 90 }, // Good - Blue
-    { month: "November", attended: 19, total: 30, percentage: 63 }, // Moderate - Orange
-    { month: "December", attended: 12, total: 31, percentage: 39 }  // Poor - Red
-  ]
+  // Weekly attendance data for the chart
+  const weeklyData = {
+    labels: ["M", "T", "W", "T", "F"],
+    datasets: [
+      {
+        data: [40, 80, 85, 55, 60],
+      },
+    ],
+  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor={'#fff'} style={'dark'}/>
-      
+      <StatusBar backgroundColor={"#fff"} style={"dark"} />
+
+      {/* Include the loader component without visible prop */}
+      <LoaderPopup />
+
       {/* Header Section */}
       <View style={styles.header}>
         <View>
@@ -146,11 +345,11 @@ const HomeScreen = ({ navigation }) => {
           <Text style={styles.date}>{currentDate}</Text>
         </View>
         <View style={styles.avatarContainer}>
-          <TouchableOpacity onPress={()=> navigation.navigate('NotificationScreen')} style={styles.iconButton}>
-            <Text style={{fontSize: 20}}>🔔</Text>
+          <TouchableOpacity onPress={() => navigation.navigate("NotificationScreen")} style={styles.iconButton}>
+            <Text style={{ fontSize: 20 }}>🔔</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={()=> navigation.navigate("ProfileScreen")} style={styles.iconButton}>
-          <Image
+          <TouchableOpacity onPress={() => navigation.navigate("ProfileScreen")} style={styles.iconButton}>
+            <Image
               source={{
                  uri: image 
               }}
@@ -159,7 +358,7 @@ const HomeScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
-     
+
       {/* Weekly Attendance Chart */}
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Weekly Attendance</Text>
@@ -203,29 +402,73 @@ const HomeScreen = ({ navigation }) => {
             <Text style={[styles.toggleText, activeStats === "monthly" && styles.activeToggleText]}>Monthly</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.toggleButton, activeStats === "yearly" && styles.activeToggle]}
-            onPress={() => setActiveStats("yearly")}
+            style={[styles.toggleButton, activeStats === "weekly" && styles.activeToggle]}
+            onPress={() => setActiveStats("weekly")}
           >
-            <Text style={[styles.toggleText, activeStats === "yearly" && styles.activeToggleText]}>Weekly</Text>
+            <Text style={[styles.toggleText, activeStats === "weekly" && styles.activeToggleText]}>Daily</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {isDayMissed && <DocumentsUpload isVisible={isDayMissed} onClose={() => setIsDayMissed(false)}/>}
+      {isDayMissed && <DocumentsUpload isVisible={isDayMissed} onClose={() => setIsDayMissed(false)} />}
       <ScrollView>
-        {/* Monthly Stats Cards */}
+        {/* Stats Cards based on active view */}
         <View style={styles.statsCards}>
-          {monthlyStats.map((stat, index) => (
-            <View key={index} style={styles.statCard}>
-              <Text style={styles.monthTitle}>{stat.month}</Text>
-              <Text style={styles.attendanceText}>{stat.attended} of {stat.total} days</Text>
-              
-              {/* Using the new AttendanceProgressBar component */}
-              <AttendanceProgressBar percentage={stat.percentage} />
-              
-              <Text style={styles.percentageText}>{stat.percentage}%</Text>
-            </View>
-          ))}
+          {activeStats === "monthly" &&
+            sortedMonthlyStats.map((stat, index) => (
+              <View key={index} style={styles.statCard}>
+                <Text style={styles.monthTitle}>{stat.monthYear}</Text>
+                {stat.noData ? (
+                  <Text style={styles.attendanceText}>No data available yet</Text>
+                ) : (
+                  <>
+                    <Text style={styles.attendanceText}>
+                      {stat.attended} of {stat.total} days
+                    </Text>
+                    <AttendanceProgressBar percentage={stat.percentage} />
+                    <Text style={styles.percentageText}>{stat.percentage.toFixed(1)}%</Text>
+                  </>
+                )}
+              </View>
+            ))}
+
+          {activeStats === "weekly" &&
+            myWeeklyData.map((day, index) => (
+              <View key={index} style={styles.statCard}>
+                <Text style={styles.monthTitle}>
+                  {day.dayOfWeek} ({day.date})
+                </Text>
+                <Text style={styles.attendanceText}>
+                  {day.attended
+                    ? `${day.checkInTime || "No check-in"} - ${day.checkOutTime || "No check-out"}`
+                    : "Absent"}
+                </Text>
+
+                {day.attended && (
+                  <>
+                    <View style={styles.statusContainer}>
+                      <Text
+                        style={[
+                          styles.statusText,
+                          {
+                            color:
+                              day.status === "On time" || day.status === "Within grace period"
+                                ? "#4CAF50"
+                                : day.status === "Late"
+                                  ? "#FF9800"
+                                  : "#2196F3",
+                          },
+                        ]}
+                      >
+                        {day.status}
+                      </Text>
+                    </View>
+
+                    <Text style={styles.hoursText}>Hours worked: {day.hoursWorked || "0.00"}</Text>
+                  </>
+                )}
+              </View>
+            ))}
         </View>
 
         {/* Spacer for bottom tabs */}
@@ -246,11 +489,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 60,
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     zIndex: 1000,
   },
   greeting: {
@@ -267,17 +510,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 10,
   },
-  iconButton:{
+  iconButton: {
     padding: 5,
     borderRadius: 50,
-    gap: 12
+    gap: 12,
   },
   chartContainer: {
     marginHorizontal: 20,
-    marginTop: 100, 
+    marginTop: 100,
     paddingVertical: 15,
   },
-  profileImage:{
+  profileImage: {
     width: 40,
     height: 40,
     borderRadius: 50,
@@ -375,8 +618,34 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
   },
   bottomSpacer: {
-    height: 80, 
+    height: 80,
+  },
+  progressGuideContainer: {
+    marginTop: 8,
+    backgroundColor: "#F8F8F8",
+    padding: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#EEEEEE",
+  },
+  progressGuideText: {
+    fontSize: 12,
+    color: "#666666",
+    textAlign: "center",
+  },
+  statusContainer: {
+    marginVertical: 5,
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  hoursText: {
+    fontSize: 14,
+    color: "#666666",
+    marginTop: 5,
   },
 })
 
-export default HomeScreen;
+export default HomeScreen
+

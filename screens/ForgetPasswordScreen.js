@@ -9,26 +9,26 @@ const ForgetPasswordScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const token = useSelector((state) => state.auth.token);
-  const BASE_URL = 'https://timemanagementsystemserver.onrender.com';
-  const handleForgotPassword = async () => {
-    if (!email) return;
+  // const token = useSelector((state) => state.auth.token);
+  // const BASE_URL = 'https://timemanagementsystemserver.onrender.com';
+  // const handleForgotPassword = async () => {
+  //   if (!email) return;
     
-    setLoading(true);
-    setError('');
+  //   setLoading(true);
+  //   setError('');
     
-    try {
-      const response = await axios.post(`${BASE_URL}/api/auth/forgot-password`, 
-        { email },
-        { 
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          } 
-        }
-      );
+  //   try {
+  //     const response = await axios.post(`${BASE_URL}/api/auth/forgot-password`, 
+  //       { email },
+  //       { 
+  //         headers: { 
+  //           'Content-Type': 'application/json',
+  //           'Authorization': `Bearer ${token}`
+  //         } 
+  //       }
+  //     );
       
-      setLoading(false);
+  //     setLoading(false);
       
       if (response.data.message === "Password reset link sent successfully") {
         navigation.navigate('PasswordEmail', { email });

@@ -1,39 +1,53 @@
-import React, { useEffect, useRef } from 'react';
-import {
-  View,
-  Modal,
-  StyleSheet,
-  Animated,
-  Easing,
-  Dimensions,
-} from 'react-native';
-import Svg, { Circle, Text, Defs, LinearGradient, Stop, G } from 'react-native-svg';
+"use client"
 
-const { width } = Dimensions.get('window');
-const CIRCLE_SIZE = width * 0.5;
-const CIRCLE_LENGTH = CIRCLE_SIZE * Math.PI;
-const PARTICLE_COUNT = 24;
+import { useEffect, useRef, useState } from "react"
+import { View, Modal, StyleSheet, Animated, Easing, Dimensions } from "react-native"
+import Svg, { Circle, Defs, LinearGradient, Stop, G } from "react-native-svg"
 
-const LoaderPopup = ({ visible = false }) => {
-  const progressAnim = useRef(new Animated.Value(0)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+const { width } = Dimensions.get("window")
+const CIRCLE_SIZE = width * 0.5
+const CIRCLE_LENGTH = CIRCLE_SIZE * Math.PI
+const PARTICLE_COUNT = 24
+
+// Create a singleton instance that can be imported and used anywhere
+let loaderInstance = null
+
+// Create animated circle component
+const AnimatedCircle = Animated.createAnimatedComponent(Circle)
+
+const LoaderPopup = () => {
+  const [isVisible, setIsVisible] = useState(false)
+  const progressAnim = useRef(new Animated.Value(0)).current
+  const rotateAnim = useRef(new Animated.Value(0)).current
+  const fadeAnim = useRef(new Animated.Value(0)).current
   const particleAnims = useRef(
     [...Array(PARTICLE_COUNT)].map(() => ({
       scale: new Animated.Value(0),
       opacity: new Animated.Value(0),
-    }))
-  ).current;
+    })),
+  ).current
+
+  // Set the loader instance reference when component mounts
+  useEffect(() => {
+    loaderInstance = {
+      show: () => setIsVisible(true),
+      hide: () => setIsVisible(false),
+    }
+
+    return () => {
+      loaderInstance = null
+    }
+  }, [])
 
   useEffect(() => {
-    if (visible) {
+    if (isVisible) {
       // Fade in
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 600,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
-      }).start();
+      }).start()
 
       // Circular progress animation
       Animated.loop(
@@ -50,8 +64,8 @@ const LoaderPopup = ({ visible = false }) => {
             easing: Easing.inOut(Easing.cubic),
             useNativeDriver: true,
           }),
-        ])
-      ).start();
+        ]),
+      ).start()
 
       // Rotation animation
       Animated.loop(
@@ -60,8 +74,8 @@ const LoaderPopup = ({ visible = false }) => {
           duration: 8000,
           easing: Easing.linear,
           useNativeDriver: true,
-        })
-      ).start();
+        }),
+      ).start()
 
       // Particle animations
       particleAnims.forEach((anim, index) => {
@@ -97,49 +111,45 @@ const LoaderPopup = ({ visible = false }) => {
               }),
             ]),
           ]).start(() => {
-            if (visible) {
-              startParticleAnimation();
+            if (isVisible) {
+              startParticleAnimation()
             }
-          });
-        };
-        startParticleAnimation();
-      });
+          })
+        }
+        startParticleAnimation()
+      })
     } else {
       Animated.timing(fadeAnim, {
         toValue: 0,
         duration: 400,
         easing: Easing.in(Easing.cubic),
         useNativeDriver: true,
-      }).start();
+      }).start()
     }
 
     return () => {
-      progressAnim.stopAnimation();
-      rotateAnim.stopAnimation();
-      particleAnims.forEach(anim => {
-        anim.scale.stopAnimation();
-        anim.opacity.stopAnimation();
-      });
-    };
-  }, [visible]);
+      progressAnim.stopAnimation()
+      rotateAnim.stopAnimation()
+      particleAnims.forEach((anim) => {
+        anim.scale.stopAnimation()
+        anim.opacity.stopAnimation()
+      })
+    }
+  }, [isVisible])
 
   const rotate = rotateAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
+    outputRange: ["0deg", "360deg"],
+  })
 
   return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType="none"
-    >
+    <Modal transparent visible={isVisible} animationType="none">
       <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
         <View style={styles.loaderContainer}>
           {/* Floating particles */}
           {particleAnims.map((anim, index) => {
-            const angle = (index * 360) / PARTICLE_COUNT;
-            const radius = CIRCLE_SIZE * 0.6;
+            const angle = (index * 360) / PARTICLE_COUNT
+            const radius = CIRCLE_SIZE * 0.6
             return (
               <Animated.View
                 key={index}
@@ -155,7 +165,7 @@ const LoaderPopup = ({ visible = false }) => {
                   },
                 ]}
               />
-            );
+            )
           })}
 
           {/* Main circular loader */}
@@ -198,58 +208,69 @@ const LoaderPopup = ({ visible = false }) => {
 
           {/* Inner content */}
           <View style={styles.innerContent}>
-            <Animated.Text style={[styles.loadingText, { opacity: fadeAnim }]}>
-              Loading
-            </Animated.Text>
+            <Animated.Text style={[styles.loadingText, { opacity: fadeAnim }]}>Loading</Animated.Text>
           </View>
         </View>
       </Animated.View>
     </Modal>
-  );
-};
-
-// Create animated circle component
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#f2f2f8",
+    justifyContent: "center",
+    alignItems: "center",
   },
   loaderContainer: {
     width: CIRCLE_SIZE,
     height: CIRCLE_SIZE,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   innerContent: {
-    position: 'absolute',
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: "absolute",
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
-    color: '#8CC63F',
+    color: "#8CC63F",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     letterSpacing: 1,
-    textShadowColor: 'rgba(140, 198, 63, 0.5)',
+    textShadowColor: "rgba(140, 198, 63, 0.5)",
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 10,
   },
   particle: {
-    position: 'absolute',
+    position: "absolute",
     width: 6,
     height: 6,
-    backgroundColor: '#8CC63F',
+    backgroundColor: "#8CC63F",
     borderRadius: 3,
-    shadowColor: '#8CC63F',
+    shadowColor: "#8CC63F",
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.8,
     shadowRadius: 4,
     elevation: 2,
   },
-});
+})
 
-export default LoaderPopup;
+// Export a utility to control the loader
+export const Loader = {
+  show: () => {
+    if (loaderInstance) {
+      loaderInstance.show()
+    }
+  },
+  hide: () => {
+    if (loaderInstance) {
+      loaderInstance.hide()
+    }
+  },
+}
+
+// Export the component as default
+export default LoaderPopup
+

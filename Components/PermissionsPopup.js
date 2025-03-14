@@ -145,7 +145,7 @@ const PermissionsPopup = ({ isVisible }) => {
         });
         setTimeout(() => {
           navigation.navigate("ScannerScreen");
-        }, 3000);
+        }, 100);
       } else {
         Alert.alert("Camera Permission", "Camera access denied.");
         navigation.navigate("GetStartedScreen");
@@ -317,21 +317,35 @@ const styles = StyleSheet.create({
   acceptButton: {
     width: '100%',
     height: 44,
-    backgroundColor: "#8AC052",
-    borderRadius: 20,
+    backgroundColor: "#8CE01C",
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
     elevation: 2,
+    shadowColor: '#8CE01C',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   declineButton: {
     width: '100%',
     height: 44,
     backgroundColor: "white",
-    borderRadius: 20,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 2,
+    elevation: 6,
+    shadowColor: '#8CE01C',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   buttontextDecline: {
     color: 'black',

@@ -10,6 +10,7 @@ import { Ionicons } from "@expo/vector-icons";
 import CalendarModal from "../Components/CalendarModal";
 import axios from "axios";
 import { useSelector } from "react-redux";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const TimelineScreen = () => {
   const [expandedDay, setExpandedDay] = useState(null);
@@ -20,11 +21,15 @@ const TimelineScreen = () => {
   const [selectedDate, setSelectedDate] = useState(currentDate.getDate());
   const [weekDates, setWeekDates] = useState([]);
   const [displayDays, setDisplayDays] = useState([]);
-  const TraineeID = useSelector((state) => state.auth.traineeID);
-  const token = useSelector((state) => state.auth.token);
+  // const TraineeID = useSelector((state) => state.auth.traineeID);
+  // const token = useSelector((state) => state.auth.token);
   const [weeklyData, setWeeklyData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [token, setToken]= useState(null);
+  const [TraineeID, setTraineeID]= useState(null);
 
+
+ 
   const months = [
     "January",
     "February",
@@ -52,6 +57,8 @@ const TimelineScreen = () => {
       const formattedDate = `${selectedYear}-${formattedMonth}-${formattedDay}`;
       
       console.log("Fetching data for date:", formattedDate);
+
+      
       
       // Pass the selected date to the API
       const response = await axios.get(
@@ -76,6 +83,24 @@ const TimelineScreen = () => {
       setIsLoading(false);
     }
   };
+
+
+  useEffect(()=>{
+    const fetchUserData = async ()=>{
+     try {
+       const ID = await AsyncStorage.getItem('traineeID');
+       const Token = await AsyncStorage.getItem('token');
+
+       setToken(Token);
+       setTraineeID(ID)
+       console.log("This is the Token Nigger", Token);
+     } catch (error) {
+       console.error("Message error", error)
+     }
+    }
+    fetchUserData();
+ },[])
+
 
   // Initialize the week days when component mounts or when selectedDate changes
   useEffect(() => {
@@ -481,7 +506,7 @@ const styles = StyleSheet.create({
     marginRight: 16,
     paddingLeft: 40,
     position: "relative",
-    marginBottom: 16,
+    marginBottom: 55,
   },
   timelineLine: {
     position: "absolute",

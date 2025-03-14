@@ -1,13 +1,15 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Provider } from "react-redux";
+import { Provider, useSelector } from "react-redux";
 import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity, View } from 'react-native';
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import store from "./Components/Redux/Store.js";
+
+// Import all screens
 import SplashScreen from "./screens/SplashScreen";
 import GetStartedScreen from "./screens/GetStartedScreen";
 import TraineeLoginScreen from "./screens/TraineeLoginScreen";
@@ -27,11 +29,10 @@ import GetStartedAttendance from "./screens/GetStartedAttendance.js";
 import GetStartedVerified from "./screens/GetStartedVerified.js";
 import SettingsScreen from "./screens/SettingsScreen.js";
 
-
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Bottom Tab Navigator
+// Bottom Tab Navigator for authenticated users
 function BottomTabNavigator() {
   return (
     <Tab.Navigator
@@ -56,12 +57,10 @@ function BottomTabNavigator() {
           if (route.name === "HomeScreen") iconName = "home-outline";
           else if (route.name === "ScannerAuth") iconName = "qr-code-outline";
           else if (route.name === "Timeline") iconName = "time-outline";
-          
           return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: "#8BC34A",
         tabBarInactiveTintColor: "gray",
-        headerShown: false,
         tabBarButton: (props) => {
           if (route.name === 'ScannerAuth') {
             return (
@@ -79,7 +78,7 @@ function BottomTabNavigator() {
                     width: 70,
                     height: 70,
                     borderRadius: 35,
-                    backgroundColor: '#8BC34A',
+                    backgroundColor: '#8CD136',
                     justifyContent: 'center',
                     alignItems: 'center',
                     shadowColor: '#000',
@@ -105,38 +104,58 @@ function BottomTabNavigator() {
   );
 }
 
-// Auth Navigator
-function AuthNavigator() {
+// Main App Navigator with token retrieval
+function AppNavigator() {
+  const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(null);
+
+  useEffect(() => {
+    const checkToken = async () => {
+      try {
+        const storedToken = await AsyncStorage.getItem("token");
+        setToken(storedToken);
+      } catch (error) {
+        console.error("Error retrieving token:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkToken();
+  }, []);
+
+  if (loading) return null;
+
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="SplashScreen" component={SplashScreen} />
+    <Stack.Navigator 
+      initialRouteName={token ? "MainApp" : "GetStartedScreen"}
+      screenOptions={{ headerShown: false }}
+    >
+      {/* <Stack.Screen name="SplashScreen" component={SplashScreen} /> */}
       <Stack.Screen name="GetStartedScreen" component={GetStartedScreen} />
+      <Stack.Screen name="GetStartedSeamlessly" component={GetStartedSeamlessly} />
+      <Stack.Screen name="PermissionsScreen" component={PermissionsScreen} />
+      <Stack.Screen name="GetStartedVerified" component={GetStartedVerified} />
+      <Stack.Screen name="GetStartedAttendance" component={GetStartedAttendance} />
+      <Stack.Screen name="ScannerScreen" component={ScannerScreen} />
       <Stack.Screen name="TraineeLoginScreen" component={TraineeLoginScreen} />
       <Stack.Screen name="GuestRegister" component={GuestRegisterScreen} />
       <Stack.Screen name="GuestEmail" component={GuestEmailScreen} />
       <Stack.Screen name="ForgetPassword" component={ForgetPasswordScreen} />
       <Stack.Screen name="PasswordEmail" component={PasswordEmailScreen} />
+      <Stack.Screen name="MainApp" component={BottomTabNavigator} />
       <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
       <Stack.Screen name="NotificationScreen" component={NotificationScreen} />
-      <Stack.Screen name="PermissionsScreen" component={PermissionsScreen} />
-      <Stack.Screen name="ScannerScreen" component={ScannerScreen} />
-      <Stack.Screen name="MainApp" component={BottomTabNavigator} />
-      <Stack.Screen name="HomeScreen" component={HomeScreen} />
-      <Stack.Screen name="GetStartedSeamlessly" component={GetStartedSeamlessly} />
-      <Stack.Screen name="GetStartedAttendance" component={GetStartedAttendance} />
-      <Stack.Screen name="GetStartedVerified" component={GetStartedVerified} />
       <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
     </Stack.Navigator>
   );
 }
 
-// Main App Navigator
 export default function App() {
   return (
     <Provider store={store}>
       <NavigationContainer>
         <StatusBar style="auto" />
-        <AuthNavigator />
+        <AppNavigator />
       </NavigationContainer>
     </Provider>
   );

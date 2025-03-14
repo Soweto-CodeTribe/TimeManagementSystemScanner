@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
     marginRight: 16,
     paddingLeft: 40,
     position: "relative",
-    marginBottom: 16,
+    marginBottom: 55,
   },
   timelineLine: {
     position: "absolute",

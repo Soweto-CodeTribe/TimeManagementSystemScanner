@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, Pressable, Alert } from 'react-native';
 import Animated, { 
   useSharedValue, 
@@ -10,6 +10,7 @@ import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import Toast from "react-native-toast-message";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Import the actions from your new slice
 import { 
@@ -27,9 +28,31 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet}) => {
   const overlayOpacity = useSharedValue(0);
   
   // Get state from Redux
-  const token = useSelector((state) => state.auth.token);
-  const traineeId = useSelector((state) => state.auth.traineeID);
-  const { lunchStatus, loading } = useSelector((state) => state.checkInOut);
+  // const token = useSelector((state) => state.auth.token);
+  // const traineeId = useSelector((state) => state.auth.traineeID);
+   const [token, setToken]= useState(null);
+   const [traineeId, setTraineeID] = useState(null);
+   const { lunchStatus, loading } = useSelector((state) => state.checkInOut);
+
+    useEffect(()=>{
+      const fetchUserData = async ()=>{
+       try {
+         const ID = await AsyncStorage.getItem('traineeID');
+         const Token = await AsyncStorage.getItem('token');
+  
+         setToken(Token);
+         setTraineeID(ID);
+         
+       } catch (error) {
+         console.error("Message error", error)
+       }
+      }
+      fetchUserData();
+   },[])
+
+   console.log("This is the Token Nigger", token);
+   console.log("This is the ID Nigger", traineeId);
+  
   
   const dispatch = useDispatch();
   const navigation = useNavigation();
@@ -88,7 +111,7 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet}) => {
     closeSheet();
     // Navigate after a delay to allow the sheet to close
     setTimeout(() => {
-      navigation.navigate("HomeScreen");
+      navigation.navigate("Home");
     }, 3000);
   };
 

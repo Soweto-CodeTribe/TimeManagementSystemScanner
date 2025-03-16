@@ -30,26 +30,26 @@ const ForgetPasswordScreen = ({ navigation }) => {
       
   //     setLoading(false);
       
-      if (response.data.message === "Password reset link sent successfully") {
-        navigation.navigate('PasswordEmail', { email });
-      } else {
-        setError(response.data.message || 'An error occurred');
-      }
-    } catch (error) {
-      setLoading(false); 
-      if (error.response) {
-        // Server responded with an error
-        setError(error.response.data.message || 'Server error');
-      } else if (error.request) {
-        // No response received
-        setError('Network error. Please check your connection.');
-      } else {
-        // Request setup error
-        setError('Failed to send request');
-      }
-      console.error('Error:', error);
-    }
-  };
+  //     if (response.data.message === "Password reset link sent successfully") {
+  //       navigation.navigate('PasswordEmail', { email });
+  //     } else {
+  //       setError(response.data.message || 'An error occurred');
+  //     }
+  //   } catch (error) {
+  //     setLoading(false); 
+  //     if (error.response) {
+  //       // Server responded with an error
+  //       setError(error.response.data.message || 'Server error');
+  //     } else if (error.request) {
+  //       // No response received
+  //       setError('Network error. Please check your connection.');
+  //     } else {
+  //       // Request setup error
+  //       setError('Failed to send request');
+  //     }
+  //     console.error('Error:', error);
+  //   }
+  // };
   
   return (
     <SafeAreaView style={styles.container}>

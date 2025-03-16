@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message'; // Add this import
 import locationsImage from "../assets/permissionsImage.png"
 import CameraImage from "../assets/permissionscamera.png"
+import { ActivityIndicator } from 'react-native';
 
 const { height, width } = Dimensions.get('window');
 const SHEET_HEIGHT = height * 0.5;
@@ -24,6 +25,7 @@ const PermissionsPopup = ({ isVisible }) => {
   const overlayOpacity = useSharedValue(0);
   const [cameraPermissions, setCameraPermissions] = useState(false);
   const navigation = useNavigation();
+  const [loader, setLoading]= useState(false);
 
   useEffect(() => {
     if (isVisible) {
@@ -143,9 +145,11 @@ const PermissionsPopup = ({ isVisible }) => {
           text2: "Camera Permission Granted Successfully",
           position: "top",
         });
+        setLoading(true);
         setTimeout(() => {
+          setLoading(false);
           navigation.navigate("ScannerScreen");
-        }, 100);
+        }, 3000);
       } else {
         Alert.alert("Camera Permission", "Camera access denied.");
         navigation.navigate("GetStartedScreen");
@@ -157,16 +161,34 @@ const PermissionsPopup = ({ isVisible }) => {
   };
 
 
+  if (loader) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#8BC34A" />
+      </View>
+    );
+  }
+
+
+
+
 
 // Layout UI
   return (
     <View style={styles.container}>
+       <Toast/>
       <Animated.View 
         style={[styles.overlay, animatedOverlayStyle]} 
       />
-     
+
+      <View style={styles.toastContainer}>
+         <Toast/>
+      </View>
+      
       <GestureDetector gesture={gesture}>
+      
         <Animated.View style={[styles.bottomSheet, animatedSheetStyle]}>
+        
           <View style={styles.handle} />
           
           <View style={styles.permissionButtonsContainer}>
@@ -240,10 +262,9 @@ const PermissionsPopup = ({ isVisible }) => {
                 </View>
               </>
             )}
-          </View>
-        </Animated.View>
+          </View>  
+        </Animated.View>  
       </GestureDetector>
-      <Toast/>
     </View>
     
   );
@@ -362,7 +383,22 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "column",
     marginTop: 40,
-  }
+  },
+toastContainer: {
+  position: 'absolute',
+  top: 50, 
+  left: 0,
+  right: 0,
+  alignItems: 'center',
+  zIndex: 1003, 
+},
+loadingContainer: {
+  flex: 1,
+  justifyContent: "center",
+  alignItems: "center",
+  backgroundColor: "#FFFFFF",
+  zIndex:99999
+},
 });
 
 export default PermissionsPopup;

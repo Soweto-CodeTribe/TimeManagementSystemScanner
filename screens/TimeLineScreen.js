@@ -58,7 +58,7 @@ const TimelineScreen = () => {
       
       console.log("Fetching data for date:", formattedDate);
 
-      
+    
       
       // Pass the selected date to the API
       const response = await axios.get(
@@ -82,6 +82,11 @@ const TimelineScreen = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleUpload = (dayName) => {
+    // Implement your upload functionality here
+    console.log(`Upload for ${dayName}`);
   };
 
 
@@ -309,22 +314,23 @@ const TimelineScreen = () => {
         </View>
       ) : (
         <ScrollView style={styles.scrollView}>
-          {displayDays.map((day, index) => (
-            <View key={index}>
-              <View style={styles.dayCard}>
-                <View
-                  style={[
-                    styles.dateContainer,
-                    { backgroundColor: day.backgroundColor },
-                  ]}
-                >
-                  <Text style={[styles.dateNumber, { color: day.textColor }]}>
-                    {day.date}
-                  </Text>
-                </View>
-                <View style={styles.dayInfoContainer}>
-                  <View style={styles.dayHeaderContainer}>
-                    <Text style={styles.dayName}>{day.dayName}</Text>
+        {displayDays.map((day, index) => (
+          <View key={index}>
+            <View style={styles.dayCard}>
+              <View
+                style={[
+                  styles.dateContainer,
+                  { backgroundColor: day.backgroundColor },
+                ]}
+              >
+                <Text style={[styles.dateNumber, { color: day.textColor }]}>
+                  {day.date}
+                </Text>
+              </View>
+              <View style={styles.dayInfoContainer}>
+                <View style={styles.dayHeaderContainer}>
+                  <Text style={styles.dayName}>{day.dayName}</Text>
+                  <View style={styles.headerButtonsContainer}>
                     <TouchableOpacity onPress={() => toggleExpand(day.dayName)}>
                       <Ionicons
                         name={
@@ -337,16 +343,18 @@ const TimelineScreen = () => {
                       />
                     </TouchableOpacity>
                   </View>
-                  {day.timeRanges.map((timeRange, timeIndex) => (
-                    <View key={timeIndex} style={styles.timeRangeContainer}>
-                      <Ionicons name="time-outline" size={16} color="#999" />
-                      <Text style={styles.timeRange}>
-                        {timeRange.start === "N/A" ? 
-                          "No data available" : 
-                          `${timeRange.start} - ${timeRange.end}`}
-                      </Text>
-                    </View>
-                  ))}
+                </View>
+                {day.timeRanges.map((timeRange, timeIndex) => (
+                  <View key={timeIndex} style={styles.timeRangeContainer}>
+                    <Ionicons name="time-outline" size={16} color="#999" />
+                    <Text style={styles.timeRange}>
+                      {timeRange.start === "N/A" ? 
+                        "No data available" : 
+                        `${timeRange.start} - ${timeRange.end}`}
+                    </Text>
+                  </View>
+                ))}
+                <View style={styles.statusAndUploadContainer}>
                   {day.dayData?.status && (
                     <View style={styles.statusContainer}>
                       <Text style={[
@@ -357,9 +365,18 @@ const TimelineScreen = () => {
                       </Text>
                     </View>
                   )}
+                  {day.dayData?.status === "Absent" && (
+                    <TouchableOpacity 
+                      onPress={() => handleUpload(day.dayName)}
+                      style={styles.uploadButton}
+                    >
+                      <Ionicons name="cloud-upload-outline" size={24} color="#FF7043" />
+                      <View style={styles.radiatingEffect} />
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
-
+            </View>
               {/* Expanded Timeline Under the Day */}
               {expandedDay === day.dayName && (
                 <View style={styles.timelineContainer}>
@@ -550,6 +567,31 @@ const styles = StyleSheet.create({
   timelineTime: {
     fontSize: 14,
     color: "#999",
+  },
+  headerButtonsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  uploadButton: {
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  radiatingEffect: {
+    position: 'absolute',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 112, 67, 0.3)',
+    zIndex: -1,
+    transform: [{scale: 1}],
+  },
+  statusAndUploadContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    gap: 150,
   },
 });
 

@@ -59,17 +59,18 @@ const PermissionsPopup = ({ isVisible }) => {
   }));
 
 
-// Locations Function
+
+  // Locations Function
   const requestLocationPermission = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status === "granted") {
-           Toast.show({
-                      type: "success",
-                      text1: "Location Permission Granted",
-                      text2: "Location Granted Successfully",
-                      position: "top",
-                    });
+        Toast.show({
+          type: "success",
+          text1: "Location Permission Granted",
+          text2: "Location Granted Successfully",
+          position: "top",
+        });
         setCameraPermissions(true);
         
         try {
@@ -92,6 +93,78 @@ const PermissionsPopup = ({ isVisible }) => {
             mayShowUserSettingsDialog: true
           });
           console.log("Current location:", location);
+          
+          // Extract longitude and latitude from the location object
+          const { longitude, latitude } = location.coords;
+          
+          // Post the location data to your API
+          try {
+            const response = await fetch('https://timemanagementsystemserver.onrender.com/api/validate-location', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                longitude,
+                latitude
+              }),
+            });
+            
+            // Check if the response is valid JSON before parsing
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+              try {
+                const data = await response.json();
+                console.log('Location validation response:', data);
+                
+                // Handle the API response based on the allowed property
+                if (response.ok) {
+                  if (data.allowed === true) {
+                    console.log('Location allowed');
+                    // navigation.navigate("GetStartedScreen");
+                  } else {
+                    console.error('Location not allowed:', data.message);
+                    Alert.alert(
+                      "Location Not Allowed",
+                      data.message || "Your location is not supported at this time.",
+                      [{ text: "OK" }]
+                    );
+                    navigation.navigate("GetStartedScreen");
+                  }
+                } else {
+                  console.error('Location validation failed:', data);
+                  Alert.alert(
+                    "Location Validation Failed",
+                    data.message || "We couldn't validate your location. Please try again.",
+                    [{ text: "OK" }]
+                  );
+                }
+              } catch (jsonError) {
+                console.error("Error parsing JSON response:", jsonError);
+                Alert.alert(
+                  "Response Error",
+                  "Received an invalid response from the server. Please try again later.",
+                  [{ text: "OK" }]
+                );
+              }
+            } else {
+              // Handle non-JSON responses
+              const textResponse = await response.text();
+              console.error("Non-JSON response received:", textResponse);
+              Alert.alert(
+                "Server Error",
+                "The server returned an unexpected response format. Please try again later.",
+                [{ text: "OK" }]
+              );
+            }
+          } catch (apiError) {
+            console.error("Error posting location data to API:", apiError);
+            Alert.alert(
+              "Connection Error",
+              "Failed to communicate with our servers. Please check your internet connection and try again.",
+              [{ text: "OK" }]
+            );
+          }
           
         } catch (locationError) {
           console.error("Error getting current position:", locationError);
@@ -130,9 +203,6 @@ const PermissionsPopup = ({ isVisible }) => {
       Alert.alert("Error", "Failed to request location permission");
     }
   };
-
-
-
 
 // Camera Permissions
   const requestCameraPermission = async () => {

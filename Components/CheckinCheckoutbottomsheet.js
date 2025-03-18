@@ -110,9 +110,9 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet}) => {
   const closeSheetAndNavigate = () => {
     closeSheet();
     // Navigate after a delay to allow the sheet to close
-    setTimeout(() => {
-      navigation.navigate("Home");
-    }, 3000);
+    // setTimeout(() => {
+    //   navigation.navigate("Home");
+    // }, 3000);
   };
 
   const handleCheckInLunch = async () => {

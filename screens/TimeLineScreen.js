@@ -62,7 +62,7 @@ const TimelineScreen = () => {
       
       // Pass the selected date to the API
       const response = await axios.get(
-        `https://timemanagementsystemserver.onrender.com/api/session/weekly-stats?traineeId=${TraineeID}&date=${formattedDate}`,
+        `https://timemanagementsystemserver.onrender.com/api/session/weekly-stats?traineeId=${TraineeID}&weekStart=${formattedDate}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

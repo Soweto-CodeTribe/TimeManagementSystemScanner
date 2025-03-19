@@ -185,7 +185,7 @@ const CalendarModal = ({
           </View>
           
           {/* Week View Section */}
-          <View style={styles.weekViewSection}>
+          {/* <View style={styles.weekViewSection}>
             <Text style={styles.weekViewTitle}>Week View</Text>
             <View style={styles.weekViewDaysContainer}>
               {weekDayLabels.slice(0, 7).map((day, index) => {
@@ -217,7 +217,7 @@ const CalendarModal = ({
                 );
               })}
             </View>
-          </View>
+          </View> */}
           
           {/* Action Buttons */}
           <View style={styles.calendarActions}>

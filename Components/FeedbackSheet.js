@@ -1,7 +1,56 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, TouchableWithoutFeedback } from 'react-native';
+import React, { useState, useEffect} from 'react';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, TouchableWithoutFeedback, Alert } from 'react-native';
 
-const FeedbackBottomSheet = ({setOpenFeedbackSheet, openFeedbacksheet}) => {
+const FeedbackBottomSheet = ({ setOpenFeedbackSheet, openFeedbacksheet }) => {
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [token, setToken]= useState(null);
+
+  useEffect(()=>{
+    const fetchUserData = async ()=>{
+     try {
+       const ID = await AsyncStorage.getItem('traineeID');
+       const Token = await AsyncStorage.getItem('token');
+
+       setToken(Token);
+       setTraineeID(ID)
+       console.log("This is the Token Nigger", Token);
+     } catch (error) {
+       console.error("Message error", error)
+     }
+    }
+    fetchUserData();
+ },[])
+
+  const handleSubmit = async () => {
+    if (!message.trim()) {
+      Alert.alert('Error', 'Please enter your feedback before submitting.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        'https://timemanagementsystemserver.onrender.com/api/add-user/feedback',
+        { message },
+        { headers: { Authorization: `Bearer ${token}`,} }
+      );
+
+      if (response.status === 200) {
+        Alert.alert('Success', 'Feedback submitted successfully.');
+        setMessage('');
+        setOpenFeedbackSheet(false);
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Failed to submit feedback. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Modal
       animationType="slide"
@@ -14,13 +63,13 @@ const FeedbackBottomSheet = ({setOpenFeedbackSheet, openFeedbacksheet}) => {
           <TouchableWithoutFeedback>
             <View style={styles.bottomSheet}>
               <View style={styles.indicator} />
-              
+
               <Text style={styles.title}>Send Feedback</Text>
-              
+
               <Text style={styles.subtitle}>
-                Provide feedback about the app so we can improve on user experience
+                Provide feedback about the app so we can improve on user experience.
               </Text>
-              
+
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.input}
@@ -28,11 +77,19 @@ const FeedbackBottomSheet = ({setOpenFeedbackSheet, openFeedbacksheet}) => {
                   placeholderTextColor="#BBBBBB"
                   multiline={true}
                   numberOfLines={6}
+                  value={message}
+                  onChangeText={setMessage}
                 />
               </View>
-              
-              <TouchableOpacity style={styles.submitButton}>
-                <Text style={styles.submitButtonText}>Submit</Text>
+
+              <TouchableOpacity
+                style={[styles.submitButton, loading && styles.disabledButton]}
+                onPress={handleSubmit}
+                disabled={loading}
+              >
+                <Text style={styles.submitButtonText}>
+                  {loading ? 'Submitting...' : 'Submit'}
+                </Text>
               </TouchableOpacity>
             </View>
           </TouchableWithoutFeedback>
@@ -102,6 +159,9 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  disabledButton: {
+    backgroundColor: '#A5D6A7',
   },
 });
 

@@ -368,7 +368,7 @@ const HomeScreen = ({ navigation }) => {
           <TouchableOpacity onPress={() => navigation.navigate("ProfileScreen")} style={styles.iconButton}>
             <Image
               source={{
-                 uri: image 
+                uri: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-Z6HPIGZArOlwZgZRYD64JxoekuRd7t.png",
               }}
               style={styles.profileImage}
             />

@@ -224,7 +224,7 @@ const ProfileScreen = ({ navigation }) => {
         openTermssheeet && (
           <TermsAndConditions 
           openTermssheeet={openTermssheeet}
-          setTermssheeet={setTermssheeet}
+          onClose={() => setTermssheeet(false)}
           />
         )
       }

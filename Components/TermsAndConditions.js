@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Modal, TouchableWithoutFeedback } from 'react-native';
 
-const TermsAndConditions = ({ openTermsSheet, setTermsSheet }) => {
+const TermsAndConditions = ({ openTermsSheet, setTermsSheet, onClose}) => {
   const [accepted, setAccepted] = useState(false);
   const [token, setToken] = useState(null);
   const [traineeID, setTraineeID] = useState(null);
@@ -22,18 +22,16 @@ const TermsAndConditions = ({ openTermsSheet, setTermsSheet }) => {
 //     fetchUserData();
 //   }, []);
 
-  const handleAccept = () => {
-    setTermsSheet(false)
-  };
+
 
   return (
     <Modal
       animationType="slide"
       transparent={true}
       visible={openTermsSheet}
-      onRequestClose={() => setTermsSheet(false)}
+      onRequestClose={() => onClose()}
     >
-      <TouchableWithoutFeedback onPress={() => setTermsSheet(false)}>
+      <TouchableWithoutFeedback onPress={() => onClose()}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
             <View style={styles.bottomSheet}>
@@ -107,7 +105,7 @@ const TermsAndConditions = ({ openTermsSheet, setTermsSheet }) => {
               <View style={styles.footerContainer}>
                 <TouchableOpacity
                   style={styles.acceptButton}
-                  onPress={() => setTermsSheet(false)}
+                  onPress={() => onClose()}
                 >
                   <Text style={styles.acceptButtonText}>
                     I Accept the Terms & Conditions

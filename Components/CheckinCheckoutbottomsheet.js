@@ -266,7 +266,7 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet}) => {
                   (loading || checkout !== "N/A") && { backgroundColor: '#ccc' }
                 ]}
                 onPress={handleCheckOut}
-                android_ripple={{ color: 'rgba(255, 255, 255, 0.3)' }}
+                android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}
               >
                 <Text style={styles.buttonTextLight}>
                    {loading && lunchStatus === "checkedIn" ? "Loading..." : "Check Out of Lunch"}
@@ -339,8 +339,8 @@ const styles = StyleSheet.create({
   lunchInButton: {
     width: '100%',
     height: 44,
-    backgroundColor: "#F4A261",
-    borderRadius: 20,
+    backgroundColor: "#8CD136",
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
@@ -349,8 +349,8 @@ const styles = StyleSheet.create({
   lunchOutButton: {
     width: '100%',
     height: 44,
-    backgroundColor: "#E9C46A",
-    borderRadius: 20,
+    backgroundColor: "#8CD136",
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
@@ -359,8 +359,8 @@ const styles = StyleSheet.create({
   checkOutButton: {
     width: '100%',
     height: 44,
-    backgroundColor: "#E76F51",
-    borderRadius: 20,
+    backgroundColor: "#8CD136",
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 2,

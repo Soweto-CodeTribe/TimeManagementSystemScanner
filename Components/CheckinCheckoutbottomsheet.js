@@ -11,6 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 import Toast from "react-native-toast-message";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 // Import the actions from your new slice
 import { 
@@ -24,16 +25,23 @@ const SHEET_HEIGHT = height * .42;
 const SHEET_OVERFLOW = 20;
 
 const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet}) => {
-  const translateY = useSharedValue(SHEET_HEIGHT);
-  const overlayOpacity = useSharedValue(0);
-  
-  // Get state from Redux
-  // const token = useSelector((state) => state.auth.token);
-  // const traineeId = useSelector((state) => state.auth.traineeID);
+  // Variables
+   const translateY = useSharedValue(SHEET_HEIGHT);
+   const overlayOpacity = useSharedValue(0); 
    const [token, setToken]= useState(null);
    const [traineeId, setTraineeID] = useState(null);
    const { lunchStatus, loading } = useSelector((state) => state.checkInOut);
+   const dispatch = useDispatch();
+   const today = new Date(); 
+   const [lunchStartTime, setlunchStartTime] = useState(null);
+   const [lunchEndtime, setlunchEndTime] = useState(null);
+   const [checkout, setCheckOut]= useState(null);
+   const [weekData, setWeekData] = useState([]);
+   const formattedDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
+   console.log("Date", formattedDate);
+
+// Functions
     useEffect(()=>{
       const fetchUserData = async ()=>{
        try {
@@ -48,15 +56,73 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet}) => {
        }
       }
       fetchUserData();
-   },[])
+   },[]);
 
-   console.log("This is the Token Nigger", token);
-   console.log("This is the ID Nigger", traineeId);
+
+   console.log(weekData)
+   const handleTimeLine = async ()=>{
+    try {
+      const response = await axios.get(`https://timemanagementsystemserver.onrender.com/api/session/weekly-stats?traineeId=${traineeId}&weekStart=${formattedDate}`, {
+        headers:{
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setWeekData(response.data);
+    } catch (error) {
+      console.log(error);
+      
+    }
+  }
+ 
+  useEffect(() => {
+    if (traineeId && token) {
+      handleTimeLine();
+    }
+  }, [traineeId, token]);
+  
+
+
+  const FindTodayData = ()=>{
+    const todayData = weekData.dailyBreakdown?.find(day => day.date === formattedDate);
+
+    if (todayData && todayData.attended) {
+      return {
+        checkInTime: todayData.checkInTime,
+        checkOutTime: todayData.checkOutTime,
+        lunchStartTime: todayData.lunchStartTime,
+        lunchEndTime: todayData.lunchEndTime,
+        status: todayData.status,
+        hoursWorked: todayData.hoursWorked
+      };
+    }
+    // lunchEndTime
+    return null;
+  }  
+
+
+  useEffect(() => {
+    if (weekData) {
+      const todayData = FindTodayData();
+      if (todayData) {
+        // setCheckInTime(todayData.checkInTime);
+        setlunchStartTime(todayData.lunchStartTime);
+        setlunchEndTime(todayData.lunchEndTime);
+        setCheckOut(todayData.checkOutTime);
+        // setLunchStartTime(todayData.lunchStartTime);
+        // setLunchEndTime(todayData.lunchEndTime);
+      }
+    }
+  }, [weekData, formattedDate]);
+
+ 
+
+  console.log("This is my start time to lunch",lunchStartTime);
+  console.log("This is my start End of he lunch time",lunchEndtime,);
+  console.log("This is my start End of the day time",checkout,);
+
+
   
   
-  const dispatch = useDispatch();
-  const navigation = useNavigation();
-
   useEffect(() => {
     if (isVisible) {
       overlayOpacity.value = withTiming(1, { duration: 200 });
@@ -109,10 +175,6 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet}) => {
 
   const closeSheetAndNavigate = () => {
     closeSheet();
-    // Navigate after a delay to allow the sheet to close
-    // setTimeout(() => {
-    //   navigation.navigate("Home");
-    // }, 3000);
   };
 
   const handleCheckInLunch = async () => {
@@ -139,6 +201,9 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet}) => {
       });
   };
 
+// Add another 
+
+// Layout 
   return (
     <View style={styles.container}>
       <Toast/>
@@ -158,27 +223,31 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet}) => {
             <View style={styles.buttonsContainer}>
               {/* Check In to Lunch */}
               <Pressable 
-                disabled={loading || lunchStatus !== "notStarted"}
+                disabled={loading || lunchStatus !== "notStarted" || lunchStartTime !== "N/A"}
                 style={({ pressed }) => [
                   styles.lunchInButton,
                   pressed && { opacity: 0.8 },
-                  (loading || lunchStatus !== "notStarted") && { backgroundColor: '#ccc' }
+                  (loading || lunchStatus !== "notStarted" || lunchStartTime !== "N/A") && { backgroundColor: '#ccc' }
                 ]}
                 onPress={handleCheckInLunch}
                 android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}
               >
                 <Text style={styles.buttonTextLight}>
-                  {loading && lunchStatus === "notStarted" ? "Loading..." : "Check In to Lunch"}
+                  {loading && lunchStatus === "notStarted" 
+                    ? "Loading..." 
+                    : lunchStartTime === "N/A" 
+                      ? "Check In" 
+                      : "Check In to Lunch"}
                 </Text>
-              </Pressable>
+            </Pressable>
               
               {/* Check Out of Lunch */}
               <Pressable 
-                disabled={loading || lunchStatus !== "checkedIn"}
+                disabled={loading || lunchEndtime !== "N/A"}
                 style={({ pressed }) => [
                   styles.lunchOutButton,
                   pressed && { opacity: 0.8 },
-                  (loading || lunchStatus !== "checkedIn") && { backgroundColor: '#ccc' }
+                  (loading || lunchEndtime !== "N/A") && { backgroundColor: '#ccc' }
                 ]}
                 onPress={handleCheckOutLunch}
                 android_ripple={{ color: 'rgba(0, 0, 0, 0.1)' }}
@@ -190,19 +259,20 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet}) => {
               
               {/* Check Out (always enabled) */}
               <Pressable 
-                disabled={loading}
+                disabled={loading || checkout !== "N/A"}
                 style={({ pressed }) => [
                   styles.checkOutButton,
                   pressed && { opacity: 0.8 },
-                  loading && { backgroundColor: '#ccc' }
+                  (loading || checkout !== "N/A") && { backgroundColor: '#ccc' }
                 ]}
                 onPress={handleCheckOut}
                 android_ripple={{ color: 'rgba(255, 255, 255, 0.3)' }}
               >
                 <Text style={styles.buttonTextLight}>
-                  {loading ? "Loading..." : "Check Out"}
+                   {loading && lunchStatus === "checkedIn" ? "Loading..." : "Check Out of Lunch"}
                 </Text>
               </Pressable>
+
             </View>
           </View>
         </Animated.View>
@@ -211,6 +281,9 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet}) => {
   );
 };
 
+
+
+// Syles
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',

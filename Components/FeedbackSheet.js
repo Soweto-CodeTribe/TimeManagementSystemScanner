@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, TouchableWithoutFeedback, Alert } from 'react-native';
 
 const FeedbackBottomSheet = ({ setOpenFeedbackSheet, openFeedbacksheet }) => {
-  const [message, setMessage] = useState('');
+  const [feedbackText, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [token, setToken]= useState(null);
   const [traineeId, setTraineeID] = useState(null);
@@ -26,7 +26,7 @@ const FeedbackBottomSheet = ({ setOpenFeedbackSheet, openFeedbacksheet }) => {
  },[])
 
   const handleSubmit = async () => {
-    if (!message.trim()) {
+    if (!feedbackText.trim()) {
       Alert.alert('Error', 'Please enter your feedback before submitting.');
       return;
     }
@@ -35,15 +35,17 @@ const FeedbackBottomSheet = ({ setOpenFeedbackSheet, openFeedbacksheet }) => {
     try {
       const response = await axios.post(
         'https://timemanagementsystemserver.onrender.com/api/add-user/feedback',
-        { message },
+        { feedbackText },
         { headers: { Authorization: `Bearer ${token}`,} }
       );
 
-      if (response.status === 200) {
+      if (response.status === 201) {
         Alert.alert('Success', 'Feedback submitted successfully.');
         setMessage('');
         setOpenFeedbackSheet(false);
       }
+
+      console.log(response.status);
     } catch (error) {
       console.error(error);
       Alert.alert('Error', 'Failed to submit feedback. Please try again later.');
@@ -78,7 +80,7 @@ const FeedbackBottomSheet = ({ setOpenFeedbackSheet, openFeedbacksheet }) => {
                   placeholderTextColor="#BBBBBB"
                   multiline={true}
                   numberOfLines={6}
-                  value={message}
+                  value={feedbackText}
                   onChangeText={setMessage}
                 />
               </View>
@@ -135,7 +137,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     lineHeight: 22,
   },
-  inputContainer: {
+  inputContainer: { 
     width: '100%',
     borderWidth: 1,
     borderColor: '#E0E0E0',

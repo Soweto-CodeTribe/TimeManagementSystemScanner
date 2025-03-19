@@ -11,6 +11,7 @@ import CalendarModal from "../Components/CalendarModal";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import DocumentsUpload from "../Components/DocumentsUpload";
 
 const TimelineScreen = () => {
   const [expandedDay, setExpandedDay] = useState(null);
@@ -21,6 +22,7 @@ const TimelineScreen = () => {
   const [selectedDate, setSelectedDate] = useState(currentDate.getDate());
   const [weekDates, setWeekDates] = useState([]);
   const [displayDays, setDisplayDays] = useState([]);
+  const [openDocumentsheet, setDocumentsheet] = useState(false);
   // const TraineeID = useSelector((state) => state.auth.traineeID);
   // const token = useSelector((state) => state.auth.token);
   const [weeklyData, setWeeklyData] = useState([]);
@@ -367,7 +369,9 @@ const TimelineScreen = () => {
                   )}
                   {day.dayData?.status === "Absent" && (
                     <TouchableOpacity 
-                      onPress={() => handleUpload(day.dayName)}
+                      onPress={() => setDocumentsheet(true)}
+                      // setDocumentsheet
+                      // handleUpload(day.dayName)
                       style={styles.uploadButton}
                     >
                       <Ionicons name="cloud-upload-outline" size={24} color="#FF7043" />
@@ -407,6 +411,15 @@ const TimelineScreen = () => {
           ))}
         </ScrollView>
       )}
+      {
+         openDocumentsheet && (
+          <DocumentsUpload
+          openDocumentsheet={openDocumentsheet}
+          onClose={() => setDocumentsheet(false)}
+          />
+        )
+
+      }
     </View>
   );
 };

@@ -11,6 +11,7 @@ import {
   resetScan, 
   setBottomSheetVisible 
 } from '../Components/Redux/Slices/ScanSlice.js';
+import { BlurView } from 'expo-blur';
 
 export default function ScannerScreen({ navigation }) { 
   // Redux hooks
@@ -94,7 +95,13 @@ export default function ScannerScreen({ navigation }) {
         <View style={styles.overlay}>
           <View style={styles.frame} />
           {loading && (
-            <Text style={styles.loadingText}>Processing...</Text>
+             <BlurView
+             style={styles.blurOverlay}
+             blurType="light"
+             blurAmount={5}
+           >
+             <Text style={styles.loadingText}>Processing...</Text>
+           </BlurView>
           )}
         </View>
         
@@ -160,5 +167,16 @@ const styles = StyleSheet.create({
     borderColor: 'white',
     borderRadius: 10,
     backgroundColor: 'rgba(255, 255, 255, 0.1)', 
+  },
+  blurOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)', 
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex:9999,
   },
 });

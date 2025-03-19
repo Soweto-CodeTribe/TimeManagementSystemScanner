@@ -26,6 +26,7 @@ const ProfileScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [image, setImage] = useState(null);
   const [name, setName] = useState("");
+  const [location, setlocation] = useState("");
   const [openProfileSheet, setOpenProfileSheet] = useState(false);
   const [openFeedbacksheet, setOpenFeedbackSheet] = useState(false);
   const [openDocumentsheet, setDocumentsheet] = useState(false);
@@ -42,6 +43,8 @@ const ProfileScreen = ({ navigation }) => {
       try {
         const storedImage = await AsyncStorage.getItem("profileImage");
         const storedName = await AsyncStorage.getItem("name");
+        const storedlocation = await AsyncStorage.getItem("Location");
+
 
         if (storedImage) {
           setImage(storedImage);
@@ -49,6 +52,10 @@ const ProfileScreen = ({ navigation }) => {
 
         if (storedName) {
           setName(storedName);
+        }
+
+        if (storedlocation){
+          setlocation(storedlocation);
         }
       } catch (error) {
         console.error("Error loading profile data:", error);
@@ -152,7 +159,7 @@ const ProfileScreen = ({ navigation }) => {
               <Text style={styles.profileName}>{name || "User"}</Text>
               <View style={styles.locationContainer}>
                 <Ionicons name="location" size={16} color="#8BC34A" />
-                <Text style={styles.locationText}>Soweto, Gauteng</Text>
+                <Text style={styles.locationText}>{location}</Text>
               </View>
             </View>
           </View>

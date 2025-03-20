@@ -185,6 +185,12 @@ const ProfileScreen = ({ navigation }) => {
               onPress={() => navigation.navigate("SettingsScreen")}
             />
             <MenuItem
+              icon="ticket-outline"
+              title="Tickets"
+              iconColor="#8BC34A"
+              onPress={() => navigation.navigate("TicketScreen")}
+            />
+            <MenuItem
               icon="alert-circle-outline"
               title="Report Issue"
               iconColor="#8BC34A"

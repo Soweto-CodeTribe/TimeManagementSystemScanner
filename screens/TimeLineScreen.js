@@ -11,6 +11,7 @@ import CalendarModal from "../Components/CalendarModal";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import DocumentsUpload from "../Components/DocumentsUpload";
 
 const TimelineScreen = () => {
   const [expandedDay, setExpandedDay] = useState(null);
@@ -21,13 +22,12 @@ const TimelineScreen = () => {
   const [selectedDate, setSelectedDate] = useState(currentDate.getDate());
   const [weekDates, setWeekDates] = useState([]);
   const [displayDays, setDisplayDays] = useState([]);
-  // const TraineeID = useSelector((state) => state.auth.traineeID);
-  // const token = useSelector((state) => state.auth.token);
+  const [openDocumentsheet, setDocumentsheet] = useState(false);
   const [weeklyData, setWeeklyData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [token, setToken]= useState(null);
   const [TraineeID, setTraineeID]= useState(null);
-
+  const [currentWeekStart, setCurrentWeekStart] = useState(null);
 
  
   const months = [
@@ -47,6 +47,32 @@ const TimelineScreen = () => {
   
   const weekDayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
+  // Function to get the Monday of the current week
+  const getCurrentWeekMonday = () => {
+    const now = new Date();
+    const day = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+    
+    const monday = new Date(now.setDate(diff));
+    return monday;
+  };
+
+  // Initialize with current week's Monday when component mounts
+  useEffect(() => {
+    const monday = getCurrentWeekMonday();
+    setSelectedDate(monday.getDate());
+    setSelectedMonth(months[monday.getMonth()]);
+    setSelectedYear(monday.getFullYear());
+    setCurrentWeekStart(monday);
+    
+    // Format for display
+    const monthNum = monday.getMonth() + 1;
+    const formattedMonth = monthNum.toString().padStart(2, "0");
+    const formattedDay = monday.getDate().toString().padStart(2, "0");
+    const formattedDate = `${monday.getFullYear()}-${formattedMonth}-${formattedDay}`;
+    console.log("Auto-selected week starting at:", formattedDate);
+  }, []);
+
   const fetchWeeklyData = async () => {
     setIsLoading(true);
     try {
@@ -57,12 +83,10 @@ const TimelineScreen = () => {
       const formattedDate = `${selectedYear}-${formattedMonth}-${formattedDay}`;
       
       console.log("Fetching data for date:", formattedDate);
-
-    
       
       // Pass the selected date to the API
       const response = await axios.get(
-        `https://timemanagementsystemserver.onrender.com/api/session/weekly-stats?traineeId=${TraineeID}&date=${formattedDate}`,
+        `https://timemanagementsystemserver.onrender.com/api/session/weekly-stats?traineeId=${TraineeID}&weekStart=${formattedDate}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -89,7 +113,6 @@ const TimelineScreen = () => {
     console.log(`Upload for ${dayName}`);
   };
 
-
   useEffect(()=>{
     const fetchUserData = async ()=>{
      try {
@@ -98,7 +121,7 @@ const TimelineScreen = () => {
 
        setToken(Token);
        setTraineeID(ID)
-       console.log("This is the Token Nigger", Token);
+       console.log("This is the Token", Token);
      } catch (error) {
        console.error("Message error", error)
      }
@@ -106,16 +129,17 @@ const TimelineScreen = () => {
     fetchUserData();
  },[])
 
-
   // Initialize the week days when component mounts or when selectedDate changes
   useEffect(() => {
-    const loadData = async () => {
-      const data = await fetchWeeklyData();
-      calculateWeekDates(data);
-    };
-    
-    loadData();
-  }, [selectedDate, selectedMonth, selectedYear]);
+    if (token && TraineeID) {
+      const loadData = async () => {
+        const data = await fetchWeeklyData();
+        calculateWeekDates(data);
+      };
+      
+      loadData();
+    }
+  }, [selectedDate, selectedMonth, selectedYear, token, TraineeID]);
 
   // Calculate the dates for the current week (Mon-Fri) based on selected date
   const calculateWeekDates = (weeklyDataArray = []) => {
@@ -189,12 +213,23 @@ const TimelineScreen = () => {
         textColor: getTextColorForDay(i),
         timeRanges: timeRanges,
         dayData: dayData || null, // Store the full day data
-        formattedDate: formattedDate
+        formattedDate: formattedDate,
+        isToday: isDateToday(year, month, day)
       });
     }
 
     setWeekDates(weekDateArray);
     setDisplayDays(displayDaysArray);
+  };
+  
+  // Helper function to check if a date is today
+  const isDateToday = (year, month, day) => {
+    const today = new Date();
+    return (
+      today.getDate() === day &&
+      today.getMonth() === month &&
+      today.getFullYear() === year
+    );
   };
   
   // Helper function to format time from API
@@ -259,6 +294,13 @@ const TimelineScreen = () => {
     setShowCalendar(false);
   };
 
+  const jumpToCurrentWeek = () => {
+    const monday = getCurrentWeekMonday();
+    setSelectedDate(monday.getDate());
+    setSelectedMonth(months[monday.getMonth()]);
+    setSelectedYear(monday.getFullYear());
+  };
+
   const renderTimelineItem = (icon, title, time, dayData) => (
     <View style={styles.timelineItem}>
       <View style={styles.timelineDot} />
@@ -277,10 +319,16 @@ const TimelineScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Timeline</Text>
-        <TouchableOpacity style={styles.filterButton} onPress={toggleCalendar}>
-          <Ionicons name="calendar" size={20} color="#4CAF50" />
-          <Text style={styles.filterText}>Filter</Text>
-        </TouchableOpacity>
+        <View style={styles.headerButtonsGroup}>
+          <TouchableOpacity style={styles.todayButton} onPress={jumpToCurrentWeek}>
+            <Ionicons name="today" size={20} color="#4CAF50" />
+            <Text style={styles.filterText}>Today</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.filterButton} onPress={toggleCalendar}>
+            <Ionicons name="calendar" size={20} color="#4CAF50" />
+            <Text style={styles.filterText}>Filter</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Month and Week Label */}
@@ -316,20 +364,32 @@ const TimelineScreen = () => {
         <ScrollView style={styles.scrollView}>
         {displayDays.map((day, index) => (
           <View key={index}>
-            <View style={styles.dayCard}>
+            <View style={[
+              styles.dayCard,
+              day.isToday ? styles.todayCard : null
+            ]}>
               <View
                 style={[
                   styles.dateContainer,
                   { backgroundColor: day.backgroundColor },
+                  day.isToday ? styles.todayDateContainer : null
                 ]}
               >
                 <Text style={[styles.dateNumber, { color: day.textColor }]}>
                   {day.date}
                 </Text>
+                {day.isToday && (
+                  <Text style={styles.todayLabel}>TODAY</Text>
+                )}
               </View>
               <View style={styles.dayInfoContainer}>
                 <View style={styles.dayHeaderContainer}>
-                  <Text style={styles.dayName}>{day.dayName}</Text>
+                  <Text style={[
+                    styles.dayName,
+                    day.isToday ? styles.todayText : null
+                  ]}>
+                    {day.dayName}
+                  </Text>
                   <View style={styles.headerButtonsContainer}>
                     <TouchableOpacity onPress={() => toggleExpand(day.dayName)}>
                       <Ionicons
@@ -367,7 +427,7 @@ const TimelineScreen = () => {
                   )}
                   {day.dayData?.status === "Absent" && (
                     <TouchableOpacity 
-                      onPress={() => handleUpload(day.dayName)}
+                      onPress={() => setDocumentsheet(true)}
                       style={styles.uploadButton}
                     >
                       <Ionicons name="cloud-upload-outline" size={24} color="#FF7043" />
@@ -407,6 +467,14 @@ const TimelineScreen = () => {
           ))}
         </ScrollView>
       )}
+      {
+         openDocumentsheet && (
+          <DocumentsUpload
+          openDocumentsheet={openDocumentsheet}
+          onClose={() => setDocumentsheet(false)}
+          />
+        )
+      }
     </View>
   );
 };
@@ -431,7 +499,19 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#333",
   },
+  headerButtonsGroup: {
+    flexDirection: "row",
+    gap: 8,
+  },
   filterButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(76, 175, 80, 0.1)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  todayButton: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "rgba(76, 175, 80, 0.1)",
@@ -474,6 +554,10 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
+  todayCard: {
+    borderWidth: 1,
+    borderColor: "#4CAF50",
+  },
   dateContainer: {
     width: 60,
     height: 60,
@@ -482,9 +566,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     margin: 8,
   },
+  todayDateContainer: {
+    borderWidth: 2,
+    borderColor: "#4CAF50",
+  },
   dateNumber: {
     fontSize: 28,
     fontWeight: "bold",
+  },
+  todayLabel: {
+    fontSize: 10,
+    fontWeight: "bold",
+    color: "#4CAF50",
+    marginTop: -4,
   },
   dayInfoContainer: {
     flex: 1,
@@ -500,6 +594,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "500",
     color: "#333",
+  },
+  todayText: {
+    color: "#4CAF50",
+    fontWeight: "700",
   },
   timeRangeContainer: {
     flexDirection: "row",
@@ -523,7 +621,7 @@ const styles = StyleSheet.create({
     marginRight: 16,
     paddingLeft: 40,
     position: "relative",
-    marginBottom: 55,
+    marginBottom: 105,
   },
   timelineLine: {
     position: "absolute",

@@ -20,14 +20,17 @@ import FeedbackBottomSheet from "../Components/FeedbackSheet";
 import { useDispatch, useSelector } from 'react-redux';
 import { logout } from "../Components/Redux/Slices/AuthenticationSlice";
 import DocumentsUpload from "../Components/DocumentsUpload";
+import TermsAndConditions from "../Components/TermsAndConditions";
 
 const ProfileScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [image, setImage] = useState(null);
   const [name, setName] = useState("");
+  const [location, setlocation] = useState("");
   const [openProfileSheet, setOpenProfileSheet] = useState(false);
   const [openFeedbacksheet, setOpenFeedbackSheet] = useState(false);
   const [openDocumentsheet, setDocumentsheet] = useState(false);
+  const [openTermssheeet, setTermssheeet] = useState(false);
   const [activity, setActivity]= useState(false);
   const dispatch = useDispatch();
 
@@ -40,6 +43,8 @@ const ProfileScreen = ({ navigation }) => {
       try {
         const storedImage = await AsyncStorage.getItem("profileImage");
         const storedName = await AsyncStorage.getItem("name");
+        const storedlocation = await AsyncStorage.getItem("Location");
+
 
         if (storedImage) {
           setImage(storedImage);
@@ -47,6 +52,10 @@ const ProfileScreen = ({ navigation }) => {
 
         if (storedName) {
           setName(storedName);
+        }
+
+        if (storedlocation){
+          setlocation(storedlocation);
         }
       } catch (error) {
         console.error("Error loading profile data:", error);
@@ -150,7 +159,7 @@ const ProfileScreen = ({ navigation }) => {
               <Text style={styles.profileName}>{name || "User"}</Text>
               <View style={styles.locationContainer}>
                 <Ionicons name="location" size={16} color="#8BC34A" />
-                <Text style={styles.locationText}>Soweto, Gauteng</Text>
+                <Text style={styles.locationText}>{location}</Text>
               </View>
             </View>
           </View>
@@ -176,6 +185,12 @@ const ProfileScreen = ({ navigation }) => {
               onPress={() => navigation.navigate("SettingsScreen")}
             />
             <MenuItem
+              icon="ticket-outline"
+              title="Tickets"
+              iconColor="#8BC34A"
+              onPress={() => navigation.navigate("TicketScreen")}
+            />
+            <MenuItem
               icon="alert-circle-outline"
               title="Report Issue"
               iconColor="#8BC34A"
@@ -185,7 +200,7 @@ const ProfileScreen = ({ navigation }) => {
               icon="document-outline"
               title="Terms and Conditions"
               iconColor="#8BC34A"
-              
+              onPress={() => setTermssheeet(true)}
             />
             <MenuItem
               icon="log-out-outline"
@@ -215,6 +230,14 @@ const ProfileScreen = ({ navigation }) => {
           <DocumentsUpload
           openDocumentsheet={openDocumentsheet}
           onClose={() => setDocumentsheet(false)}
+          />
+        )
+      }
+      {
+        openTermssheeet && (
+          <TermsAndConditions 
+          openTermssheeet={openTermssheeet}
+          onClose={() => setTermssheeet(false)}
           />
         )
       }

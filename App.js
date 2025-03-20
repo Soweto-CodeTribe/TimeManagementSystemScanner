@@ -28,6 +28,7 @@ import GetStartedSeamlessly from "./screens/GetStartedSeamlessly.js";
 import GetStartedAttendance from "./screens/GetStartedAttendance.js";
 import GetStartedVerified from "./screens/GetStartedVerified.js";
 import SettingsScreen from "./screens/SettingsScreen.js";
+import TicketScreen from "./screens/TicketsScreen.js";
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -146,6 +147,7 @@ function AppNavigator() {
       <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
       <Stack.Screen name="NotificationScreen" component={NotificationScreen} />
       <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
+      <Stack.Screen name="TicketScreen" component={TicketScreen} />
     </Stack.Navigator>
   );
 }

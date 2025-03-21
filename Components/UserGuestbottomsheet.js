@@ -10,7 +10,7 @@ import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { useNavigation } from '@react-navigation/native';
 
 const { height, width } = Dimensions.get('window');
-const SHEET_HEIGHT = height * 0.3;
+const SHEET_HEIGHT = height * 0.26;
 const SHEET_OVERFLOW = 20;
 
 const UserGuestBottomSheet = ({ isVisible }) => {
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     bottom: -SHEET_OVERFLOW,
     left: 0,
     right: 0,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#ffffff',
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
     padding: 20,
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: '#ffffff40',
+    backgroundColor: '#bdbdbd',
     borderRadius: 2,
     marginBottom: 20,
   },
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   },
   acceptButton: {
     width: '100%',
-    height: 44,
+    height:50,
     backgroundColor: "#8CE01C",
     borderRadius: 12,
     justifyContent: 'center',
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
   },
   declineButton: {
     width: '100%',
-    height: 44,
+    height: 50,
     backgroundColor: "white",
     borderRadius: 12,
     justifyContent: 'center',

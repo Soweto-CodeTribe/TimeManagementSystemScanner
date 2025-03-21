@@ -1,168 +1,187 @@
-import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { View, Text, StyleSheet, Dimensions, Pressable, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
-import QRcode from "../assets/qrcode.png";
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  Dimensions,
+  StatusBar,
+  Animated,
+  Platform,
+} from 'react-native';
+
+import QRCode from "../assets/qrcode.png";
+import CodeTribe from "../assets/codetribetext.png";
 import PermissionsPopup from '../Components/PermissionsPopup';
-import { useState, useEffect } from 'react';
-import CodeTribeText from "../assets/codetribetext.png"
 
 const { width, height } = Dimensions.get('window');
 
-// Constants for consistent styling
-const COLORS = {
-  primary: '#8AC052',
-  secondary: '#7C808D',
-  white: '#FFFFFF',
-  shadow: '#000000',
-};
-
-// Spacing for responsiveness on different screens
-const SPACING = {
-  xs: 10,
-  sm: 12,
-  md: 20,
-  lg: 30,
-  xl: 40,
-};
-
 const PermissionsScreen = () => {
-  const navigation = useNavigation();
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const [scaleAnim] = useState(new Animated.Value(0.9));
   const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
+  
+  // Animate components on mount
+  React.useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 700,
+        useNativeDriver: true,
+      })
+    ]).start();
+  }, []);
 
-    useEffect(() => {
-      // Show bottom sheet when screen mounts
+      useEffect(() => {
       setIsBottomSheetVisible(true);
     }, []);
 
-  const handleGetStarted = () => {
-    navigation.navigate("ScanScreen");
-  };
-
   return (
-    <>
-      <StatusBar style="dark" />
-      <SafeAreaView style={styles.container}>
-        <View style={styles.wrapper}>
-          {/* Decorative top gradient */}
-          <LinearGradient
-            colors={[
-              'rgba(138, 192, 82, 0.15)',
-              'rgba(138, 192, 82, 0.1)',
-              'rgba(138, 192, 82, 0)',
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      
+      <SafeAreaView style={styles.safeArea}>
+        {/* Content Container */}
+        <View style={styles.contentContainer}>
+          {/* Logo */}
+          <Animated.View 
+            style={[
+              styles.logoContainer, 
+              { opacity: fadeAnim }
             ]}
-            start={{ x: 0.1, y: 0.1 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.cornerGradient}
-          />
-
-          {/* Main content */}
-          <View style={styles.contentContainer}>
-
+          >
             <Image
-             source={CodeTribeText}
-              style={styles.qrImage}
+              source={CodeTribe}
+              style={styles.logoImage}
               resizeMode="contain"
             />
-            <Image
-              source={QRcode}
-              style={styles.qrImage}
-              resizeMode="contain"
-            />
-          </View>
+          </Animated.View>
 
-          {/* Bottom section */}
+          {/* QR Code with animation */}
+          <Animated.View 
+            style={[
+              styles.qrFrameContainer,
+              {
+                opacity: fadeAnim,
+                transform: [{ scale: scaleAnim }]
+              }
+            ]}
+          >
+            <View style={styles.qrCodeShadow}>
+              <Image
+                source={QRCode}
+                style={styles.qrCodeImage}
+                resizeMode="contain"
+              />
+            </View>
+            <View style={styles.scanningLine} />
+          </Animated.View>
+
           <PermissionsPopup
           isVisible={isBottomSheetVisible}
-          // onClose={() => setIsBottomSheetVisible(false)}        
-        />
-          
+          onClose={() => setIsBottomSheetVisible(false)}        
+           />
+
         </View>
+
       </SafeAreaView>
-    </>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.white,
+    backgroundColor: '#FFFFFF',
   },
-  wrapper: {
+  safeArea: {
     flex: 1,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F5',
+    backgroundColor: '#FFFFFF',
+  },
+  backButton: {
+    padding: 8,
+  },
+  backText: {
+    fontSize: 16,
+    color: '#555555',
+    fontWeight: '500',
+  },
+  skipButton: {
+    padding: 8,
+  },
+  skipText: {
+    fontSize: 16,
+    color: '#555555',
+    fontWeight: '500',
   },
   contentContainer: {
     flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+  },
+  logoContainer: {
+    marginTop: height * 0.02,
+    marginBottom: height * 0.03,
+    alignItems: 'center',
+  },
+  logoImage: {
+    width: 180,
+    height: 40,
+  },
+  qrFrameContainer: {
+    width: width * 0.7,
+    height: width * 0.7,
     justifyContent: 'center',
     alignItems: 'center',
+    marginVertical: height * 0.03,
+    position: 'relative',
+  },
+  qrCodeShadow: {
     width: '100%',
-    marginBottom:340
-  },
-  qrImage: {
-    width: width * 0.5,
-    height: width * 0.4,
-    borderRadius: SPACING.sm,
-  },
-  cornerGradient: {
-    width: width * 0.8,
-    height: width * 0.7,
-    borderRadius: width * 0.4,
-    position: 'absolute',
-    top: -width * 0.4,
-    right: -width * 0.4,
-  },
-  bottomContainer: {
-    width: '100%',
-    height: height * 0.4,
-    paddingVertical: SPACING.xl,
-    paddingHorizontal: SPACING.lg,
-    justifyContent: 'space-between',
+    height: '100%',
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
     alignItems: 'center',
-    borderTopRightRadius: SPACING.xl,
-    borderTopLeftRadius: SPACING.xl,
-    shadowColor: COLORS.shadow,
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: -3,
+      height: 4,
     },
     shadowOpacity: 0.1,
-    shadowRadius: 4.65,
-    elevation: 6,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  textGroup: {
-    alignItems: 'center',
-    gap: SPACING.xs,
+  qrCodeImage: {
+    width: '90%',
+    height: '90%',
   },
-  heading: {
-    color: COLORS.white,
-    fontSize: 42,
-    fontWeight: 'bold',
-    lineHeight: 53,
-    marginBottom: SPACING.xs,
-  },
-  subheading: {
-    color: COLORS.white,
-    fontSize: 17,
-    fontWeight: '400',
-    lineHeight: 21,
-  },
-  button: {
-    width: '100%',
-    maxWidth: 352,
-    height: 44,
-    backgroundColor: COLORS.primary,
-    borderRadius: SPACING.xs,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: SPACING.lg,
-  },
-  buttonText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: '600',
+  scanningLine: {
+    position: 'absolute',
+    width: '75%',
+    height:
+    2,
+    backgroundColor: 'rgba(140, 224, 28, 0.8)',
+    top: '50%',
+    left: '12.5%',
   },
 });
 

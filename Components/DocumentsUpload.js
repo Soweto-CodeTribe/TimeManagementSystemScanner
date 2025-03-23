@@ -226,7 +226,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { height, width } = Dimensions.get('window');
-const SHEET_HEIGHT = height * 0.9;
+const SHEET_HEIGHT = height * 0.74;
 const SHEET_OVERFLOW = 20;
 
 const DocumentsUpload = ({ openDocumentsheet, onClose }) => {

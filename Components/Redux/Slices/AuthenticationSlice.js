@@ -11,7 +11,6 @@ const getCurrentTime = () => {
   hours = hours % 12;
   hours = hours ? hours : 12; // the hour '0' should be '12'
   return `${hours}:${minutes} ${ampm}`;
-  // ${ampm}
 };
 
 // Helper function to get current date in format "YYYY-MM-DD"
@@ -24,6 +23,11 @@ export const checkIn = createAsyncThunk(
   "auth/checkIn",
   async ({ traineeId, name, location = "Office" }, { rejectWithValue }) => {
     try {
+      // Get token and verify it exists
+      const token = await AsyncStorage.getItem("token");
+      console.log("Token in check-in:", token);
+      if (!token) throw new Error("No authentication token available");
+      
       const checkInTime = getCurrentTime();
       const date = getCurrentDate();
 
@@ -35,18 +39,17 @@ export const checkIn = createAsyncThunk(
 
       console.log("Sending check-in data:", { traineeId, name, ...checkInData });
 
-      // Fix: Correct API payload structure
       const response = await axios.post(
         "https://timemanagementsystemserver.onrender.com/api/session/check-in",
         { 
           traineeId, 
           name, 
-          location:"Office", 
-          checkInTime  // Changed from checkIn to checkInTime
+          location: "Office", 
+          checkInTime
         },
         {
           headers: { 
-            Authorization: `Bearer ${await AsyncStorage.getItem("token")}`
+            Authorization: `Bearer ${token}`
           }
         }
       );
@@ -59,7 +62,7 @@ export const checkIn = createAsyncThunk(
       return { ...response.data, checkInData };
     } catch (error) {
       console.error("Check-in error:", error);
-      return rejectWithValue(error.response?.data?.message || "Check-in failed");
+      return rejectWithValue(error.response?.data?.message || error.message || "Check-in failed");
     }
   }
 );
@@ -78,56 +81,45 @@ export const loginUser = createAsyncThunk(
 
       console.log("Login Response Data:", data);
       console.log("Token:", data.token);
-      console.log("Location",data.location);
+      console.log("Location:", data.location);
+      
       if (!data.token) throw new Error("No token received");
 
       // Extract trainee details from user data
+      const token = data.token;
       const traineeID = data.trainee?.traineeId?.toString();
       const name = data.trainee?.name || data.trainee?.fullName;
       const cellphone = data.trainee?.phoneNumber;
       const idNumber = data.trainee?.idNumber;
       const location = data.trainee?.location;
-      const surname =data.trainee?.surname;
+      const surname = data.trainee?.surname;
       
+      // Always store essential authentication data regardless of keepSignedIn
+      await AsyncStorage.setItem("token", token);
+      await AsyncStorage.setItem("traineeID", traineeID || "");
+      await AsyncStorage.setItem("name", name || "");
+      await AsyncStorage.setItem("email", email);
+      
+      // Store additional user info
+      if (surname) await AsyncStorage.setItem("Surname", surname);
+      if (cellphone) await AsyncStorage.setItem("cellphone", cellphone);
+      if (idNumber) await AsyncStorage.setItem("idNumber", idNumber);
+      if (location) await AsyncStorage.setItem("Location", location);
 
       console.log("Name:", name);
-      console.log("Surname:",surname);
+      console.log("Surname:", surname);
       console.log("Trainee ID:", traineeID);
-      console.log("Cell Phone: ",cellphone);
-      console.log("ID Number: ",idNumber);
+      console.log("Cell Phone: ", cellphone);
+      console.log("ID Number: ", idNumber);
       console.log("Location: ", location);
       
-
+      // Handle keepSignedIn flag
       if (keepSignedIn) {
-        await AsyncStorage.setItem("token", data.token);
-        await AsyncStorage.setItem("email", email);
         await AsyncStorage.setItem("keepSignedIn", "true");
-        if (traineeID) {
-          await AsyncStorage.setItem("traineeID", traineeID);
-        }
-        if (name) {
-          await AsyncStorage.setItem("name", name);
-        }
-        if(surname){
-          await AsyncStorage.setItem("Surname",surname)
-        }
-        if(cellphone){
-          await AsyncStorage.setItem("cellphone", cellphone);
-        }
-        if(idNumber){
-          await AsyncStorage.setItem("ID Number",idNumber);
-        }
-        if(location){
-          await AsyncStorage.setItem("Location",location)
-        }
-        
-
       } else {
-        await AsyncStorage.removeItem("token");
-        await AsyncStorage.removeItem("email");
+        // If not keeping signed in, we'll still be authenticated for this session,
+        // but will clear the flag so app startup won't auto-login next time
         await AsyncStorage.removeItem("keepSignedIn");
-        await AsyncStorage.removeItem("traineeID");
-        await AsyncStorage.removeItem("name");
       }
 
       // Automatically check-in after successful login if traineeID and name are available
@@ -141,9 +133,10 @@ export const loginUser = createAsyncThunk(
         }
       }
 
-      return { ...data, traineeID };
+      return { ...data, traineeID, name };
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Login failed");
+      console.error("Login error:", error);
+      return rejectWithValue(error.response?.data?.message || error.message || "Login failed");
     }
   }
 );
@@ -153,13 +146,20 @@ export const fetchUserData = createAsyncThunk(
   "auth/fetchUserData",
   async (_, { getState, rejectWithValue }) => {
     try {
+      // Try to get token from state first
       const { token } = getState().auth;
-      if (!token) throw new Error("No token found");
+      
+      // If not in state, try AsyncStorage as fallback
+      const authToken = token || await AsyncStorage.getItem("token");
+      
+      console.log("Fetching user data with token:", authToken ? "Token exists" : "Token is missing");
+      
+      if (!authToken) throw new Error("No authentication token found");
 
       const response = await axios.get(
         "https://timemanagementsystemserver.onrender.com/api/auth/getUser",
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${authToken}` },
         }
       );
 
@@ -167,16 +167,21 @@ export const fetchUserData = createAsyncThunk(
 
       console.log("Fetched User Data:", userData);
       await AsyncStorage.setItem("user", JSON.stringify(userData));
+      
+      // Use userData instead of undefined data variable
+      if (userData.trainee) {
+        await AsyncStorage.setItem("token", authToken);
+        await AsyncStorage.setItem("cell Number", userData.trainee.phoneNumber || "");
+        await AsyncStorage.setItem("email", userData.trainee.email || "");
+        await AsyncStorage.setItem("id Number", userData.trainee.idNumber || "");
+        await AsyncStorage.setItem("Location", userData.trainee.location || "");
 
-      await AsyncStorage.setItem("cell Number", data.trainee.phoneNumber);
-      await AsyncStorage.setItem("email", data.trainee.email);
-      await AsyncStorage.setItem("id Number", data.trainee.idNumber);
-      await AsyncStorage.setItem("Location", data.trainee.location);
-
-      console.log("cell Number", data.trainee.phoneNumber);
-      console.log("email", data.trainee.email);
-      console.log("id Number", data.trainee.idNumber);
-      console.log("Location", data.trainee.location);
+        console.log("Stored Token in AsyncStorage:", authToken);
+        console.log("cell Number", userData.trainee.phoneNumber);
+        console.log("email", userData.trainee.email);
+        console.log("id Number", userData.trainee.idNumber);
+        console.log("Location", userData.trainee.location);
+      }
 
       // Store traineeID if available
       const traineeID = userData.trainee?.traineeId?.toString();
@@ -186,7 +191,8 @@ export const fetchUserData = createAsyncThunk(
 
       return userData;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch user data");
+      console.error("Fetch user data error:", error);
+      return rejectWithValue(error.response?.data?.message || error.message || "Failed to fetch user data");
     }
   }
 );
@@ -197,7 +203,8 @@ const authSlice = createSlice({
     user: null,
     token: null,
     traineeID: null,
-    email:null,
+    email: null,
+    name: null,
     checkInData: null,
     isLoading: false,
     isCheckingIn: false,
@@ -209,7 +216,8 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       state.traineeID = null;
-      state.email=null;
+      state.email = null;
+      state.name = null;
       state.checkInData = null;
       AsyncStorage.removeItem("token");
       AsyncStorage.removeItem("user");
@@ -218,6 +226,16 @@ const authSlice = createSlice({
       AsyncStorage.removeItem("traineeID");
       AsyncStorage.removeItem("name");
       AsyncStorage.removeItem("checkInData");
+    },
+    // Reducer to set token from AsyncStorage on app startup
+    setToken: (state, action) => {
+      state.token = action.payload;
+    },
+    // New reducer to set user data from AsyncStorage on app startup
+    setUserData: (state, action) => {
+      state.traineeID = action.payload.traineeID;
+      state.email = action.payload.email;
+      state.name = action.payload.name;
     },
   },
   extraReducers: (builder) => {
@@ -231,11 +249,14 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.token = action.payload.token;
         state.traineeID = action.payload.traineeID;
+        state.name = action.payload.name;
+        state.email = action.payload.email || action.meta.arg.email;
        
+        console.log("Stored Token in Redux:", state.token);
         console.log("Token after Login:", action.payload.token);
         console.log("Trainee ID after Login:", action.payload.traineeID);
+        console.log("Name after Login:", action.payload.name);
     
-
         if (action.payload.user) {
           state.user = action.payload.user;
           console.log("Stored User in Redux:", state.user);
@@ -265,14 +286,16 @@ const authSlice = createSlice({
       .addCase(fetchUserData.fulfilled, (state, action) => {
         state.user = action.payload;
         const traineeID = action.payload.trainee?.traineeId?.toString();
-        const email=action.payload?.email;
+        const email = action.payload?.email || action.payload.trainee?.email;
+        const name = action.payload.trainee?.name || action.payload.trainee?.fullName;
         state.traineeID = traineeID || state.traineeID;
+        state.email = email || state.email;
+        state.name = name || state.name;
      
-
         console.log("Updated Redux State - User:", state.user);
         console.log("Updated Redux State - Trainee ID:", state.traineeID);
-   
-
+        console.log("Updated Redux State - Email:", state.email);
+        console.log("Updated Redux State - Name:", state.name);
       })
       .addCase(fetchUserData.rejected, (state, action) => {
         state.error = action.payload;
@@ -280,5 +303,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout } = authSlice.actions;
+export const { logout, setToken, setUserData } = authSlice.actions;
 export default authSlice.reducer;

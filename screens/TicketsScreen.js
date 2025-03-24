@@ -13,34 +13,15 @@ import {
   SafeAreaView,
   ActivityIndicator,
   FlatList,
-  Modal,
-  RefreshControl
+  Modal
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 
-// Color palette - updated to be less "green heavy" but with green accents
-const COLORS = {
-  primary: '#4CAF50', // Primary green
-  primaryDark: '#388E3C', // Dark green for accents
-  accent: '#66BB6A', // Light green for buttons and highlights
-  background: '#F9FAFB', // Light gray-white for background
-  surface: '#FFFFFF', // White for cards and surfaces
-  text: '#1F2937', // Dark gray for text
-  textSecondary: '#6B7280', // Medium gray for secondary text
-  border: '#E5E7EB', // Light gray for borders
-  error: '#EF4444', // Red for errors
-  success: '#10B981', // Green for success messages
-  warning: '#F59E0B', // Amber for warnings
-  info: '#3B82F6', // Blue for info
-  disabled: 'rgba(0, 0, 0, 0.38)'
-};
-
-const TicketScreen = () => {
+const TicketScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [tickets, setTickets] = useState([]);
   const [traineeId, setTraineeId] = useState('');
   const [token, setToken] = useState(null);
@@ -62,16 +43,13 @@ const TicketScreen = () => {
         const ID = await AsyncStorage.getItem('traineeID');
         const Token = await AsyncStorage.getItem('token');
         
-        // Ensure ID is a string
         const traineeIdString = ID ? String(ID) : '';
         
         setToken(Token);
         setTraineeId(traineeIdString);
 
-        // Set default axios auth header once token is available
         if (Token) {
           axios.defaults.headers.common['Authorization'] = `Bearer ${Token}`;
-          // Fetch tickets after setting token and traineeId
           if (traineeIdString) {
             fetchTickets(Token, traineeIdString);
           }
@@ -84,16 +62,11 @@ const TicketScreen = () => {
     fetchUserData();
   }, []);
 
-  // Fetch all tickets for the authenticated user
   const fetchTickets = async (authToken = token, userId = traineeId) => {
-    if (!authToken || !userId) {
-      console.log('Missing auth token or user ID');
-      return;
-    }
+    if (!authToken || !userId) return;
     
     try {
       setLoading(true);
-      // Fix the endpoint to use proper API route
       const response = await axios.get(
         `https://timemanagementsystemserver.onrender.com/api/tickets/trainee/${userId}/tickets`,
         {
@@ -103,22 +76,14 @@ const TicketScreen = () => {
         }
       );
       setTickets(response.data);
-      console.log(response.data);
     } catch (error) {
       console.error('Fetch tickets error:', error.response?.data || error.message);
       Alert.alert('Error', 'Failed to fetch tickets. Please try again.');
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchTickets();
-  };
-
-  // Reset form data and errors
   const resetForm = () => {
     setTicketData({
       title: '',
@@ -129,13 +94,11 @@ const TicketScreen = () => {
     setErrors({});
   };
 
-  // Handle form input changes
   const handleChange = (field, value) => {
     setTicketData({
       ...ticketData,
       [field]: value,
     });
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors({
         ...errors,
@@ -144,7 +107,6 @@ const TicketScreen = () => {
     }
   };
 
-  // Validate form inputs
   const validateForm = () => {
     const newErrors = {};
     if (!ticketData.title.trim()) {
@@ -161,7 +123,6 @@ const TicketScreen = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle ticket creation
   const handleCreateTicket = async () => {
     if (!token || !traineeId) {
       Alert.alert('Error', 'Authorization required. Please log in again.');
@@ -171,14 +132,14 @@ const TicketScreen = () => {
     if (validateForm()) {
       try {
         setLoading(true);
-        const response = await axios.post(
+        await axios.post(
           `https://timemanagementsystemserver.onrender.com/api/tickets?traineeId=${traineeId}`,
           {
             title: ticketData.title,
             description: ticketData.description,
             priority: ticketData.priority,
             category: ticketData.category,
-            traineeId: String(traineeId), // Ensure traineeId is a string
+            traineeId: String(traineeId),
           },
           {
             headers: {
@@ -204,100 +165,12 @@ const TicketScreen = () => {
     }
   };
 
-  // Handle viewing a ticket's details - FIXED
-  const handleViewTicket = async (ticketId) => {
-    if (!token || !traineeId) {
-      Alert.alert('Error', 'Authorization required. Please log in again.');
-      return;
-    }
-  
-    try {
-      setLoading(true);
-      
-      // Using axios.request() to configure a GET request with a body
-      const response = await axios.get(
-        `https://timemanagementsystemserver.onrender.com/api/tickets/my-tickets/${ticketId}?traineeId=${traineeId}`,
-        
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
-      
-      setCurrentTicket(response.data);
-      setIsDetailModalVisible(true);
-    } catch (error) {
-      console.error('View ticket error:', error.response?.data || error.message);
-      const errorMsg = error.response?.data?.error || 'Failed to fetch ticket details';
-      Alert.alert('Error', errorMsg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Setup for editing a ticket
-  const handleEditSetup = (ticket) => {
-    setTicketData({
-      title: ticket.title,
-      description: ticket.description,
-      priority: ticket.priority || 'medium',
-      category: ticket.category || 'bug',
-    });
-    setCurrentTicket(ticket);
-    setIsDetailModalVisible(false);
-    setIsEditModalVisible(true);
-  };
-
-  // Handle updating a ticket
-  const handleUpdateTicket = async () => {
-    if (!token || !traineeId || !currentTicket) {
-      Alert.alert('Error', 'Missing required information. Please try again.');
-      return;
-    }
-
-    if (validateForm()) {
-      try {
-        setLoading(true);
-        const response = await axios.put(
-          `https://timemanagementsystemserver.onrender.com/api/tickets/my-tickets/${currentTicket.id}?traineeId=${traineeId}`,
-          {
-            title: ticketData.title,
-            description: ticketData.description,
-            priority: ticketData.priority,
-            traineeId: String(traineeId), // Ensure traineeId is a string
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          }
-        );
-        
-        Alert.alert('Success', 'Ticket updated successfully!');
-        setIsEditModalVisible(false);
-        resetForm();
-        fetchTickets();
-      } catch (error) {
-        console.error('Update ticket error:', error.response?.data || error.message);
-        const errorMsg = error.response?.data?.error || 'Failed to update ticket';
-        Alert.alert('Error', errorMsg);
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      Alert.alert('Error', 'Please fix the errors in the form');
-    }
-  };
-
-  // Handle canceling a ticket
   const handleCancelTicket = async (ticketId) => {
     if (!token || !traineeId) {
       Alert.alert('Error', 'Authorization required. Please log in again.');
       return;
     }
-
+  
     Alert.alert(
       'Cancel Ticket',
       'Are you sure you want to cancel this ticket? This action cannot be undone.',
@@ -312,7 +185,7 @@ const TicketScreen = () => {
               const response = await axios.post(
                 `https://timemanagementsystemserver.onrender.com/api/tickets/my-tickets/${ticketId}/cancel?traineeId=${traineeId}`,
                 {
-                  traineeId: String(traineeId), // Ensure traineeId is a string
+                  traineeId: String(traineeId),
                 },
                 {
                   headers: {
@@ -338,128 +211,174 @@ const TicketScreen = () => {
     );
   };
 
-  // Get status color based on ticket status
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'open':
-        return COLORS.info;
-      case 'in-progress':
-        return COLORS.warning;
-      case 'resolved':
-        return COLORS.success;
-      case 'closed':
-        return COLORS.textSecondary;
-      default:
-        return COLORS.textSecondary;
+  const handleEditSetup = (ticket) => {
+    setTicketData({
+      title: ticket.title,
+      description: ticket.description,
+      priority: ticket.priority || 'medium',
+      category: ticket.category || 'bug',
+    });
+    setCurrentTicket(ticket);
+    setIsDetailModalVisible(false);
+    setIsEditModalVisible(true);
+  };
+
+  const handleUpdateTicket = async () => {
+    if (!token || !traineeId || !currentTicket) {
+      Alert.alert('Error', 'Missing required information. Please try again.');
+      return;
+    }
+
+    if (validateForm()) {
+      try {
+        setLoading(true);
+        const response = await axios.put(
+          `https://timemanagementsystemserver.onrender.com/api/tickets/my-tickets/${currentTicket.id}?traineeId=${traineeId}`,
+          {
+            title: ticketData.title,
+            description: ticketData.description,
+            priority: ticketData.priority,
+            category: ticketData.category,
+            traineeId: String(traineeId),
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        
+        Alert.alert('Success', 'Ticket updated successfully!');
+        setIsEditModalVisible(false);
+        resetForm();
+        fetchTickets();
+      } catch (error) {
+        console.error('Update ticket error:', error.response?.data || error.message);
+        const errorMsg = error.response?.data?.error || 'Failed to update ticket';
+        Alert.alert('Error', errorMsg);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      Alert.alert('Error', 'Please fix the errors in the form');
     }
   };
 
-  // Get priority color based on ticket priority
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'low':
-        return COLORS.info;
-      case 'medium':
-        return COLORS.warning;
-      case 'high':
-        return COLORS.error;
-      case 'critical':
-        return '#B91C1C'; // Darker red for critical
-      default:
-        return COLORS.info;
+  const handleViewTicket = async (ticketId) => {
+    if (!token || !traineeId) {
+      Alert.alert('Error', 'Authorization required. Please log in again.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      const response = await axios.get(
+        `https://timemanagementsystemserver.onrender.com/api/tickets/my-tickets/${ticketId}?traineeId=${traineeId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      
+      setCurrentTicket(response.data);
+      setIsDetailModalVisible(true);
+    } catch (error) {
+      console.error('View ticket error:', error.response?.data || error.message);
+      const errorMsg = error.response?.data?.error || 'Failed to fetch ticket details';
+      Alert.alert('Error', errorMsg);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Format date to readable string
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  // Render a single ticket item
   const renderTicketItem = ({ item }) => (
     <TouchableOpacity
-      style={styles.ticketItem}
+      style={styles.menuItem}
       onPress={() => handleViewTicket(item.id)}
     >
-      <View style={styles.ticketHeader}>
-        <Text style={styles.ticketTitle} numberOfLines={1}>{item.title}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-          <Text style={styles.statusText}>{item.status}</Text>
+      <View style={styles.menuItemLeft}>
+        <View style={[styles.iconContainer, { backgroundColor: '#8BC34A20' }]}>
+          <Ionicons name="ticket-outline" size={20} color="#8BC34A" />
+        </View>
+        <View style={styles.ticketContent}>
+          <Text style={styles.menuItemText} numberOfLines={1}>{item.title}</Text>
+          <Text style={styles.ticketSubtext} numberOfLines={1}>{item.description}</Text>
         </View>
       </View>
-      
-      <Text style={styles.ticketDescription} numberOfLines={2}>{item.description}</Text>
-      
-      <View style={styles.ticketFooter}>
-        <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(item.priority) }]}>
-          <Text style={styles.priorityText}>{item.priority}</Text>
-        </View>
-        <Text style={styles.ticketDate}>{formatDate(item.createdAt)}</Text>
+      <View style={styles.statusBadge}>
+        <Text style={[styles.statusText, { 
+          color: item.status === 'closed' ? '#4CAF50' : 
+                 item.status === 'cancelled' ? '#F44336' : 
+                 item.status === 'in-progress' ? '#FFC107' : '#2196F3'
+        }]}>
+          {item.status}
+        </Text>
       </View>
+      <Ionicons name="chevron-forward" size={20} color="#CCCCCC" />
     </TouchableOpacity>
   );
 
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'low': return '#4CAF50';
+      case 'medium': return '#FFC107';
+      case 'high': return '#FF9800';
+      case 'critical': return '#F44336';
+      default: return '#2196F3';
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.surface} />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Support Tickets</Text>
+      <View style={styles.navBar}>
         <TouchableOpacity
-          style={styles.createButton}
-          onPress={() => {
-            resetForm();
-            setIsCreateModalVisible(true);
-          }}
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
         >
-          <Text style={styles.createButtonText}>New Ticket</Text>
+          <Ionicons name="chevron-back" size={24} color="#999999" />
         </TouchableOpacity>
+        <Text style={styles.navBarTitle}>Support Tickets</Text>
       </View>
 
-      {/* Loading Indicator */}
-      {loading && !refreshing && (
+      {loading && (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator size="large" color="#8BC34A" />
         </View>
       )}
 
-      {/* List of Tickets */}
       <FlatList
         data={tickets}
         renderItem={renderTicketItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.ticketList}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[COLORS.primary]}
-          />
-        }
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={styles.menuContainer}
         ListEmptyComponent={
           !loading ? (
             <View style={styles.emptyContainer}>
-              <Ionicons name="ticket-outline" size={64} color={COLORS.textSecondary} />
+              <Ionicons name="ticket-outline" size={64} color="#999999" />
               <Text style={styles.emptyText}>No tickets found</Text>
               <Text style={styles.emptySubtext}>
                 Create a new ticket to get help from our support team
               </Text>
-              <TouchableOpacity
-                style={styles.emptyButton}
-                onPress={() => {
-                  resetForm();
-                  setIsCreateModalVisible(true);
-                }}
-              >
-                <Text style={styles.emptyButtonText}>Create Ticket</Text>
-              </TouchableOpacity>
             </View>
           ) : null
         }
       />
+
+      {/* Floating Create Ticket Button */}
+      <TouchableOpacity
+        style={styles.floatingButton}
+        onPress={() => {
+          resetForm();
+          setIsCreateModalVisible(true);
+        }}
+      >
+        <Ionicons name="add" size={24} color="white" />
+      </TouchableOpacity>
 
       {/* Create Ticket Modal */}
       <Modal
@@ -476,12 +395,11 @@ const TicketScreen = () => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Create New Ticket</Text>
               <TouchableOpacity onPress={() => setIsCreateModalVisible(false)}>
-                <Ionicons name="close" size={24} color={COLORS.text} />
+                <Ionicons name="close" size={24} color="#333333" />
               </TouchableOpacity>
             </View>
             
             <ScrollView contentContainerStyle={styles.modalContent}>
-              {/* Title Input */}
               <View style={styles.formGroup}>
                 <Text style={styles.label}>Title</Text>
                 <TextInput
@@ -489,12 +407,11 @@ const TicketScreen = () => {
                   placeholder="Enter ticket title"
                   value={ticketData.title}
                   onChangeText={(text) => handleChange('title', text)}
-                  placeholderTextColor={COLORS.textSecondary}
+                  placeholderTextColor="#999999"
                 />
                 {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
               </View>
 
-              {/* Description Input */}
               <View style={styles.formGroup}>
                 <Text style={styles.label}>Description</Text>
                 <TextInput
@@ -504,12 +421,11 @@ const TicketScreen = () => {
                   numberOfLines={6}
                   value={ticketData.description}
                   onChangeText={(text) => handleChange('description', text)}
-                  placeholderTextColor={COLORS.textSecondary}
+                  placeholderTextColor="#999999"
                 />
                 {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
               </View>
 
-              {/* Priority Picker */}
               <View style={styles.formGroup}>
                 <Text style={styles.label}>Priority</Text>
                 <View style={styles.pickerContainer}>
@@ -526,7 +442,6 @@ const TicketScreen = () => {
                 </View>
               </View>
 
-              {/* Category Picker */}
               <View style={styles.formGroup}>
                 <Text style={styles.label}>Category</Text>
                 <View style={styles.pickerContainer}>
@@ -544,16 +459,15 @@ const TicketScreen = () => {
                 </View>
               </View>
 
-              {/* Submit Button */}
               <TouchableOpacity
-                style={styles.submitButton}
+                style={styles.editProfileButton}
                 onPress={handleCreateTicket}
                 disabled={loading}
               >
                 {loading ? (
-                  <ActivityIndicator size="small" color={COLORS.surface} />
+                  <ActivityIndicator size="small" color="white" />
                 ) : (
-                  <Text style={styles.submitButtonText}>Create Ticket</Text>
+                  <Text style={styles.editProfileText}>Create Ticket</Text>
                 )}
               </TouchableOpacity>
             </ScrollView>
@@ -574,14 +488,13 @@ const TicketScreen = () => {
         >
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Update Ticket</Text>
+              <Text style={styles.modalTitle}>Edit Ticket</Text>
               <TouchableOpacity onPress={() => setIsEditModalVisible(false)}>
-                <Ionicons name="close" size={24} color={COLORS.text} />
+                <Ionicons name="close" size={24} color="#333333" />
               </TouchableOpacity>
             </View>
             
             <ScrollView contentContainerStyle={styles.modalContent}>
-              {/* Title Input */}
               <View style={styles.formGroup}>
                 <Text style={styles.label}>Title</Text>
                 <TextInput
@@ -589,12 +502,11 @@ const TicketScreen = () => {
                   placeholder="Enter ticket title"
                   value={ticketData.title}
                   onChangeText={(text) => handleChange('title', text)}
-                  placeholderTextColor={COLORS.textSecondary}
+                  placeholderTextColor="#999999"
                 />
                 {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
               </View>
 
-              {/* Description Input */}
               <View style={styles.formGroup}>
                 <Text style={styles.label}>Description</Text>
                 <TextInput
@@ -604,12 +516,11 @@ const TicketScreen = () => {
                   numberOfLines={6}
                   value={ticketData.description}
                   onChangeText={(text) => handleChange('description', text)}
-                  placeholderTextColor={COLORS.textSecondary}
+                  placeholderTextColor="#999999"
                 />
                 {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
               </View>
 
-              {/* Priority Picker */}
               <View style={styles.formGroup}>
                 <Text style={styles.label}>Priority</Text>
                 <View style={styles.pickerContainer}>
@@ -626,16 +537,32 @@ const TicketScreen = () => {
                 </View>
               </View>
 
-              {/* Submit Button */}
+              <View style={styles.formGroup}>
+                <Text style={styles.label}>Category</Text>
+                <View style={styles.pickerContainer}>
+                  <Picker
+                    selectedValue={ticketData.category}
+                    onValueChange={(value) => handleChange('category', value)}
+                    style={styles.picker}
+                  >
+                    <Picker.Item label="Bug" value="bug" />
+                    <Picker.Item label="Feature Request" value="feature" />
+                    <Picker.Item label="Technical Support" value="support" />
+                    <Picker.Item label="Documentation" value="docs" />
+                    <Picker.Item label="Other" value="other" />
+                  </Picker>
+                </View>
+              </View>
+
               <TouchableOpacity
-                style={styles.submitButton}
+                style={styles.editProfileButton}
                 onPress={handleUpdateTicket}
                 disabled={loading}
               >
                 {loading ? (
-                  <ActivityIndicator size="small" color={COLORS.surface} />
+                  <ActivityIndicator size="small" color="white" />
                 ) : (
-                  <Text style={styles.submitButtonText}>Update Ticket</Text>
+                  <Text style={styles.editProfileText}>Update Ticket</Text>
                 )}
               </TouchableOpacity>
             </ScrollView>
@@ -655,63 +582,102 @@ const TicketScreen = () => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Ticket Details</Text>
               <TouchableOpacity onPress={() => setIsDetailModalVisible(false)}>
-                <Ionicons name="close" size={24} color={COLORS.text} />
+                <Ionicons name="close" size={24} color="#333333" />
               </TouchableOpacity>
             </View>
             
             {currentTicket && (
               <ScrollView contentContainerStyle={styles.modalContent}>
-                <View style={styles.detailHeader}>
-                  <Text style={styles.detailTitle}>{currentTicket.title}</Text>
-                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(currentTicket.status) }]}>
-                    <Text style={styles.statusText}>{currentTicket.status}</Text>
+                <View style={styles.profileInfo}>
+                  <Text style={styles.profileName}>{currentTicket.title}</Text>
+                  <View style={styles.locationContainer}>
+                    <Ionicons name="document-text-outline" size={16} color="#8BC34A" />
+                    <Text style={styles.locationText}>{currentTicket.category}</Text>
                   </View>
                 </View>
-                
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Category:</Text>
-                  <Text style={styles.detailValue}>{currentTicket.category}</Text>
-                </View>
-                
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Priority:</Text>
-                  <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(currentTicket.priority) }]}>
-                    <Text style={styles.priorityText}>{currentTicket.priority}</Text>
+
+                <View style={[styles.menuItem, { marginTop: 15 }]}>
+                  <View style={styles.menuItemLeft}>
+                    <View style={[styles.iconContainer, { backgroundColor: '#8BC34A20' }]}>
+                      <Ionicons name="flag-outline" size={20} color="#8BC34A" />
+                    </View>
+                    <View>
+                      <Text style={styles.menuItemText}>Priority</Text>
+                      <Text style={[styles.ticketSubtext, { 
+                        color: getPriorityColor(currentTicket.priority) 
+                      }]}>
+                        {currentTicket.priority}
+                      </Text>
+                    </View>
                   </View>
                 </View>
-                
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Created:</Text>
-                  <Text style={styles.detailValue}>{formatDate(currentTicket.createdAt)}</Text>
+
+                <View style={styles.menuItem}>
+                  <View style={styles.menuItemLeft}>
+                    <View style={[styles.iconContainer, { backgroundColor: '#8BC34A20' }]}>
+                      <Ionicons name="time-outline" size={20} color="#8BC34A" />
+                    </View>
+                    <View>
+                      <Text style={styles.menuItemText}>Status</Text>
+                      <Text style={[styles.ticketSubtext, { 
+                        color: currentTicket.status === 'closed' ? '#4CAF50' : 
+                               currentTicket.status === 'cancelled' ? '#F44336' : 
+                               currentTicket.status === 'in-progress' ? '#FFC107' : '#2196F3'
+                      }]}>
+                        {currentTicket.status}
+                      </Text>
+                    </View>
+                  </View>
                 </View>
-                
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Updated:</Text>
-                  <Text style={styles.detailValue}>{formatDate(currentTicket.updatedAt)}</Text>
+
+                <View style={styles.menuItem}>
+                  <View style={styles.menuItemLeft}>
+                    <View style={[styles.iconContainer, { backgroundColor: '#8BC34A20' }]}>
+                      <Ionicons name="calendar-outline" size={20} color="#8BC34A" />
+                    </View>
+                    <View>
+                      <Text style={styles.menuItemText}>Created At</Text>
+                      <Text style={styles.ticketSubtext}>
+                        {new Date(currentTicket.createdAt).toLocaleString()}
+                      </Text>
+                    </View>
+                  </View>
                 </View>
-                
+
+                {currentTicket.updatedAt && (
+                  <View style={styles.menuItem}>
+                    <View style={styles.menuItemLeft}>
+                      <View style={[styles.iconContainer, { backgroundColor: '#8BC34A20' }]}>
+                        <Ionicons name="refresh-outline" size={20} color="#8BC34A" />
+                      </View>
+                      <View>
+                        <Text style={styles.menuItemText}>Last Updated</Text>
+                        <Text style={styles.ticketSubtext}>
+                          {new Date(currentTicket.updatedAt).toLocaleString()}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                )}
+
                 <View style={styles.descriptionContainer}>
-                  <Text style={styles.descriptionLabel}>Description:</Text>
+                  <Text style={styles.label}>Description</Text>
                   <Text style={styles.descriptionText}>{currentTicket.description}</Text>
                 </View>
-                
-                {/* Actions buttons only for open tickets */}
+
                 {currentTicket.status === 'open' && (
-                  <View style={styles.actionButtonsContainer}>
+                  <View style={styles.buttonGroup}>
                     <TouchableOpacity
-                      style={styles.editButton}
+                      style={[styles.editButton, { backgroundColor: '#8BC34A' }]}
                       onPress={() => handleEditSetup(currentTicket)}
                     >
-                      <Ionicons name="create-outline" size={18} color={COLORS.surface} />
-                      <Text style={styles.actionButtonText}>Edit</Text>
+                      <Text style={styles.buttonText}>Edit Ticket</Text>
                     </TouchableOpacity>
-                    
                     <TouchableOpacity
-                      style={styles.cancelButton}
+                      style={[styles.editButton, { backgroundColor: '#F44336' }]}
                       onPress={() => handleCancelTicket(currentTicket.id)}
                     >
-                      <Ionicons name="close-circle-outline" size={18} color={COLORS.surface} />
-                      <Text style={styles.actionButtonText}>Cancel</Text>
+                      <Text style={styles.buttonText}>Cancel Ticket</Text>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -724,46 +690,83 @@ const TicketScreen = () => {
   );
 };
 
-// Styles would be defined here
-
-
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.background,
+    backgroundColor: "#FFFFFF",
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 25,
-    backgroundColor: COLORS.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+  navBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    backgroundColor: "#F5F5F5",
+    marginTop: 40,
+  },
+  backButton: {
+    padding: 5,
+  },
+  navBarTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#999999",
+    textAlign: "center",
+    flex: 1,
+    position: "absolute",
+    left: 0,
+    right: 0,
+    textAlign: "center",
+  },
+  menuContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "white",
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  headerTitle: {
-    fontSize: 22,
+  menuItemLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  menuItemText: {
+    fontSize: 16,
+    color: "#666666",
+  },
+  ticketContent: {
+    flex: 1,
+    flexDirection: "column",
+  },
+  ticketSubtext: {
+    fontSize: 12,
+    color: "#999999",
+  },
+  statusBadge: {
+    marginRight: 10,
+  },
+  statusText: {
+    fontSize: 12,
     fontWeight: 'bold',
-    color: COLORS.text,
-  },
-  createButton: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  createButtonText: {
-    color: COLORS.surface,
-    fontSize: 14,
-    fontWeight: '600',
+    textTransform: 'capitalize',
   },
   loadingContainer: {
     position: 'absolute',
@@ -776,74 +779,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.7)',
     zIndex: 1000,
   },
-  ticketList: {
-    padding: 16,
-    paddingBottom: 80, // Extra padding at bottom for better scrolling
-  },
-  ticketItem: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-    borderLeftWidth: 4,
-    borderLeftColor: COLORS.primary,
-  },
-  ticketHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  ticketTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text,
-    flex: 1,
-    marginRight: 8,
-  },
-  ticketDescription: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    marginBottom: 12,
-  },
-  ticketFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statusText: {
-    color: COLORS.surface,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  priorityBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  priorityText: {
-    color: COLORS.surface,
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  ticketDate: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-  },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -852,205 +787,160 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: COLORS.text,
+    color: '#333333',
     marginTop: 16,
   },
   emptySubtext: {
     fontSize: 14,
-    color: COLORS.textSecondary,
+    color: '#666666',
     textAlign: 'center',
     marginTop: 8,
-    marginBottom: 24,
   },
-  emptyButton: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-  },
-  emptyButtonText: {
-    color: COLORS.surface,
-    fontSize: 14,
-    fontWeight: '600',
+  floatingButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: '#8BC34A',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: COLORS.surface,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     maxHeight: '90%',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomColor: '#E5E5E5',
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: COLORS.text,
+    color: '#333333',
   },
   modalContent: {
-    padding: 16,
+    padding: 20,
+    paddingBottom: 30,
   },
   formGroup: {
-    marginBottom: 16,
+    marginBottom: 15,
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.text,
+    color: '#666666',
     marginBottom: 8,
+    fontWeight: '600',
   },
   input: {
-    backgroundColor: COLORS.background,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    backgroundColor: '#F5F5F5',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    color: COLORS.text,
   },
   inputError: {
-    borderColor: COLORS.error,
+    borderColor: 'red',
+    borderWidth: 1,
   },
   errorText: {
-    color: COLORS.error,
+    color: 'red',
     fontSize: 12,
-    marginTop: 4,
+    marginTop: 5,
   },
   textArea: {
-    backgroundColor: COLORS.background,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    backgroundColor: '#F5F5F5',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    color: COLORS.text,
-    height: 120,
+    minHeight: 100,
     textAlignVertical: 'top',
   },
   pickerContainer: {
-    backgroundColor: COLORS.background,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    backgroundColor: '#F5F5F5',
     borderRadius: 8,
     overflow: 'hidden',
   },
   picker: {
     height: 50,
-    width: '100%',
-    color: COLORS.text,
   },
-  submitButton: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 14,
+  editProfileButton: {
+    backgroundColor: '#8BC34A',
     borderRadius: 8,
+    paddingVertical: 15,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
+    marginTop: 15,
   },
-  submitButtonText: {
-    color: COLORS.surface,
+  editProfileText: {
+    color: 'white',
     fontSize: 16,
     fontWeight: '600',
-  },
-  detailHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-  },
-  detailTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLORS.text,
-    flex: 1,
-    marginRight: 8,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  detailLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  detailValue: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
   },
   descriptionContainer: {
-    marginTop: 8,
-    marginBottom: 24,
-  },
-  descriptionLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.text,
-    marginBottom: 8,
+    marginTop: 15,
+    marginBottom: 15,
   },
   descriptionText: {
-    fontSize: 16,
-    color: COLORS.text,
-    lineHeight: 24,
+    fontSize: 14,
+    color: '#666666',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
   },
-  actionButtonsContainer: {
+  profileInfo: {
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  profileName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 8,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  locationText: {
+    fontSize: 14,
+    color: '#8BC34A',
+    marginLeft: 4,
+    fontWeight: '600',
+  },
+  buttonGroup: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginTop: 15,
   },
   editButton: {
-    backgroundColor: COLORS.info,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
     flex: 1,
-    marginRight: 8,
-  },
-  cancelButton: {
-    backgroundColor: COLORS.warning,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
     borderRadius: 8,
-    flexDirection: 'row',
+    paddingVertical: 15,
     alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    marginRight: 8,
+    marginHorizontal: 5,
   },
-  deleteButton: {
-    backgroundColor: COLORS.error,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-  },
-  actionButtonText: {
-    color: COLORS.surface,
-    fontSize: 14,
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
     fontWeight: '600',
-    marginLeft: 4,
-  }
+  },
 });
 
-export default TicketScreen
+export default TicketScreen;

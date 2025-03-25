@@ -705,6 +705,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 5,
+    zIndex:10
   },
   navBarTitle: {
     fontSize: 18,

@@ -310,6 +310,8 @@ export const checkIn = createAsyncThunk(
     try {
       // Get token and verify it exists
       const token = await AsyncStorage.getItem("token");
+      const location = await AsyncStorage.getItem("Location");
+      console.log(location);
       console.log("Token in check-in:", token);
       if (!token) throw new Error("No authentication token available");
       
@@ -329,7 +331,7 @@ export const checkIn = createAsyncThunk(
         { 
           traineeId, 
           name, 
-          location: "Office", 
+          location, 
           checkInTime
         },
         {

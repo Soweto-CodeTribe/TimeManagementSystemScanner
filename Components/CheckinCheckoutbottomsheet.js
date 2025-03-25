@@ -29,7 +29,7 @@ import {
 
 
 const { height, width } = Dimensions.get("window");
-const SHEET_HEIGHT = height * 0.42;
+const SHEET_HEIGHT = height * 0.3;
 const SHEET_OVERFLOW = 20;
 
 const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet }) => {

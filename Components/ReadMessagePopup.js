@@ -193,13 +193,18 @@
 // });
 
 // export default MessagePopup;
+import React, { useRef, useEffect, useMemo } from 'react';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withTiming, 
+  Easing 
+} from 'react-native-reanimated';
+import { GestureHandlerRootView, PanGestureHandler, State } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-
-import React, { useRef, useEffect } from 'react';
-import { Modal, Animated, TouchableOpacity, View, Text, StyleSheet, Dimensions, SafeAreaView } from 'react-native';
-
-const windowHeight = Dimensions.get('window').height;
-const windowWidth = Dimensions.get('window').width;
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // Professional color palette
 const COLORS = {
@@ -208,6 +213,7 @@ const COLORS = {
   accent: '#81C784',     // Light green
   border: '#43A047',     // Border green
   background: '#F5F9F6', // Light green background
+  overlay: 'rgba(0,0,0,0.5)',
   text: {
     dark: '#1C1C1C',
     medium: '#424242',
@@ -215,66 +221,86 @@ const COLORS = {
   }
 };
 
-const ReadMessagePopup = ({ message, visible, onClose }) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(windowHeight)).current;
+const ReadMessageBottomSheet = ({ 
+  message, 
+  visible, 
+  onClose 
+}) => {
+  const insets = useSafeAreaInsets();
+  
+  // Animation values
+  const translateY = useSharedValue(SCREEN_HEIGHT);
+  const opacity = useSharedValue(0);
+
+  // Gesture handling
+  const gestureHandler = useRef(null);
 
   useEffect(() => {
     if (visible) {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 400,
-          useNativeDriver: true
-        })
-      ]).start();
+      // Slide up the bottom sheet
+      translateY.value = withTiming(0, {
+        duration: 300,
+        easing: Easing.out(Easing.cubic)
+      });
+      // Fade in the overlay
+      opacity.value = withTiming(1, {
+        duration: 300,
+        easing: Easing.out(Easing.cubic)
+      });
     } else {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true
-        }),
-        Animated.timing(slideAnim, {
-          toValue: windowHeight,
-          duration: 300,
-          useNativeDriver: true
-        })
-      ]).start();
+      // Slide down the bottom sheet
+      translateY.value = withTiming(SCREEN_HEIGHT, {
+        duration: 300,
+        easing: Easing.out(Easing.cubic)
+      });
+      // Fade out the overlay
+      opacity.value = withTiming(0, {
+        duration: 300,
+        easing: Easing.out(Easing.cubic)
+      });
     }
   }, [visible]);
+
+  // Animated styles
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: translateY.value }]
+    };
+  });
+
+  const overlayStyle = useAnimatedStyle(() => {
+    return {
+      opacity: opacity.value
+    };
+  });
 
   if (!visible || !message) return null;
 
   return (
-    <Modal transparent={true} visible={visible} onRequestClose={onClose}>
+    <GestureHandlerRootView style={styles.container}>
+      {/* Overlay */}
       <Animated.View 
         style={[
-          styles.container,
-          {
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }]
-          }
-        ]}
-      >
-        <SafeAreaView style={styles.safeArea}>
+          styles.overlay, 
+          overlayStyle, 
+          { height: SCREEN_HEIGHT }
+        ]} 
+        onTouchEnd={onClose}
+      />
+
+      {/* Bottom Sheet */}
+      <PanGestureHandler ref={gestureHandler}>
+        <Animated.View 
+          style={[
+            styles.bottomSheet, 
+            animatedStyle,
+            { paddingBottom: insets.bottom }
+          ]}
+        >
           <View style={styles.header}>
-            <View style={styles.headerContent}>
-              <Text style={styles.headerTitle}>Message Details</Text>
-              <TouchableOpacity 
-                style={styles.closeButton} 
-                onPress={onClose}
-              >
-                <Text style={styles.closeButtonText}>✕</Text>
-              </TouchableOpacity>
-            </View>
+            <View style={styles.grabber} />
           </View>
-          
+
           <View style={styles.content}>
             <View style={styles.card}>
               <View style={styles.field}>
@@ -290,73 +316,65 @@ const ReadMessagePopup = ({ message, visible, onClose }) => {
               </View>
               
               <View style={styles.field}>
-                <Text style={styles.label}>Date & Time</Text>
+                <Text style={styles.label}>Time</Text>
                 <Text style={styles.value}>{message.timestamp}</Text>
                 <View style={styles.underline} />
               </View>
             </View>
           </View>
-        </SafeAreaView>
-      </Animated.View>
-    </Modal>
+        </Animated.View>
+      </PanGestureHandler>
+    </GestureHandlerRootView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    width: windowWidth,
-    height: windowHeight
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000
   },
-  safeArea: {
-    flex: 1
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: COLORS.overlay
+  },
+  bottomSheet: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: COLORS.background,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5
   },
   header: {
-    backgroundColor: COLORS.primary,
-    borderBottomWidth: 2,
-    borderBottomColor: COLORS.border,
-    paddingTop: 8,
-    paddingBottom: 16,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4
-  },
-  headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20
+    paddingVertical: 10
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: 'white'
-  },
-  closeButton: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)'
-  },
-  closeButtonText: {
-    fontSize: 20,
-    color: 'white',
-    fontWeight: '300'
+  grabber: {
+    width: 50,
+    height: 5,
+    backgroundColor: COLORS.accent,
+    borderRadius: 2.5
   },
   content: {
-    flex: 1,
     padding: 20
   },
   card: {
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 24,
-    marginTop: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
     shadowColor: '#000',
@@ -389,4 +407,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default ReadMessagePopup;
+export default ReadMessageBottomSheet;

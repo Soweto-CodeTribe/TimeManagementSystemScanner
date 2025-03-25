@@ -341,6 +341,7 @@ const TicketScreen = ({ navigation }) => {
           onPress={() => navigation.goBack()}
         >
           <Ionicons name="chevron-back" size={24} color="#999999" />
+          <Text>Back</Text>
         </TouchableOpacity>
         <Text style={styles.navBarTitle}>Support Tickets</Text>
       </View>
@@ -700,12 +701,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    backgroundColor: "#F5F5F5",
+    // backgroundColor: "#F5F5F5",
     marginTop: 40,
   },
   backButton: {
     padding: 5,
-    zIndex:10
+    zIndex:10,
+    flexDirection:"row"
   },
   navBarTitle: {
     fontSize: 18,

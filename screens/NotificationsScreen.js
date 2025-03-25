@@ -586,6 +586,7 @@ const formatTimestamp = (timestamp) => {
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color="#aaa" />
+          <Text>Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Notifications</Text>
         <TouchableOpacity style={styles.refreshButton} onPress={fetchNotifications}>
@@ -661,6 +662,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 4,
+    flexDirection: "row"
   },
   refreshButton: {
     padding: 4,

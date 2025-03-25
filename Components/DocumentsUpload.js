@@ -748,13 +748,13 @@ const styles = StyleSheet.create({
     borderColor: '#053742',
     borderRadius: 10,
     marginBottom: 15,
-    height: Platform.OS === 'ios' ? 150 : 44,
+    height: Platform.OS === 'ios' ? 150 : 46,
     overflow: 'hidden',
     justifyContent: 'center',
   },
   picker: {
     width: '100%',
-    height: Platform.OS === 'ios' ? 150 : 44,
+    height: Platform.OS === 'ios' ? 150 : 60,
   },
   dateButton: {
     width: '100%',

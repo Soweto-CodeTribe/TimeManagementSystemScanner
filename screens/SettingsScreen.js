@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Switch, SafeAreaView, StatusBar } from 'react-native';
+import { Ionicons } from "@expo/vector-icons";
 
 const SettingsScreen = ({ navigation }) => {
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
@@ -16,7 +17,7 @@ const SettingsScreen = ({ navigation }) => {
           style={styles.backButton} 
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backArrow}>←</Text>
+         <Ionicons name="chevron-back" size={24} color="#999999" /> 
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Settings</Text>

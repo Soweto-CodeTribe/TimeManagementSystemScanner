@@ -616,6 +616,7 @@ const formatTimestamp = (timestamp) => {
           showsVerticalScrollIndicator={false}
           refreshing={loading}
           onRefresh={fetchNotifications}
+          style={{padding:5,}}
         />
       ) : (
         <View style={styles.emptyContainer}>
@@ -678,7 +679,14 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
+    shadowColor: "#000",
+    marginBottom: 8,
+    borderRadius: 10,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   unreadNotification: {
     backgroundColor: '#f0f8ff',

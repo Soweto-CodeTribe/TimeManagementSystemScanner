@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
     bottom: -SHEET_OVERFLOW,
     left: 0,
     right: 0,
-    backgroundColor: "#1E1E1E",
+    backgroundColor: "#ffffff",
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
     padding: 20,
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: "#ffffff40",
+    backgroundColor: "#bdbdbd",
     borderRadius: 2,
     marginBottom: 20,
   },

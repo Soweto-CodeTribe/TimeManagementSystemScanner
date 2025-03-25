@@ -8,9 +8,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 import LoaderPopup, { Loader } from "../Components/LoaderPopup"
 import axios from "axios"
 import DocumentsUpload from "../Components/DocumentsUpload"
+import { Ionicons } from "@expo/vector-icons" // Import Ionicons for the bell icon
 
 // Import the function to get all months
-import { getAllProgramMonths } from "./DateUtils" // Make sure to create this file
+import { getAllProgramMonths } from "./DateUtils"
 
 // Progress Guide component
 const AttendanceProgressBar = ({ percentage, showLabel = false }) => {
@@ -51,9 +52,10 @@ const AttendanceProgressBar = ({ percentage, showLabel = false }) => {
 const HomeScreen = ({ navigation }) => {
   const [activeStats, setActiveStats] = useState("monthly")
   const [isDayMissed, setIsDayMissed] = useState(false)
-  const [name, setName] = useState("User") // Default value
-  const [myWeeklyData, setMyWeeklyData] = useState([])
+  const [name, setName] = useState("User")
+  const [dailyData, setDailyData] = useState([])
   const [monthlyStats, setMonthlyStats] = useState([])
+  const [yearlyStats, setYearlyStats] = useState([])
   const [programMonths, setProgramMonths] = useState([])
   const [programInfo, setProgramInfo] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -77,21 +79,18 @@ const HomeScreen = ({ navigation }) => {
     }
   }
 
-  useEffect(()=>{
-    const getProfile = async ()=>{
+  useEffect(() => {
+    const getProfile = async () => {
       try {
-        const ProfileImage = await AsyncStorage.getItem('profileImage');
-        setImage(ProfileImage);
-  
-        console.log("This is the image",ProfileImage)
-        
+        const ProfileImage = await AsyncStorage.getItem('profileImage')
+        setImage(ProfileImage)
       } catch (error) {
         console.error("Error Loading Image", error)
       }
     }
     
-    getProfile();
-  },[]);
+    getProfile()
+  }, [])
 
   // Fetch program information
   const fetchProgramInfo = async (authToken) => {
@@ -128,8 +127,8 @@ const HomeScreen = ({ navigation }) => {
     }
   }
 
-  // Fetch weekly data
-  const fetchWeeklyData = async (authToken, traineeId) => {
+  // Fetch daily data for the graph
+  const fetchDailyData = async (authToken, traineeId) => {
     try {
       if (!authToken || !traineeId) {
         console.error("Token or traineeId is missing.")
@@ -146,10 +145,16 @@ const HomeScreen = ({ navigation }) => {
       )
 
       if (weeklyResponse.data) {
-        setMyWeeklyData(weeklyResponse.data.dailyBreakdown)
+        const dailyBreakdown = weeklyResponse.data.dailyBreakdown || []
+        setDailyData(dailyBreakdown)
+        
+        // Return the data for chart creation
+        return dailyBreakdown
       }
+      return []
     } catch (error) {
-      console.error("Error fetching weekly data:", error.response?.data || error.message)
+      console.error("Error fetching daily data:", error.response?.data || error.message)
+      return []
     }
   }
 
@@ -199,23 +204,16 @@ const HomeScreen = ({ navigation }) => {
             return [...prevStats, newStat]
           }
         })
+
+        // Update yearly stats
+        updateYearlyStats(year, stats)
       }
     } catch (error) {
       console.error("Error fetching monthly data:", error.response?.data || error.message)
       // For months with no data, add an empty record
       const monthNames = [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",
+        "January", "February", "March", "April", "May", "June", 
+        "July", "August", "September", "October", "November", "December"
       ]
 
       setMonthlyStats((prevStats) => {
@@ -231,14 +229,55 @@ const HomeScreen = ({ navigation }) => {
               attended: 0,
               total: 0,
               percentage: 0,
-              noData: true, // Flag to indicate this month has no data
-              sortDate: new Date(year, month - 1, 1).getTime(), // Add timestamp for sorting
+              noData: true, 
+              sortDate: new Date(year, month - 1, 1).getTime(), 
             },
           ]
         }
         return prevStats
       })
     }
+  }
+
+  // Update yearly stats when monthly stats are fetched
+  const updateYearlyStats = (year, monthStats) => {
+    setYearlyStats((prevYearlyStats) => {
+      // Find if we already have this year in our stats
+      const existingIndex = prevYearlyStats.findIndex((s) => s.year === year)
+      
+      if (existingIndex >= 0) {
+        // Update existing entry
+        const newYearlyStats = [...prevYearlyStats]
+        const existingYearStat = newYearlyStats[existingIndex]
+        
+        // Add month's attendance to yearly total
+        const newAttended = existingYearStat.attended + monthStats.attendedDays
+        const newTotal = existingYearStat.total + monthStats.workingDaysInMonth
+        const newPercentage = (newAttended / newTotal) * 100
+        
+        newYearlyStats[existingIndex] = {
+          ...existingYearStat,
+          attended: newAttended,
+          total: newTotal,
+          percentage: isNaN(newPercentage) ? 0 : newPercentage,
+          months: [...(existingYearStat.months || []), monthStats.monthName]
+        }
+        
+        return newYearlyStats
+      } else {
+        // Add new entry for this year
+        return [
+          ...prevYearlyStats,
+          {
+            year: year,
+            attended: monthStats.attendedDays,
+            total: monthStats.workingDaysInMonth,
+            percentage: Number.parseFloat(monthStats.attendanceRate),
+            months: [monthStats.monthName]
+          }
+        ]
+      }
+    })
   }
 
   // Fetch all monthly stats for the program duration
@@ -248,10 +287,11 @@ const HomeScreen = ({ navigation }) => {
     try {
       // Clear previous stats
       setMonthlyStats([])
+      setYearlyStats([])
 
       // For each month in the program, fetch stats
       const fetchPromises = months.map((monthInfo) =>
-        fetchMonthlyStatsForMonth(authToken, traineeId, monthInfo.month, monthInfo.year),
+        fetchMonthlyStatsForMonth(authToken, traineeId, monthInfo.month, monthInfo.year)
       )
 
       await Promise.all(fetchPromises)
@@ -282,10 +322,10 @@ const HomeScreen = ({ navigation }) => {
         return
       }
 
-      // Step 3: Fetch weekly data
-      await fetchWeeklyData(authToken, programData.traineeId)
+      // Step 3: Fetch daily data for the graph
+      await fetchDailyData(authToken, programData.traineeId)
 
-      // Step 4: Fetch monthly stats
+      // Step 4: Fetch monthly stats (which will also update yearly stats)
       if (programData.allMonths.length > 0) {
         await fetchAllMonthlyStats(authToken, programData.traineeId, programData.allMonths)
       }
@@ -313,46 +353,69 @@ const HomeScreen = ({ navigation }) => {
 
     // Then, prioritize months with data
     return sorted.sort((a, b) => {
-      if (a.noData && !b.noData) return 1 // a has no data, b has data, b comes first
-      if (!a.noData && b.noData) return -1 // a has data, b has no data, a comes first
-      return 0 // both have data or both don't have data, maintain date sort
+      if (a.noData && !b.noData) return 1 
+      if (!a.noData && b.noData) return -1 
+      return 0;
     })
   }, [monthlyStats])
+
+  // Sort yearly stats
+  const sortedYearlyStats = useMemo(() => {
+    return [...yearlyStats].sort((a, b) => b.year - a.year)
+  }, [yearlyStats])
+
+  // Prepare data for the weekly attendance chart
+  const weeklyChartData = useMemo(() => {
+    // Default empty data
+    const emptyData = {
+      labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+      datasets: [{ 
+        data: [0, 0, 0, 0, 0],
+        color: () => '#8CC63F', // Solid green color
+        strokeWidth: 0 // No stroke
+      }]
+    }
+    
+    if (!dailyData || dailyData.length === 0) return emptyData
+    
+    // Map days to their attendance data
+    const dayLabels = []
+    const attendanceData = []
+    
+    dailyData.forEach(day => {
+      // Extract day abbreviation
+      const dayAbbr = day.dayOfWeek ? day.dayOfWeek.substring(0, 3) : ""
+      dayLabels.push(dayAbbr)
+      
+      // Calculate hours worked or use 0 if absent
+      const hoursWorked = day.attended ? parseFloat(day.hoursWorked || "0") : 0
+      attendanceData.push(hoursWorked)
+    })
+    
+    return {
+      labels: dayLabels,
+      datasets: [{ 
+        data: attendanceData,
+        color: () => '#8CC63F', 
+        strokeWidth: 0 
+      }]
+    }
+  }, [dailyData])
 
   // Current date
   const today = new Date()
   const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
+    "January", "February", "March", "April", "May", "June", 
+    "July", "August", "September", "October", "November", "December"
   ]
   const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
   const currentDate = `${days[today.getDay()]}, ${months[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()}`
-
-  // Weekly attendance data for the chart
-  const weeklyData = {
-    labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-    datasets: [
-      {
-        data: [40, 80, 85, 55, 60],
-      },
-    ],
-  }
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor={"#fff"} style={"dark"} />
 
-      {/* Include the loader component without visible prop */}
+      {/* Include the loader component */}
       <LoaderPopup />
 
       {/* Header Section */}
@@ -363,7 +426,9 @@ const HomeScreen = ({ navigation }) => {
         </View>
         <View style={styles.avatarContainer}>
           <TouchableOpacity onPress={() => navigation.navigate("NotificationScreen")} style={styles.iconButton}>
-            <Text style={{ fontSize: 20 }}>🔔</Text>
+            <View style={styles.notificationIcon}>
+            <Ionicons name="notifications-outline" size={26} color="#000000" />
+            </View>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate("ProfileScreen")} style={styles.iconButton}>
             <Image
@@ -376,22 +441,32 @@ const HomeScreen = ({ navigation }) => {
         </View>
       </View>
 
+
+
       {/* Weekly Attendance Chart */}
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Weekly Attendance</Text>
         <BarChart
-          data={weeklyData}
+          data={{
+            labels: weeklyChartData.labels,
+            datasets: [
+              {
+                data: weeklyChartData.datasets[0].data,
+              }
+            ]
+          }}
           width={Dimensions.get("window").width - 40}
-          height={180}
-          yAxisSuffix=""
+          height={250}
+          yAxisSuffix=" Hrs"
           chartConfig={{
-            backgroundColor: "transparent",
             backgroundGradientFrom: "white",
             backgroundGradientTo: "white",
-            decimalPlaces: 0,
-            color: (opacity = 1) => `rgba(107, 189, 49, ${opacity})`,
-            labelColor: () => "#ADADAD",
-            barPercentage: 0.6,
+            decimalPlaces: 1,
+            color: () => "#8CC63F",
+            fillShadowGradient: "#8CC63F",
+            fillShadowGradientOpacity: 3,
+            barPercentage: .75,
+            labelColor: () => "#808285",
             propsForBackgroundLines: {
               strokeDasharray: "",
               stroke: "#EEEEEE",
@@ -399,7 +474,7 @@ const HomeScreen = ({ navigation }) => {
             },
           }}
           style={styles.chart}
-          fromZero
+          fromZero={true}
           showValuesOnTopOfBars={false}
           withInnerLines={true}
           withHorizontalLabels={true}
@@ -419,10 +494,10 @@ const HomeScreen = ({ navigation }) => {
             <Text style={[styles.toggleText, activeStats === "monthly" && styles.activeToggleText]}>Monthly</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.toggleButton, activeStats === "weekly" && styles.activeToggle]}
-            onPress={() => setActiveStats("weekly")}
+            style={[styles.toggleButton, activeStats === "yearly" && styles.activeToggle]}
+            onPress={() => setActiveStats("yearly")}
           >
-            <Text style={[styles.toggleText, activeStats === "weekly" && styles.activeToggleText]}>Daily</Text>
+            <Text style={[styles.toggleText, activeStats === "yearly" && styles.activeToggleText]}>Yearly</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -449,39 +524,22 @@ const HomeScreen = ({ navigation }) => {
               </View>
             ))}
 
-          {activeStats === "weekly" &&
-            myWeeklyData.map((day, index) => (
+          {activeStats === "yearly" &&
+            sortedYearlyStats.map((stat, index) => (
               <View key={index} style={styles.statCard}>
-                <Text style={styles.monthTitle}>
-                  {day.dayOfWeek} ({day.date})
-                </Text>
-                <Text style={styles.attendanceText}>
-                  {day.attended
-                    ? `${day.checkInTime || "No check-in"} - ${day.checkOutTime || "No check-out"}`
-                    : "Absent"}
-                </Text>
-
-                {day.attended && (
+                <Text style={styles.monthTitle}>Year {stat.year}</Text>
+                {stat.total === 0 ? (
+                  <Text style={styles.attendanceText}>No data available yet</Text>
+                ) : (
                   <>
-                    <View style={styles.statusContainer}>
-                      <Text
-                        style={[
-                          styles.statusText,
-                          {
-                            color:
-                              day.status === "On time" || day.status === "Within grace period"
-                                ? "#4CAF50"
-                                : day.status === "Late"
-                                  ? "#FF9800"
-                                  : "#2196F3",
-                          },
-                        ]}
-                      >
-                        {day.status}
-                      </Text>
-                    </View>
-
-                    <Text style={styles.hoursText}>Hours worked: {day.hoursWorked || "0.00"}</Text>
+                    <Text style={styles.attendanceText}>
+                      {stat.attended} of {stat.total} days
+                    </Text>
+                    <AttendanceProgressBar percentage={stat.percentage} />
+                    <Text style={styles.percentageText}>{stat.percentage.toFixed(1)}%</Text>
+                    <Text style={styles.monthsCountText}>
+                      Data available for {stat.months ? stat.months.length : 0} months
+                    </Text>
                   </>
                 )}
               </View>
@@ -538,23 +596,29 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
   },
   profileImage: {
-    width: 40,
-    height: 40,
+    width: 38,
+    objectFit: 'contain',
+    height: 38,
     borderRadius: 50,
   },
   chartTitle: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 14,
+    fontWeight: "400",
     color: "#333333",
+    marginTop: 10,
     marginBottom: 10,
   },
   chart: {
     borderRadius: 12,
-    marginLeft: -15,
+    marginLeft: -10,
   },
   statsSection: {
     marginHorizontal: 20,
-    marginTop: 10,
+    // marginTop: 10,
+  },
+  dailyAttendanceSection: {
+    marginHorizontal: 20,
+    marginTop: 20,
   },
   statsTitle: {
     fontSize: 16,
@@ -593,19 +657,26 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   statsCards: {
-    marginHorizontal: 20,
+    marginHorizontal: 0,
     marginTop: 15,
     gap: 15,
+  },
+  notificationIcon:{
+  backgroundColor: '#8CC63F',
+  opacity: 0.4,
+  padding: 5,
+  borderRadius: 50,
   },
   statCard: {
     backgroundColor: "#fff",
     borderRadius: 12,
-    padding: 10,
+    padding: 15,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 1,
+    marginHorizontal: 20
   },
   monthTitle: {
     fontSize: 16,
@@ -633,6 +704,11 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#333333",
     alignSelf: "flex-end",
+  },
+  monthsCountText: {
+    fontSize: 12,
+    color: "#888888",
+    marginTop: 5,
   },
   bottomSpacer: {
     height: 80,
@@ -665,4 +741,3 @@ const styles = StyleSheet.create({
 })
 
 export default HomeScreen
-

@@ -71,33 +71,36 @@ const PermissionsPopup = ({ isVisible }) => {
           text2: "Location Granted Successfully",
           position: "top",
         });
-        setCameraPermissions(true);
+        
+        // Show loading state while processing location
+        setLoading(true);
         
         try {
-          // First check if location services are enabled before trying to get position
+          // First check if location services are enabled
           const providerStatus = await Location.getProviderStatusAsync();
           console.log("Provider status:", providerStatus);
           
           if (!providerStatus.locationServicesEnabled) {
+            setLoading(false); // Hide loader
             Alert.alert(
               "Location Services Disabled",
               "Please enable location services in your device settings to use this feature.",
               [{ text: "OK" }]
             );
-            return; // Exit early if location services are disabled
+            return;
           }
           
           // Try with simpler options first
           const location = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Low, // Try with lower accuracy first
+            accuracy: Location.Accuracy.Low,
             mayShowUserSettingsDialog: true
           });
           console.log("Current location:", location);
           
-          // Extract longitude and latitude from the location object
+          // Extract longitude and latitude
           const { longitude, latitude } = location.coords;
           
-          // Post the location data to your API
+          // Post the location data to API
           try {
             const response = await fetch('https://timemanagementsystemserver.onrender.com/api/validate-location', {
               method: 'POST',
@@ -110,36 +113,46 @@ const PermissionsPopup = ({ isVisible }) => {
               }),
             });
             
-            // Check if the response is valid JSON before parsing
+            // Check if response is valid JSON
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
               try {
                 const data = await response.json();
                 console.log('Location validation response:', data);
                 
-                // Handle the API response based on the allowed property
+                // Hide loader after receiving response
+                setLoading(false);
+                
+                // Handle the API response
                 if (response.ok) {
                   if (data.allowed === true) {
                     console.log('Location allowed');
-                    // navigation.navigate("GetStartedScreen");
+                    // If location is allowed, switch to camera permissions
+                    setCameraPermissions(true);
                   } else {
                     console.error('Location not allowed:', data.message);
                     Alert.alert(
                       "Location Not Allowed",
                       data.message || "Your location is not supported at this time.",
-                      [{ text: "OK" }]
+                      [{ 
+                        text: "OK",
+                        onPress: () => navigation.navigate("GetStartedScreen")
+                      }]
                     );
-                    navigation.navigate("GetStartedScreen");
                   }
                 } else {
-                  console.error('Location validation failed:', data);
+                  // console.error('Location validation failed:', data);
                   Alert.alert(
                     "Location Validation Failed",
                     data.message || "We couldn't validate your location. Please try again.",
-                    [{ text: "OK" }]
+                    [{ 
+                      text: "OK",
+                      onPress: () => navigation.navigate("GetStartedScreen")
+                    }]
                   );
                 }
               } catch (jsonError) {
+                setLoading(false); // Hide loader
                 console.error("Error parsing JSON response:", jsonError);
                 Alert.alert(
                   "Response Error",
@@ -148,6 +161,7 @@ const PermissionsPopup = ({ isVisible }) => {
                 );
               }
             } else {
+              setLoading(false); // Hide loader
               // Handle non-JSON responses
               const textResponse = await response.text();
               console.error("Non-JSON response received:", textResponse);
@@ -158,6 +172,7 @@ const PermissionsPopup = ({ isVisible }) => {
               );
             }
           } catch (apiError) {
+            setLoading(false); // Hide loader
             console.error("Error posting location data to API:", apiError);
             Alert.alert(
               "Connection Error",
@@ -167,6 +182,7 @@ const PermissionsPopup = ({ isVisible }) => {
           }
           
         } catch (locationError) {
+          setLoading(false); // Hide loader
           console.error("Error getting current position:", locationError);
           
           if (locationError.message.includes("rejected")) {
@@ -176,11 +192,11 @@ const PermissionsPopup = ({ isVisible }) => {
               [
                 { 
                   text: "Try Again", 
-                  onPress: () => requestLocationPermission() // Retry the location request
+                  onPress: () => requestLocationPermission()
                 },
                 { 
                   text: "You cannot continue without granting location permission", 
-                  onPress: () =>  navigation.navigate("GetStartedScreen")
+                  onPress: () => navigation.navigate("GetStartedScreen")
                 }
               ]
             );
@@ -195,10 +211,17 @@ const PermissionsPopup = ({ isVisible }) => {
           }
         }
       } else {
-        Alert.alert("Location Permission", "Please enable location services in your device settings to use this feature");
-        navigation.navigate("GetStartedScreen");
+        Alert.alert(
+          "Location Permission", 
+          "Please enable location services in your device settings to use this feature",
+          [{ 
+            text: "OK", 
+            onPress: () => navigation.navigate("GetStartedScreen")
+          }]
+        );
       }
     } catch (error) {
+      setLoading(false); // Hide loader in case of any unhandled error
       console.error("Error requesting location permission:", error);
       Alert.alert("Error", "Failed to request location permission");
     }
@@ -363,7 +386,7 @@ const styles = StyleSheet.create({
     bottom: -SHEET_OVERFLOW,
     left: 0,
     right: 0,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: '#ffffff',
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
     padding: 20,
@@ -383,18 +406,18 @@ const styles = StyleSheet.create({
   handle: {
     width: 40,
     height: 4,
-    backgroundColor: '#ffffff40',
+    backgroundColor: '#b3b3b3',
     borderRadius: 2,
     marginBottom: 20,
   },
   getStartedText: {
-    color: 'white',
+    color: '#b3b3b3',
     fontSize: 42,
     fontWeight: 'bold',
     lineHeight: 52.79,
   },
   textcontainer: {
-    color: "white",
+    color: "#b3b3b3",
     fontWeight: "400",
     lineHeight: 21.3,
     fontSize: 17,
@@ -407,13 +430,13 @@ const styles = StyleSheet.create({
   },
   acceptButton: {
     width: '100%',
-    height: 44,
+    height: 50,
     backgroundColor: "#8CE01C",
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
-    elevation: 2,
+    elevation: 6,
     shadowColor: '#8CE01C',
     shadowOffset: {
       width: 0,
@@ -424,13 +447,13 @@ const styles = StyleSheet.create({
   },
   declineButton: {
     width: '100%',
-    height: 44,
+    height: 50,
     backgroundColor: "white",
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 6,
-    shadowColor: '#8CE01C',
+    // shadowColor: '#8CE01C',
     shadowOffset: {
       width: 0,
       height: 4,

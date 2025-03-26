@@ -136,7 +136,7 @@ const PermissionsPopup = ({ isVisible }) => {
                       data.message || "Your location is not supported at this time.",
                       [{ 
                         text: "OK",
-                        onPress: () => navigation.navigate("GetStartedScreen")
+                        onPress: () => navigation.navigate("TraineeLoginScreen")
                       }]
                     );
                   }
@@ -147,7 +147,7 @@ const PermissionsPopup = ({ isVisible }) => {
                     data.message || "We couldn't validate your location. Please try again.",
                     [{ 
                       text: "OK",
-                      onPress: () => navigation.navigate("GetStartedScreen")
+                      onPress: () => navigation.navigate("TraineeLoginScreen")
                     }]
                   );
                 }

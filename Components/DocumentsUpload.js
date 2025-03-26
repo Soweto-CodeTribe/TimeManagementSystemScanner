@@ -226,7 +226,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { height, width } = Dimensions.get('window');
-const SHEET_HEIGHT = height * 0.74;
+const SHEET_HEIGHT = height * 0.65;
 const SHEET_OVERFLOW = 20;
 
 const DocumentsUpload = ({ openDocumentsheet, onClose }) => {
@@ -748,13 +748,13 @@ const styles = StyleSheet.create({
     borderColor: '#053742',
     borderRadius: 10,
     marginBottom: 15,
-    height: Platform.OS === 'ios' ? 150 : 44,
+    height: Platform.OS === 'ios' ? 150 : 46,
     overflow: 'hidden',
     justifyContent: 'center',
   },
   picker: {
     width: '100%',
-    height: Platform.OS === 'ios' ? 150 : 44,
+    height: Platform.OS === 'ios' ? 150 : 60,
   },
   dateButton: {
     width: '100%',

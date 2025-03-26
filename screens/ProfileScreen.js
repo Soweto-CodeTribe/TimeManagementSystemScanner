@@ -133,15 +133,16 @@ const ProfileScreen = ({ navigation }) => {
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       <View style={styles.container}>
-        <View style={styles.navBar}>
+      <View style={styles.navBar}>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => navigation.goBack()} // Direct navigation without delay
+            onPress={() => navigation.goBack()}
           >
-            <Ionicons name="chevron-back" size={24} color="#999999" />
+            <Ionicons name="chevron-back" size={24} color="#999999" /> 
+            <Text>Back</Text>
           </TouchableOpacity>
-          <Text style={styles.navBarTitle}>Profile</Text>
-        </View>
+        <Text style={styles.navBarTitle}>Profile</Text>
+      </View>
 
         <ScrollView>
           <View style={styles.profileHeader}>
@@ -390,6 +391,7 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 10,
     zIndex: 10,
+    flexDirection: "row"
   },
 });
 

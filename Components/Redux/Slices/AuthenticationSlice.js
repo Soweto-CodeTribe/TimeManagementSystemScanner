@@ -38,19 +38,19 @@
 //       // Fix: Correct API payload structure
 //       const response = await axios.post(
 //         "https://timemanagementsystemserver.onrender.com/api/session/check-in",
-//         { 
-//           traineeId, 
-//           name, 
-//           location:"Office", 
+//         {
+//           traineeId,
+//           name,
+//           location:"Office",
 //           checkInTime  // Changed from checkIn to checkInTime
 //         },
 //         {
-//           headers: { 
+//           headers: {
 //             Authorization: `Bearer ${await AsyncStorage.getItem("token")}`
 //           }
 //         }
 //       );
-      
+
 //       console.log("Check-in response:", response.data);
 
 //       // Store check-in data in AsyncStorage
@@ -88,7 +88,6 @@
 //       const idNumber = data.trainee?.idNumber;
 //       const location = data.trainee?.location;
 //       const surname =data.trainee?.surname;
-      
 
 //       console.log("Name:", name);
 //       console.log("Surname:",surname);
@@ -96,7 +95,6 @@
 //       console.log("Cell Phone: ",cellphone);
 //       console.log("ID Number: ",idNumber);
 //       console.log("Location: ", location);
-      
 
 //       if (keepSignedIn) {
 //         await AsyncStorage.setItem("token", data.token);
@@ -120,7 +118,6 @@
 //         if(location){
 //           await AsyncStorage.setItem("Location",location)
 //         }
-        
 
 //       } else {
 //         await AsyncStorage.removeItem("token");
@@ -231,10 +228,9 @@
 //         state.isLoading = false;
 //         state.token = action.payload.token;
 //         state.traineeID = action.payload.traineeID;
-       
+
 //         console.log("Token after Login:", action.payload.token);
 //         console.log("Trainee ID after Login:", action.payload.traineeID);
-    
 
 //         if (action.payload.user) {
 //           state.user = action.payload.user;
@@ -245,7 +241,7 @@
 //         state.isLoading = false;
 //         state.error = action.payload;
 //       })
-      
+
 //       // Check-in cases
 //       .addCase(checkIn.pending, (state) => {
 //         state.isCheckingIn = true;
@@ -260,18 +256,16 @@
 //         state.isCheckingIn = false;
 //         state.checkInError = action.payload;
 //       })
-      
+
 //       // Fetch user data cases
 //       .addCase(fetchUserData.fulfilled, (state, action) => {
 //         state.user = action.payload;
 //         const traineeID = action.payload.trainee?.traineeId?.toString();
 //         const email=action.payload?.email;
 //         state.traineeID = traineeID || state.traineeID;
-     
 
 //         console.log("Updated Redux State - User:", state.user);
 //         console.log("Updated Redux State - Trainee ID:", state.traineeID);
-   
 
 //       })
 //       .addCase(fetchUserData.rejected, (state, action) => {
@@ -291,8 +285,8 @@ import axios from "axios";
 const getCurrentTime = () => {
   const now = new Date();
   let hours = now.getHours();
-  const minutes = now.getMinutes().toString().padStart(2, '0');
-  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const minutes = now.getMinutes().toString().padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
   hours = hours % 12;
   hours = hours ? hours : 12; // the hour '0' should be '12'
   return `${hours}:${minutes} ${ampm}`;
@@ -300,7 +294,7 @@ const getCurrentTime = () => {
 
 // Helper function to get current date in format "YYYY-MM-DD"
 const getCurrentDate = () => {
-  return new Date().toISOString().split('T')[0];
+  return new Date().toISOString().split("T")[0];
 };
 
 // Async Thunk for check-in
@@ -314,33 +308,37 @@ export const checkIn = createAsyncThunk(
       console.log(location);
       console.log("Token in check-in:", token);
       if (!token) throw new Error("No authentication token available");
-      
+
       const checkInTime = getCurrentTime();
       const date = getCurrentDate();
 
       const checkInData = {
         checkInTime,
         location,
-        date
+        date,
       };
 
-      console.log("Sending check-in data:", { traineeId, name, ...checkInData });
+      console.log("Sending check-in data:", {
+        traineeId,
+        name,
+        ...checkInData,
+      });
 
       const response = await axios.post(
         "https://timemanagementsystemserver.onrender.com/api/session/check-in",
-        { 
-          traineeId, 
-          name, 
-          location, 
-          checkInTime
+        {
+          traineeId,
+          name,
+          location,
+          checkInTime,
         },
         {
-          headers: { 
-            Authorization: `Bearer ${token}`
-          }
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
-      
+
       console.log("Check-in response:", response.data);
 
       // Store check-in data in AsyncStorage
@@ -349,7 +347,9 @@ export const checkIn = createAsyncThunk(
       return { ...response.data, checkInData };
     } catch (error) {
       console.error("Check-in error:", error);
-      return rejectWithValue(error.response?.data?.message || error.message || "Check-in failed");
+      return rejectWithValue(
+        error.response?.data?.message || error.message || "Check-in failed"
+      );
     }
   }
 );
@@ -369,7 +369,7 @@ export const loginUser = createAsyncThunk(
       console.log("Login Response Data:", data);
       console.log("Token:", data.token);
       console.log("Location:", data.location);
-      
+
       if (!data.token) throw new Error("No token received");
 
       // Extract trainee details from user data
@@ -380,13 +380,13 @@ export const loginUser = createAsyncThunk(
       const idNumber = data.trainee?.idNumber;
       const location = data.trainee?.location;
       const surname = data.trainee?.surname;
-      
+
       // Always store essential authentication data regardless of keepSignedIn
       await AsyncStorage.setItem("token", token);
       await AsyncStorage.setItem("traineeID", traineeID || "");
       await AsyncStorage.setItem("name", name || "");
       await AsyncStorage.setItem("email", email);
-      
+
       // Store additional user info
       if (surname) await AsyncStorage.setItem("Surname", surname);
       if (cellphone) await AsyncStorage.setItem("cellphone", cellphone);
@@ -399,7 +399,7 @@ export const loginUser = createAsyncThunk(
       console.log("Cell Phone: ", cellphone);
       console.log("ID Number: ", idNumber);
       console.log("Location: ", location);
-      
+
       // Handle keepSignedIn flag
       if (keepSignedIn) {
         await AsyncStorage.setItem("keepSignedIn", "true");
@@ -409,21 +409,27 @@ export const loginUser = createAsyncThunk(
         await AsyncStorage.removeItem("keepSignedIn");
       }
 
+      let withInLocation = await AsyncStorage.getItem("inLocationAndVerified");
+
       // Automatically check-in after successful login if traineeID and name are available
-      if (traineeID && name) {
-        try {
-          await dispatch(checkIn({ traineeId: traineeID, name }));
-          console.log("Automatic check-in successful");
-        } catch (checkInError) {
-          console.error("Automatic check-in failed:", checkInError);
-          // Continue with login even if check-in fails
+      if (withInLocation === "true") {
+        if (traineeID && name) {
+          try {
+            await dispatch(checkIn({ traineeId: traineeID, name }));
+            console.log("Automatic check-in successful");
+          } catch (checkInError) {
+            console.error("Automatic check-in failed:", checkInError);
+            // Continue with login even if check-in fails
+          }
         }
       }
 
       return { ...data, traineeID, name };
     } catch (error) {
       console.error("Login error:", error);
-      return rejectWithValue(error.response?.data?.message || error.message || "Login failed");
+      return rejectWithValue(
+        error.response?.data?.message || error.message || "Login failed"
+      );
     }
   }
 );
@@ -435,12 +441,15 @@ export const fetchUserData = createAsyncThunk(
     try {
       // Try to get token from state first
       const { token } = getState().auth;
-      
+
       // If not in state, try AsyncStorage as fallback
-      const authToken = token || await AsyncStorage.getItem("token");
-      
-      console.log("Fetching user data with token:", authToken ? "Token exists" : "Token is missing");
-      
+      const authToken = token || (await AsyncStorage.getItem("token"));
+
+      console.log(
+        "Fetching user data with token:",
+        authToken ? "Token exists" : "Token is missing"
+      );
+
       if (!authToken) throw new Error("No authentication token found");
 
       const response = await axios.get(
@@ -454,13 +463,19 @@ export const fetchUserData = createAsyncThunk(
 
       console.log("Fetched User Data:", userData);
       await AsyncStorage.setItem("user", JSON.stringify(userData));
-      
+
       // Use userData instead of undefined data variable
       if (userData.trainee) {
         await AsyncStorage.setItem("token", authToken);
-        await AsyncStorage.setItem("cell Number", userData.trainee.phoneNumber || "");
+        await AsyncStorage.setItem(
+          "cell Number",
+          userData.trainee.phoneNumber || ""
+        );
         await AsyncStorage.setItem("email", userData.trainee.email || "");
-        await AsyncStorage.setItem("id Number", userData.trainee.idNumber || "");
+        await AsyncStorage.setItem(
+          "id Number",
+          userData.trainee.idNumber || ""
+        );
         await AsyncStorage.setItem("Location", userData.trainee.location || "");
 
         console.log("Stored Token in AsyncStorage:", authToken);
@@ -479,7 +494,11 @@ export const fetchUserData = createAsyncThunk(
       return userData;
     } catch (error) {
       console.error("Fetch user data error:", error);
-      return rejectWithValue(error.response?.data?.message || error.message || "Failed to fetch user data");
+      return rejectWithValue(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to fetch user data"
+      );
     }
   }
 );
@@ -513,6 +532,7 @@ const authSlice = createSlice({
       AsyncStorage.removeItem("traineeID");
       AsyncStorage.removeItem("name");
       AsyncStorage.removeItem("checkInData");
+      AsyncStorage.removeItem("AsyncStorage.removeItem");
     },
     // Reducer to set token from AsyncStorage on app startup
     setToken: (state, action) => {
@@ -538,12 +558,12 @@ const authSlice = createSlice({
         state.traineeID = action.payload.traineeID;
         state.name = action.payload.name;
         state.email = action.payload.email || action.meta.arg.email;
-       
+
         console.log("Stored Token in Redux:", state.token);
         console.log("Token after Login:", action.payload.token);
         console.log("Trainee ID after Login:", action.payload.traineeID);
         console.log("Name after Login:", action.payload.name);
-    
+
         if (action.payload.user) {
           state.user = action.payload.user;
           console.log("Stored User in Redux:", state.user);
@@ -553,7 +573,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
-      
+
       // Check-in cases
       .addCase(checkIn.pending, (state) => {
         state.isCheckingIn = true;
@@ -568,17 +588,18 @@ const authSlice = createSlice({
         state.isCheckingIn = false;
         state.checkInError = action.payload;
       })
-      
+
       // Fetch user data cases
       .addCase(fetchUserData.fulfilled, (state, action) => {
         state.user = action.payload;
         const traineeID = action.payload.trainee?.traineeId?.toString();
         const email = action.payload?.email || action.payload.trainee?.email;
-        const name = action.payload.trainee?.name || action.payload.trainee?.fullName;
+        const name =
+          action.payload.trainee?.name || action.payload.trainee?.fullName;
         state.traineeID = traineeID || state.traineeID;
         state.email = email || state.email;
         state.name = name || state.name;
-     
+
         console.log("Updated Redux State - User:", state.user);
         console.log("Updated Redux State - Trainee ID:", state.traineeID);
         console.log("Updated Redux State - Email:", state.email);

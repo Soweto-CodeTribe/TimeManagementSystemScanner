@@ -128,24 +128,31 @@ export default function ScannerAuth({ navigation }) {
     useCallback(() => {
       const isInLocation = async () => {
         try {
-          let withInLocation = await AsyncStorage.getItem(
-            "inLocationAndVerified"
-          );
-
+          let withInLocation = await AsyncStorage.getItem("inLocationAndVerified");
+          
           if (withInLocation !== "true") {
             Alert.alert(
-              "Cannot access the scanner because you are not in the location!"
+              "Location Verification", // Title
+              "You cannot access the scanner because you are not in the designated location.", // Message
+              [
+                {
+                  text: "OK",
+                  onPress: () => navigation.navigate("HomeScreen"),
+                  style: "default"
+                }
+              ],
+              {
+                cancelable: false,
+                dialogTitle: "Access Denied",
+                dialogMessage: "Location Check Failed"
+              }
             );
-            navigation.navigate("HomeScreen");
           }
         } catch (error) {
-          console.error(
-            "Error retrieving location verification status:",
-            error
-          );
+          console.error("Error retrieving location verification status:", error);
         }
       };
-
+  
       isInLocation();
     }, [navigation])
   );

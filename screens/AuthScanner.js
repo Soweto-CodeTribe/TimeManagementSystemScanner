@@ -1,95 +1,104 @@
-import { CameraView } from 'expo-camera';
-import { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Platform, Alert } from 'react-native';
-import { AntDesign } from '@expo/vector-icons';
-import UserGuestBottomSheet from '../Components/UserGuestbottomsheet';
-import * as Location from 'expo-location';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import CheckinCheckoutbottomsheet from '../Components/CheckinCheckoutbottomsheet';
-import Toast from 'react-native-toast-message'; // Add this import
+import { CameraView } from "expo-camera";
+import { useState, useEffect, useCallback } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import {
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  Platform,
+  Alert,
+} from "react-native";
+import { AntDesign } from "@expo/vector-icons";
+import UserGuestBottomSheet from "../Components/UserGuestbottomsheet";
+import * as Location from "expo-location";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import CheckinCheckoutbottomsheet from "../Components/CheckinCheckoutbottomsheet";
+import Toast from "react-native-toast-message"; // Add this import
 
 export default function ScannerAuth({ navigation }) {
   // Hooks
-  const [facing, setFacing] = useState('back');
+  const [facing, setFacing] = useState("back");
   const [scanned, setScanned] = useState(false);
   const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
   const [loading, setLoading] = useState(false); // Add loading state
 
   // Handle QR Code Scanned
   async function handleBarcodeScanned({ data }) {
-    if (scanned) return;  // Prevent scanning if already scanned
-    setScanned(true);      // Mark as scanned to prevent further scanning
+    if (scanned) return; // Prevent scanning if already scanned
+    setScanned(true); // Mark as scanned to prevent further scanning
     setLoading(true);
-    
+
     try {
-        const isValid = await verifyQRCode(data);
-        if (isValid) {
-            const checkIn = Date.now();
-            const readableDate = new Date(checkIn);
-            console.log(readableDate.toString()); 
+      const isValid = await verifyQRCode(data);
+      if (isValid) {
+        const checkIn = Date.now();
+        const readableDate = new Date(checkIn);
+        console.log(readableDate.toString());
 
-            // Capture location
-            let location = null;
-            try {
-                const { status } = await Location.requestForegroundPermissionsAsync();
-                if (status === "granted") {
-                    if (Platform.OS === "android") {
-                        const isAvailable = await Location.hasServicesEnabledAsync();
-                        if (!isAvailable) {
-                            throw new Error("Location services are not available on this device.");
-                        }
-                    }
-                    const loc = await Location.getCurrentPositionAsync({
-                        enableHighAccuracy: false,
-                    });
-                    location = {
-                        latitude: loc.coords.latitude,
-                        longitude: loc.coords.longitude,
-                    };
-                } else {
-                    Alert.alert(
-                        "Permission Denied",
-                        "Location permission is required to check in."
-                    );
-                }
-            } catch (error) {
-                console.error("Location Error:", error);
-                Alert.alert(
-                    "Location Error",
-                    error.message || "Could not get location."
+        // Capture location
+        let location = null;
+        try {
+          const { status } = await Location.requestForegroundPermissionsAsync();
+          if (status === "granted") {
+            if (Platform.OS === "android") {
+              const isAvailable = await Location.hasServicesEnabledAsync();
+              if (!isAvailable) {
+                throw new Error(
+                  "Location services are not available on this device."
                 );
+              }
             }
-            
-            // Save to local storage
-            const checkInData = {
-                checkInTime: checkIn,
-                location,
-            };
-            await AsyncStorage.setItem("checkInData", JSON.stringify(checkInData));
-
-            console.log(checkInData);
-            
-            // Show toast notification
-            Toast.show({
-              type: "success",
-              text1: "Scanned Successfully",
-              text2: "You can now log in to check in",
-              position: "top",
+            const loc = await Location.getCurrentPositionAsync({
+              enableHighAccuracy: false,
             });
-
-            // Important: Make sure this is set to true
-            console.log("Setting bottom sheet visible");
-            setIsBottomSheetVisible(true);
-        } else {
-            Alert.alert("Invalid QR Code", "This QR code is expired or incorrect.");
+            location = {
+              latitude: loc.coords.latitude,
+              longitude: loc.coords.longitude,
+            };
+          } else {
+            Alert.alert(
+              "Permission Denied",
+              "Location permission is required to check in."
+            );
+          }
+        } catch (error) {
+          console.error("Location Error:", error);
+          Alert.alert(
+            "Location Error",
+            error.message || "Could not get location."
+          );
         }
+
+        // Save to local storage
+        const checkInData = {
+          checkInTime: checkIn,
+          location,
+        };
+        await AsyncStorage.setItem("checkInData", JSON.stringify(checkInData));
+
+        console.log(checkInData);
+
+        // Show toast notification
+        Toast.show({
+          type: "success",
+          text1: "Scanned Successfully",
+          text2: "You can now log in to check in",
+          position: "top",
+        });
+
+        // Important: Make sure this is set to true
+        console.log("Setting bottom sheet visible");
+        setIsBottomSheetVisible(true);
+      } else {
+        Alert.alert("Invalid QR Code", "This QR code is expired or incorrect.");
+      }
     } catch (error) {
-        console.error("Scan Error:", error);
-        Alert.alert("Error", "Invalid QR Code");
+      console.error("Scan Error:", error);
+      Alert.alert("Error", "Invalid QR Code");
     } finally {
-        setLoading(false);
-        
+      setLoading(false);
     }
   }
 
@@ -115,6 +124,39 @@ export default function ScannerAuth({ navigation }) {
     }
   }
 
+  useFocusEffect(
+    useCallback(() => {
+      const isInLocation = async () => {
+        try {
+          let withInLocation = await AsyncStorage.getItem("inLocationAndVerified");
+          
+          if (withInLocation !== "true") {
+            Alert.alert(
+              "Location Verification", // Title
+              "You cannot access the scanner because you are not in the designated location.", // Message
+              [
+                {
+                  text: "OK",
+                  onPress: () => navigation.navigate("HomeScreen"),
+                  style: "default"
+                }
+              ],
+              {
+                cancelable: false,
+                dialogTitle: "Access Denied",
+                dialogMessage: "Location Check Failed"
+              }
+            );
+          }
+        } catch (error) {
+          console.error("Error retrieving location verification status:", error);
+        }
+      };
+  
+      isInLocation();
+    }, [navigation])
+  );
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -131,7 +173,7 @@ export default function ScannerAuth({ navigation }) {
       <CameraView
         style={styles.camera}
         facing={facing}
-        barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+        barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
         onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
         zoom={0.2} // Slight zoom to focus on the center
       >
@@ -146,11 +188,11 @@ export default function ScannerAuth({ navigation }) {
         Bottom Sheet State: {isBottomSheetVisible ? 'Visible' : 'Hidden'}
       </Text> */}
 
-      <CheckinCheckoutbottomsheet 
+      <CheckinCheckoutbottomsheet
         isVisible={isBottomSheetVisible}
         closeBottomSheet={closeBottomSheet}
       />
-      
+
       {/* Toast component needs to be at the root level */}
       <View style={styles.toastContainer}>
         <Toast />
@@ -166,13 +208,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 50,
     paddingBottom: 20,
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
@@ -180,8 +222,8 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
   },
   closeButton: {
     padding: 8,
@@ -190,31 +232,31 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   overlay: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   frame: {
     width: 250,
     height: 250,
     borderWidth: 4,
-    borderColor: 'white',
+    borderColor: "white",
     borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
   debugText: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 10,
     left: 0,
     right: 0,
-    textAlign: 'center',
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    color: 'white',
+    textAlign: "center",
+    backgroundColor: "rgba(0,0,0,0.7)",
+    color: "white",
     padding: 5,
   },
   toastContainer:{

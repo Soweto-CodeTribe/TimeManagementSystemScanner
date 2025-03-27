@@ -15,6 +15,7 @@ export const verifyQRCode = createAsyncThunk(
       );
       
       if (response.data.success) {
+        await AsyncStorage.setItem("inLocationAndVerified", "true");
         return qrId;
       } else {
         return rejectWithValue('Invalid QR code');

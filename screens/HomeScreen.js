@@ -1,27 +1,36 @@
-"use client"
+"use client";
 
-import { StatusBar } from "expo-status-bar"
-import { useState, useEffect, useCallback, useMemo } from "react"
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, Dimensions, TouchableOpacity, Image } from "react-native"
-import { BarChart } from "react-native-chart-kit"
-import AsyncStorage from "@react-native-async-storage/async-storage"
-import LoaderPopup, { Loader } from "../Components/LoaderPopup"
-import axios from "axios"
-import DocumentsUpload from "../Components/DocumentsUpload"
-import { Ionicons } from "@expo/vector-icons" // Import Ionicons for the bell icon
+import { StatusBar } from "expo-status-bar";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  Dimensions,
+  TouchableOpacity,
+  Image,
+} from "react-native";
+import { BarChart } from "react-native-chart-kit";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import LoaderPopup, { Loader } from "../Components/LoaderPopup";
+import axios from "axios";
+import DocumentsUpload from "../Components/DocumentsUpload";
+import { Ionicons } from "@expo/vector-icons"; // Import Ionicons for the bell icon
 
 // Import the function to get all months
-import { getAllProgramMonths } from "./DateUtils"
+import { getAllProgramMonths } from "./DateUtils";
 
 // Progress Guide component
 const AttendanceProgressBar = ({ percentage, showLabel = false }) => {
   const getBarColor = (percent) => {
-    if (percent > 80) return "#007BFF" // Blue
-    if (percent >= 60) return "#FF9800" // Orange
-    return "#FF0000" // Red
-  }
+    if (percent > 80) return "#007BFF"; // Blue
+    if (percent >= 60) return "#FF9800"; // Orange
+    return "#FF0000"; // Red
+  };
 
-  const barColor = getBarColor(percentage)
+  const barColor = getBarColor(percentage);
 
   return (
     <View style={styles.progressContainer}>
@@ -40,65 +49,65 @@ const AttendanceProgressBar = ({ percentage, showLabel = false }) => {
             {percentage > 80
               ? "If A Monthly/Yearly Attendance is Over 80%, The Progress Bar Must Be Blue"
               : percentage >= 60
-                ? "If A Monthly/Yearly Attendance is Between 60% And 80%, The Progress Bar Must Be Orange"
-                : "If A Monthly/Yearly Attendance is Under 60%, The Progress Bar Must Be Red"}
+              ? "If A Monthly/Yearly Attendance is Between 60% And 80%, The Progress Bar Must Be Orange"
+              : "If A Monthly/Yearly Attendance is Under 60%, The Progress Bar Must Be Red"}
           </Text>
         </View>
       )}
     </View>
-  )
-}
+  );
+};
 
 const HomeScreen = ({ navigation }) => {
-  const [activeStats, setActiveStats] = useState("monthly")
-  const [isDayMissed, setIsDayMissed] = useState(false)
-  const [name, setName] = useState("User")
-  const [dailyData, setDailyData] = useState([])
-  const [monthlyStats, setMonthlyStats] = useState([])
-  const [yearlyStats, setYearlyStats] = useState([])
-  const [programMonths, setProgramMonths] = useState([])
-  const [programInfo, setProgramInfo] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [token, setToken] = useState("")
-  const [dataInitialized, setDataInitialized] = useState(false)
-  const [image, setImage] = useState(null)
+  const [activeStats, setActiveStats] = useState("monthly");
+  const [isDayMissed, setIsDayMissed] = useState(false);
+  const [name, setName] = useState("User");
+  const [dailyData, setDailyData] = useState([]);
+  const [monthlyStats, setMonthlyStats] = useState([]);
+  const [yearlyStats, setYearlyStats] = useState([]);
+  const [programMonths, setProgramMonths] = useState([]);
+  const [programInfo, setProgramInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState("");
+  const [dataInitialized, setDataInitialized] = useState(false);
+  const [image, setImage] = useState(null);
 
   // Fetch name and token from AsyncStorage
   const fetchNameAndToken = async () => {
     try {
-      const storedName = await AsyncStorage.getItem("name")
-      if (storedName) setName(storedName)
+      const storedName = await AsyncStorage.getItem("name");
+      if (storedName) setName(storedName);
 
-      const storedToken = await AsyncStorage.getItem("token")
-      if (storedToken) setToken(storedToken)
+      const storedToken = await AsyncStorage.getItem("token");
+      if (storedToken) setToken(storedToken);
 
-      return storedToken
+      return storedToken;
     } catch (error) {
-      console.log("Error fetching data from storage:", error)
-      return null
+      console.log("Error fetching data from storage:", error);
+      return null;
     }
-  }
+  };
 
   useEffect(() => {
     const getProfile = async () => {
       try {
-        const ProfileImage = await AsyncStorage.getItem('profileImage')
-        setImage(ProfileImage)
+        const ProfileImage = await AsyncStorage.getItem("profileImage");
+        setImage(ProfileImage);
       } catch (error) {
-        console.error("Error Loading Image", error)
+        console.error("Error Loading Image", error);
       }
-    }
-    
-    getProfile()
-  }, [])
+    };
+
+    getProfile();
+  }, []);
 
   // Fetch program information
   const fetchProgramInfo = async (authToken) => {
     try {
-      const traineeId = (await AsyncStorage.getItem("traineeId")) || "18"
+      const traineeId = (await AsyncStorage.getItem("traineeId")) || "18";
       if (!authToken) {
-        console.error("Token is missing.")
-        return null
+        console.error("Token is missing.");
+        return null;
       }
 
       const response = await axios.get(
@@ -107,32 +116,38 @@ const HomeScreen = ({ navigation }) => {
           headers: {
             Authorization: `Bearer ${authToken}`,
           },
-        },
-      )
+        }
+      );
 
       if (response.data) {
-        setProgramInfo(response.data)
+        setProgramInfo(response.data);
 
         // Get all months for the program duration
-        const allMonths = getAllProgramMonths(response.data.programStartDate, response.data.programEndDate)
-        setProgramMonths(allMonths)
+        const allMonths = getAllProgramMonths(
+          response.data.programStartDate,
+          response.data.programEndDate
+        );
+        setProgramMonths(allMonths);
 
-        return { traineeId, allMonths }
+        return { traineeId, allMonths };
       }
 
-      return null
+      return null;
     } catch (error) {
-      console.error("Error fetching program info:", error.response?.data || error.message)
-      return null
+      console.error(
+        "Error fetching program info:",
+        error.response?.data || error.message
+      );
+      return null;
     }
-  }
+  };
 
   // Fetch daily data for the graph
   const fetchDailyData = async (authToken, traineeId) => {
     try {
       if (!authToken || !traineeId) {
-        console.error("Token or traineeId is missing.")
-        return
+        console.error("Token or traineeId is missing.");
+        return;
       }
 
       const weeklyResponse = await axios.get(
@@ -141,29 +156,37 @@ const HomeScreen = ({ navigation }) => {
           headers: {
             Authorization: `Bearer ${authToken}`,
           },
-        },
-      )
+        }
+      );
 
       if (weeklyResponse.data) {
-        const dailyBreakdown = weeklyResponse.data.dailyBreakdown || []
-        setDailyData(dailyBreakdown)
-        
+        const dailyBreakdown = weeklyResponse.data.dailyBreakdown || [];
+        setDailyData(dailyBreakdown);
+
         // Return the data for chart creation
-        return dailyBreakdown
+        return dailyBreakdown;
       }
-      return []
+      return [];
     } catch (error) {
-      console.error("Error fetching daily data:", error.response?.data || error.message)
-      return []
+      console.error(
+        "Error fetching daily data:",
+        error.response?.data || error.message
+      );
+      return [];
     }
-  }
+  };
 
   // Fetch monthly stats for a specific month
-  const fetchMonthlyStatsForMonth = async (authToken, traineeId, month, year) => {
+  const fetchMonthlyStatsForMonth = async (
+    authToken,
+    traineeId,
+    month,
+    year
+  ) => {
     try {
       if (!authToken) {
-        console.error("Token is missing.")
-        return
+        console.error("Token is missing.");
+        return;
       }
 
       const monthlyResponse = await axios.get(
@@ -172,17 +195,19 @@ const HomeScreen = ({ navigation }) => {
           headers: {
             Authorization: `Bearer ${authToken}`,
           },
-        },
-      )
+        }
+      );
 
       if (monthlyResponse.data) {
-        const stats = monthlyResponse.data.monthlyStats
-        const percentage = Number.parseFloat(stats.attendanceRate)
+        const stats = monthlyResponse.data.monthlyStats;
+        const percentage = Number.parseFloat(stats.attendanceRate);
 
         // Update or add the monthly stats
         setMonthlyStats((prevStats) => {
           // Find if we already have this month in our stats
-          const existingIndex = prevStats.findIndex((s) => s.month === stats.monthName && s.year === year)
+          const existingIndex = prevStats.findIndex(
+            (s) => s.month === stats.monthName && s.year === year
+          );
 
           const newStat = {
             month: stats.monthName,
@@ -192,32 +217,45 @@ const HomeScreen = ({ navigation }) => {
             total: stats.workingDaysInMonth,
             percentage: isNaN(percentage) ? 0 : percentage,
             sortDate: new Date(year, month - 1, 1).getTime(), // Add timestamp for sorting
-          }
+          };
 
           if (existingIndex >= 0) {
             // Update existing entry
-            const newStats = [...prevStats]
-            newStats[existingIndex] = newStat
-            return newStats
+            const newStats = [...prevStats];
+            newStats[existingIndex] = newStat;
+            return newStats;
           } else {
             // Add new entry
-            return [...prevStats, newStat]
+            return [...prevStats, newStat];
           }
-        })
+        });
 
         // Update yearly stats
-        updateYearlyStats(year, stats)
+        updateYearlyStats(year, stats);
       }
     } catch (error) {
-      console.error("Error fetching monthly data:", error.response?.data || error.message)
+      console.error(
+        "Error fetching monthly data:",
+        error.response?.data || error.message
+      );
       // For months with no data, add an empty record
       const monthNames = [
-        "January", "February", "March", "April", "May", "June", 
-        "July", "August", "September", "October", "November", "December"
-      ]
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
 
       setMonthlyStats((prevStats) => {
-        const monthName = monthNames[month - 1]
+        const monthName = monthNames[month - 1];
         // Check if we already have this month
         if (!prevStats.some((s) => s.month === monthName && s.year === year)) {
           return [
@@ -229,41 +267,41 @@ const HomeScreen = ({ navigation }) => {
               attended: 0,
               total: 0,
               percentage: 0,
-              noData: true, 
-              sortDate: new Date(year, month - 1, 1).getTime(), 
+              noData: true,
+              sortDate: new Date(year, month - 1, 1).getTime(),
             },
-          ]
+          ];
         }
-        return prevStats
-      })
+        return prevStats;
+      });
     }
-  }
+  };
 
   // Update yearly stats when monthly stats are fetched
   const updateYearlyStats = (year, monthStats) => {
     setYearlyStats((prevYearlyStats) => {
       // Find if we already have this year in our stats
-      const existingIndex = prevYearlyStats.findIndex((s) => s.year === year)
-      
+      const existingIndex = prevYearlyStats.findIndex((s) => s.year === year);
+
       if (existingIndex >= 0) {
         // Update existing entry
-        const newYearlyStats = [...prevYearlyStats]
-        const existingYearStat = newYearlyStats[existingIndex]
-        
+        const newYearlyStats = [...prevYearlyStats];
+        const existingYearStat = newYearlyStats[existingIndex];
+
         // Add month's attendance to yearly total
-        const newAttended = existingYearStat.attended + monthStats.attendedDays
-        const newTotal = existingYearStat.total + monthStats.workingDaysInMonth
-        const newPercentage = (newAttended / newTotal) * 100
-        
+        const newAttended = existingYearStat.attended + monthStats.attendedDays;
+        const newTotal = existingYearStat.total + monthStats.workingDaysInMonth;
+        const newPercentage = (newAttended / newTotal) * 100;
+
         newYearlyStats[existingIndex] = {
           ...existingYearStat,
           attended: newAttended,
           total: newTotal,
           percentage: isNaN(newPercentage) ? 0 : newPercentage,
-          months: [...(existingYearStat.months || []), monthStats.monthName]
-        }
-        
-        return newYearlyStats
+          months: [...(existingYearStat.months || []), monthStats.monthName],
+        };
+
+        return newYearlyStats;
       } else {
         // Add new entry for this year
         return [
@@ -273,143 +311,176 @@ const HomeScreen = ({ navigation }) => {
             attended: monthStats.attendedDays,
             total: monthStats.workingDaysInMonth,
             percentage: Number.parseFloat(monthStats.attendanceRate),
-            months: [monthStats.monthName]
-          }
-        ]
+            months: [monthStats.monthName],
+          },
+        ];
       }
-    })
-  }
+    });
+  };
 
   // Fetch all monthly stats for the program duration
   const fetchAllMonthlyStats = async (authToken, traineeId, months) => {
-    if (!months || months.length === 0) return
+    if (!months || months.length === 0) return;
 
     try {
       // Clear previous stats
-      setMonthlyStats([])
-      setYearlyStats([])
+      setMonthlyStats([]);
+      setYearlyStats([]);
 
       // For each month in the program, fetch stats
       const fetchPromises = months.map((monthInfo) =>
-        fetchMonthlyStatsForMonth(authToken, traineeId, monthInfo.month, monthInfo.year)
-      )
+        fetchMonthlyStatsForMonth(
+          authToken,
+          traineeId,
+          monthInfo.month,
+          monthInfo.year
+        )
+      );
 
-      await Promise.all(fetchPromises)
+      await Promise.all(fetchPromises);
     } catch (error) {
-      console.error("Error fetching all monthly stats:", error)
+      console.error("Error fetching all monthly stats:", error);
     }
-  }
+  };
 
   // Initialize all data with a single loader
   const initializeData = useCallback(async () => {
-    if (dataInitialized) return
+    if (dataInitialized) return;
 
     try {
       // Show loader only once at the beginning
-      Loader.show()
+      Loader.show();
 
       // Step 1: Get authentication token
-      const authToken = await fetchNameAndToken()
+      const authToken = await fetchNameAndToken();
       if (!authToken) {
-        console.error("Failed to get authentication token")
-        return
+        console.error("Failed to get authentication token");
+        return;
       }
 
       // Step 2: Fetch program info
-      const programData = await fetchProgramInfo(authToken)
+      const programData = await fetchProgramInfo(authToken);
       if (!programData) {
-        console.error("Failed to fetch program info")
-        return
+        console.error("Failed to fetch program info");
+        return;
       }
 
       // Step 3: Fetch daily data for the graph
-      await fetchDailyData(authToken, programData.traineeId)
+      await fetchDailyData(authToken, programData.traineeId);
 
       // Step 4: Fetch monthly stats (which will also update yearly stats)
       if (programData.allMonths.length > 0) {
-        await fetchAllMonthlyStats(authToken, programData.traineeId, programData.allMonths)
+        await fetchAllMonthlyStats(
+          authToken,
+          programData.traineeId,
+          programData.allMonths
+        );
       }
 
       // Mark data as initialized
-      setDataInitialized(true)
+      setDataInitialized(true);
     } catch (error) {
-      console.error("Error initializing data:", error)
+      console.error("Error initializing data:", error);
     } finally {
       // Hide loader when all data is loaded
-      setLoading(false)
-      Loader.hide()
+      setLoading(false);
+      Loader.hide();
     }
-  }, [dataInitialized])
+  }, [dataInitialized]);
 
   // Initialize data on component mount
   useEffect(() => {
-    initializeData()
-  }, [initializeData])
+    initializeData();
+  }, [initializeData]);
 
   // Sort and organize monthly stats
   const sortedMonthlyStats = useMemo(() => {
     // First, sort by date (newest first)
-    const sorted = [...monthlyStats].sort((a, b) => b.sortDate - a.sortDate)
+    const sorted = [...monthlyStats].sort((a, b) => b.sortDate - a.sortDate);
 
     // Then, prioritize months with data
     return sorted.sort((a, b) => {
-      if (a.noData && !b.noData) return 1 
-      if (!a.noData && b.noData) return -1 
+      if (a.noData && !b.noData) return 1;
+      if (!a.noData && b.noData) return -1;
       return 0;
-    })
-  }, [monthlyStats])
+    });
+  }, [monthlyStats]);
 
   // Sort yearly stats
   const sortedYearlyStats = useMemo(() => {
-    return [...yearlyStats].sort((a, b) => b.year - a.year)
-  }, [yearlyStats])
+    return [...yearlyStats].sort((a, b) => b.year - a.year);
+  }, [yearlyStats]);
 
   // Prepare data for the weekly attendance chart
   const weeklyChartData = useMemo(() => {
     // Default empty data
     const emptyData = {
       labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-      datasets: [{ 
-        data: [0, 0, 0, 0, 0],
-        color: () => '#8CC63F', // Solid green color
-        strokeWidth: 0 // No stroke
-      }]
-    }
-    
-    if (!dailyData || dailyData.length === 0) return emptyData
-    
+      datasets: [
+        {
+          data: [0, 0, 0, 0, 0],
+          color: () => "#8CC63F", // Solid green color
+          strokeWidth: 0, // No stroke
+        },
+      ],
+    };
+
+    if (!dailyData || dailyData.length === 0) return emptyData;
+
     // Map days to their attendance data
-    const dayLabels = []
-    const attendanceData = []
-    
-    dailyData.forEach(day => {
+    const dayLabels = [];
+    const attendanceData = [];
+
+    dailyData.forEach((day) => {
       // Extract day abbreviation
-      const dayAbbr = day.dayOfWeek ? day.dayOfWeek.substring(0, 3) : ""
-      dayLabels.push(dayAbbr)
-      
+      const dayAbbr = day.dayOfWeek ? day.dayOfWeek.substring(0, 3) : "";
+      dayLabels.push(dayAbbr);
+
       // Calculate hours worked or use 0 if absent
-      const hoursWorked = day.attended ? parseFloat(day.hoursWorked || "0") : 0
-      attendanceData.push(hoursWorked)
-    })
-    
+      const hoursWorked = day.attended ? parseFloat(day.hoursWorked || "0") : 0;
+      attendanceData.push(hoursWorked);
+    });
+
     return {
       labels: dayLabels,
-      datasets: [{ 
-        data: attendanceData,
-        color: () => '#8CC63F', 
-        strokeWidth: 0 
-      }]
-    }
-  }, [dailyData])
+      datasets: [
+        {
+          data: attendanceData,
+          color: () => "#8CC63F",
+          strokeWidth: 0,
+        },
+      ],
+    };
+  }, [dailyData]);
 
   // Current date
-  const today = new Date()
+  const today = new Date();
   const months = [
-    "January", "February", "March", "April", "May", "June", 
-    "July", "August", "September", "October", "November", "December"
-  ]
-  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-  const currentDate = `${days[today.getDay()]}, ${months[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()}`
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  const days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  const currentDate = `${days[today.getDay()]}, ${
+    months[today.getMonth()]
+  } ${today.getDate()}, ${today.getFullYear()}`;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -425,23 +496,32 @@ const HomeScreen = ({ navigation }) => {
           <Text style={styles.date}>{currentDate}</Text>
         </View>
         <View style={styles.avatarContainer}>
-          <TouchableOpacity onPress={() => navigation.navigate("NotificationScreen")} style={styles.iconButton}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("NotificationScreen")}
+            style={styles.iconButton}
+          >
             <View style={styles.notificationIcon}>
-            <Ionicons name="notifications-outline" size={26} color="#000000" />
+              <Ionicons
+                name="notifications-outline"
+                size={26}
+                color="#000000"
+              />
             </View>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate("ProfileScreen")} style={styles.iconButton}>
-            <Image
-              source={{
-                uri: image || "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-Z6HPIGZArOlwZgZRYD64JxoekuRd7t.png",
-              }}
-              style={styles.profileImage}
-            />
+          <TouchableOpacity
+            onPress={() => navigation.navigate("ProfileScreen")}
+            style={styles.iconButton}
+          >
+            {image ? (
+              <Image source={{ uri: image }} style={styles.profileImage} />
+            ) : (
+              <View style={styles.notificationIcon}>
+                <Ionicons name="person-outline" size={26} color="#000000" />
+              </View>
+            )}
           </TouchableOpacity>
         </View>
       </View>
-
-
 
       {/* Weekly Attendance Chart */}
       <View style={styles.chartContainer}>
@@ -452,8 +532,8 @@ const HomeScreen = ({ navigation }) => {
             datasets: [
               {
                 data: weeklyChartData.datasets[0].data,
-              }
-            ]
+              },
+            ],
           }}
           width={Dimensions.get("window").width - 40}
           height={250}
@@ -465,7 +545,7 @@ const HomeScreen = ({ navigation }) => {
             color: () => "#8CC63F",
             fillShadowGradient: "#8CC63F",
             fillShadowGradientOpacity: 3,
-            barPercentage: .75,
+            barPercentage: 0.75,
             labelColor: () => "#808285",
             propsForBackgroundLines: {
               strokeDasharray: "",
@@ -488,21 +568,46 @@ const HomeScreen = ({ navigation }) => {
         {/* Toggle Buttons */}
         <View style={styles.toggleContainer}>
           <TouchableOpacity
-            style={[styles.toggleButton, activeStats === "monthly" && styles.activeToggle]}
+            style={[
+              styles.toggleButton,
+              activeStats === "monthly" && styles.activeToggle,
+            ]}
             onPress={() => setActiveStats("monthly")}
           >
-            <Text style={[styles.toggleText, activeStats === "monthly" && styles.activeToggleText]}>Monthly</Text>
+            <Text
+              style={[
+                styles.toggleText,
+                activeStats === "monthly" && styles.activeToggleText,
+              ]}
+            >
+              Monthly
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.toggleButton, activeStats === "yearly" && styles.activeToggle]}
+            style={[
+              styles.toggleButton,
+              activeStats === "yearly" && styles.activeToggle,
+            ]}
             onPress={() => setActiveStats("yearly")}
           >
-            <Text style={[styles.toggleText, activeStats === "yearly" && styles.activeToggleText]}>Yearly</Text>
+            <Text
+              style={[
+                styles.toggleText,
+                activeStats === "yearly" && styles.activeToggleText,
+              ]}
+            >
+              Yearly
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {isDayMissed && <DocumentsUpload isVisible={isDayMissed} onClose={() => setIsDayMissed(false)} />}
+      {isDayMissed && (
+        <DocumentsUpload
+          isVisible={isDayMissed}
+          onClose={() => setIsDayMissed(false)}
+        />
+      )}
       <ScrollView>
         {/* Stats Cards based on active view */}
         <View style={styles.statsCards}>
@@ -511,14 +616,18 @@ const HomeScreen = ({ navigation }) => {
               <View key={index} style={styles.statCard}>
                 <Text style={styles.monthTitle}>{stat.monthYear}</Text>
                 {stat.noData ? (
-                  <Text style={styles.attendanceText}>No data available yet</Text>
+                  <Text style={styles.attendanceText}>
+                    No data available yet
+                  </Text>
                 ) : (
                   <>
                     <Text style={styles.attendanceText}>
                       {stat.attended} of {stat.total} days
                     </Text>
                     <AttendanceProgressBar percentage={stat.percentage} />
-                    <Text style={styles.percentageText}>{stat.percentage.toFixed(1)}%</Text>
+                    <Text style={styles.percentageText}>
+                      {stat.percentage.toFixed(1)}%
+                    </Text>
                   </>
                 )}
               </View>
@@ -529,16 +638,21 @@ const HomeScreen = ({ navigation }) => {
               <View key={index} style={styles.statCard}>
                 <Text style={styles.monthTitle}>Year {stat.year}</Text>
                 {stat.total === 0 ? (
-                  <Text style={styles.attendanceText}>No data available yet</Text>
+                  <Text style={styles.attendanceText}>
+                    No data available yet
+                  </Text>
                 ) : (
                   <>
                     <Text style={styles.attendanceText}>
                       {stat.attended} of {stat.total} days
                     </Text>
                     <AttendanceProgressBar percentage={stat.percentage} />
-                    <Text style={styles.percentageText}>{stat.percentage.toFixed(1)}%</Text>
+                    <Text style={styles.percentageText}>
+                      {stat.percentage.toFixed(1)}%
+                    </Text>
                     <Text style={styles.monthsCountText}>
-                      Data available for {stat.months ? stat.months.length : 0} months
+                      Data available for {stat.months ? stat.months.length : 0}{" "}
+                      months
                     </Text>
                   </>
                 )}
@@ -550,8 +664,8 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.bottomSpacer} />
       </ScrollView>
     </SafeAreaView>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -597,7 +711,7 @@ const styles = StyleSheet.create({
   },
   profileImage: {
     width: 38,
-    objectFit: 'contain',
+    objectFit: "contain",
     height: 38,
     borderRadius: 50,
   },
@@ -661,11 +775,11 @@ const styles = StyleSheet.create({
     marginTop: 15,
     gap: 15,
   },
-  notificationIcon:{
-  backgroundColor: '#8CC63F',
-  opacity: 0.4,
-  padding: 5,
-  borderRadius: 50,
+  notificationIcon: {
+    backgroundColor: "#8CC63F",
+    opacity: 0.4,
+    padding: 5,
+    borderRadius: 50,
   },
   statCard: {
     backgroundColor: "#fff",
@@ -676,7 +790,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 1,
-    marginHorizontal: 20
+    marginHorizontal: 20,
   },
   monthTitle: {
     fontSize: 16,
@@ -738,6 +852,6 @@ const styles = StyleSheet.create({
     color: "#666666",
     marginTop: 5,
   },
-})
+});
 
-export default HomeScreen
+export default HomeScreen;

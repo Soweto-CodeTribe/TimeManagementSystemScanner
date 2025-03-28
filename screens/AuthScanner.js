@@ -194,7 +194,10 @@ export default function ScannerAuth({ navigation }) {
       />
 
       {/* Toast component needs to be at the root level */}
-      <Toast />
+      <View style={styles.toastContainer}>
+        <Toast />
+      </View>
+      
     </View>
   );
 }
@@ -256,4 +259,7 @@ const styles = StyleSheet.create({
     color: "white",
     padding: 5,
   },
+  toastContainer:{
+    zIndex: 10
+  }
 });

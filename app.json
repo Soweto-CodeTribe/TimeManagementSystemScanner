@@ -47,7 +47,8 @@
         {
           "cameraPermission": "Allow $(TimeManagementSystem) to access your camera"
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "extra": {
       "eas": {

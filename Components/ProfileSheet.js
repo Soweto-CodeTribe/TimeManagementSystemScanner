@@ -122,7 +122,7 @@ const ProfileBottomSheet = ({ openProfileSheet, setOpenProfileSheet }) => {
               </View>
               <Text style={styles.fieldText}>{number}</Text>
               <Pressable style={styles.actionIcon} onPress={()=>console.log("Edit Number")}>
-                <Feather name="edit-2" size={20} color="#6B7280" />
+              <Feather name="lock" size={20} color="#6B7280" /> 
               </ Pressable>
             </View>
             

@@ -8,7 +8,7 @@ import {
   SafeAreaView,
   StatusBar,
   Pressable,
-  Alert
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect } from "react";
@@ -17,10 +17,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ActivityIndicator } from "react-native";
 import ProfileButtomSheet from "../Components/ProfileSheet";
 import FeedbackBottomSheet from "../Components/FeedbackSheet";
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../Components/Redux/Slices/AuthenticationSlice";
 import DocumentsUpload from "../Components/DocumentsUpload";
 import TermsAndConditions from "../Components/TermsAndConditions";
+import axios from "axios";
 
 const ProfileScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +32,7 @@ const ProfileScreen = ({ navigation }) => {
   const [openFeedbacksheet, setOpenFeedbackSheet] = useState(false);
   const [openDocumentsheet, setDocumentsheet] = useState(false);
   const [openTermssheeet, setTermssheeet] = useState(false);
-  const [activity, setActivity]= useState(false);
+  const [activity, setActivity] = useState(false);
   const dispatch = useDispatch();
 
   const defaultImage =
@@ -45,7 +46,6 @@ const ProfileScreen = ({ navigation }) => {
         const storedName = await AsyncStorage.getItem("name");
         const storedlocation = await AsyncStorage.getItem("Location");
 
-
         if (storedImage) {
           setImage(storedImage);
         }
@@ -54,7 +54,7 @@ const ProfileScreen = ({ navigation }) => {
           setName(storedName);
         }
 
-        if (storedlocation){
+        if (storedlocation) {
           setlocation(storedlocation);
         }
       } catch (error) {
@@ -65,6 +65,22 @@ const ProfileScreen = ({ navigation }) => {
     // Run the function on component mount
     loadProfileData();
   }, []);
+
+  const logUserOut = async () => {
+    const token = await AsyncStorage.getItem("token");
+
+    try {
+      axios.post(
+        "https://timemanagementsystemserver.onrender.com/api/auth/logout",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+    } catch (error) {
+      console.error("Logout Error:", error.response?.data || error);
+      Alert.alert("Logout Error:", error.response?.data || error);
+    }
+  };
 
   // Function to pick an image from the Gallery
   const pickImage = async () => {
@@ -93,19 +109,19 @@ const ProfileScreen = ({ navigation }) => {
     );
   }
 
-  
   const HandleLogout = () => {
-    Alert.alert('Are you sure you want to logout ?', 'See you next time ❤️', [
+    Alert.alert("Are you sure you want to logout ?", "See you next time", [
       {
-        text: 'No',
-        onPress: () => console.log('Cancel Pressed'),
-        style: 'cancel',
+        text: "No",
+        onPress: () => console.log("Cancel Pressed"),
+        style: "cancel",
       },
       {
-        text: 'Yes', 
-        onPress: () => {
+        text: "Yes",
+        onPress: async () => {
           // Set activity to true and wait for state update to complete
           setActivity(true);
+          await logUserOut();
           // Use setTimeout to ensure the state update has time to propagate
           setTimeout(() => {
             dispatch(logout()); // Dispatch logout action
@@ -114,10 +130,10 @@ const ProfileScreen = ({ navigation }) => {
               navigation.navigate("GetStartedScreen");
             }, 3000);
           }, 100); // Small delay to ensure state update completes
-        }
+        },
       },
     ]);
-  }
+  };
 
   if (activity) {
     return (
@@ -133,16 +149,16 @@ const ProfileScreen = ({ navigation }) => {
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
       <View style={styles.container}>
-      <View style={styles.navBar}>
+        <View style={styles.navBar}>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="chevron-back" size={24} color="#999999" /> 
+            <Ionicons name="chevron-back" size={24} color="#999999" />
             <Text>Back</Text>
           </TouchableOpacity>
-        <Text style={styles.navBarTitle}>Profile</Text>
-      </View>
+          <Text style={styles.navBarTitle}>Profile</Text>
+        </View>
 
         <ScrollView>
           <View style={styles.profileHeader}>
@@ -177,7 +193,7 @@ const ProfileScreen = ({ navigation }) => {
               icon="document-text-outline"
               title="Documents"
               iconColor="#8BC34A"
-              onPress={()=> setDocumentsheet(true)}
+              onPress={() => setDocumentsheet(true)}
             />
             {/* <MenuItem
               icon="settings-outline"
@@ -193,7 +209,7 @@ const ProfileScreen = ({ navigation }) => {
             />
             <MenuItem
               icon="alert-circle-outline"
-              title="Report Issue"
+              title="Send Feedback"
               iconColor="#8BC34A"
               onPress={() => setOpenFeedbackSheet(true)}
             />
@@ -207,7 +223,7 @@ const ProfileScreen = ({ navigation }) => {
               icon="log-out-outline"
               title="Sign out"
               iconColor="#FF5252"
-              onPress={()=> HandleLogout()}
+              onPress={() => HandleLogout()}
             />
           </View>
           {/* <FeedbackBottomSheet/> */}
@@ -226,22 +242,18 @@ const ProfileScreen = ({ navigation }) => {
           openFeedbacksheet={openFeedbacksheet}
         />
       )}
-      {
-        openDocumentsheet && (
-          <DocumentsUpload
+      {openDocumentsheet && (
+        <DocumentsUpload
           openDocumentsheet={openDocumentsheet}
           onClose={() => setDocumentsheet(false)}
-          />
-        )
-      }
-      {
-        openTermssheeet && (
-          <TermsAndConditions 
+        />
+      )}
+      {openTermssheeet && (
+        <TermsAndConditions
           openTermssheeet={openTermssheeet}
           onClose={() => setTermssheeet(false)}
-          />
-        )
-      }
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -391,7 +403,7 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 10,
     zIndex: 10,
-    flexDirection: "row"
+    flexDirection: "row",
   },
 });
 

@@ -84,6 +84,7 @@ const HomeScreen = ({ navigation }) => {
       return storedToken;
     } catch (error) {
       console.log("Error fetching data from storage:", error);
+      Alert.alert("Error fetching data from storage:", error);
       return null;
     }
   };
@@ -95,6 +96,7 @@ const HomeScreen = ({ navigation }) => {
         setImage(ProfileImage);
       } catch (error) {
         console.error("Error Loading Image", error);
+        Alert.alert("Error Loading Image", error);
       }
     };
 
@@ -107,6 +109,8 @@ const HomeScreen = ({ navigation }) => {
       const traineeId = (await AsyncStorage.getItem("traineeId")) || "18";
       if (!authToken) {
         console.error("Token is missing.");
+        Alert.alert("Token is missing.");
+
         return null;
       }
 
@@ -135,6 +139,10 @@ const HomeScreen = ({ navigation }) => {
       return null;
     } catch (error) {
       console.error(
+        "Error fetching program info:",
+        error.response?.data || error.message
+      );
+      Alert.alert(
         "Error fetching program info:",
         error.response?.data || error.message
       );
@@ -172,6 +180,10 @@ const HomeScreen = ({ navigation }) => {
         "Error fetching daily data:",
         error.response?.data || error.message
       );
+      Alert.alert(
+        "Error fetching daily data:",
+        error.response?.data || error.message
+      );
       return [];
     }
   };
@@ -186,6 +198,7 @@ const HomeScreen = ({ navigation }) => {
     try {
       if (!authToken) {
         console.error("Token is missing.");
+        Alert.alert("Token is missing.");
         return;
       }
 
@@ -238,6 +251,11 @@ const HomeScreen = ({ navigation }) => {
         "Error fetching monthly data:",
         error.response?.data || error.message
       );
+      Alert.alert(
+        "Error fetching monthly data:",
+        error.response?.data || error.message
+      );
+
       // For months with no data, add an empty record
       const monthNames = [
         "January",
@@ -340,6 +358,7 @@ const HomeScreen = ({ navigation }) => {
       await Promise.all(fetchPromises);
     } catch (error) {
       console.error("Error fetching all monthly stats:", error);
+      Alert.alert("Error fetching all monthly stats:", error.message);
     }
   };
 
@@ -362,6 +381,7 @@ const HomeScreen = ({ navigation }) => {
       const programData = await fetchProgramInfo(authToken);
       if (!programData) {
         console.error("Failed to fetch program info");
+        Alert.alert("Failed to fetch program info");
         return;
       }
 
@@ -381,6 +401,7 @@ const HomeScreen = ({ navigation }) => {
       setDataInitialized(true);
     } catch (error) {
       console.error("Error initializing data:", error);
+      Alert.alert("Error initializing data:", error.message);
     } finally {
       // Hide loader when all data is loaded
       setLoading(false);

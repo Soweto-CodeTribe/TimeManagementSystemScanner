@@ -377,6 +377,7 @@ export default function NotificationScreen() {
       setLoading(false);
     } catch (error) {
       console.error("Error fetching notifications:", error);
+      Alert.alert("Error fetching notifications:", error);
       setError(error.message || "Failed to load notifications");
       setLoading(false);
       Alert.alert("Error", error.message || "Failed to load notifications");
@@ -420,7 +421,8 @@ export default function NotificationScreen() {
                 Alert.alert("Success", "Notification deleted successfully");
               } catch (deleteError) {
                 console.error("Error deleting notification:", deleteError);
-                
+                Alert.alert("Error deleting notification:", deleteError);
+
                 // Restore the notification if deletion fails
                 Alert.alert(
                   "Error", 

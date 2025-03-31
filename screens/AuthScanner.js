@@ -78,7 +78,7 @@ export default function ScannerAuth({ navigation }) {
         };
         await AsyncStorage.setItem("checkInData", JSON.stringify(checkInData));
 
-        console.log(checkInData);
+        // console.log(checkInData);
 
         // Show toast notification
         Toast.show({
@@ -89,7 +89,7 @@ export default function ScannerAuth({ navigation }) {
         });
 
         // Important: Make sure this is set to true
-        console.log("Setting bottom sheet visible");
+        // console.log("Setting bottom sheet visible");
         setIsBottomSheetVisible(true);
       } else {
         Alert.alert("Invalid QR Code", "This QR code is expired or incorrect.");
@@ -120,6 +120,8 @@ export default function ScannerAuth({ navigation }) {
         "QR Code Verification Error:",
         error.response?.data || error
       );
+      Alert.alert("QR Code Verification Error:", error.response?.data || error);
+
       return false;
     }
   }
@@ -128,8 +130,10 @@ export default function ScannerAuth({ navigation }) {
     useCallback(() => {
       const isInLocation = async () => {
         try {
-          let withInLocation = await AsyncStorage.getItem("inLocationAndVerified");
-          
+          let withInLocation = await AsyncStorage.getItem(
+            "inLocationAndVerified"
+          );
+
           if (withInLocation !== "true") {
             Alert.alert(
               "Location Verification", // Title
@@ -138,21 +142,25 @@ export default function ScannerAuth({ navigation }) {
                 {
                   text: "OK",
                   onPress: () => navigation.navigate("HomeScreen"),
-                  style: "default"
-                }
+                  style: "default",
+                },
               ],
               {
                 cancelable: false,
                 dialogTitle: "Access Denied",
-                dialogMessage: "Location Check Failed"
+                dialogMessage: "Location Check Failed",
               }
             );
           }
         } catch (error) {
-          console.error("Error retrieving location verification status:", error);
+          console.error(
+            "Error retrieving location verification status:",
+            error
+          );
+          Alert.alert("Error retrieving location verification status:", error);
         }
       };
-  
+
       isInLocation();
     }, [navigation])
   );
@@ -197,7 +205,6 @@ export default function ScannerAuth({ navigation }) {
       <View style={styles.toastContainer}>
         <Toast />
       </View>
-      
     </View>
   );
 }
@@ -259,7 +266,7 @@ const styles = StyleSheet.create({
     color: "white",
     padding: 5,
   },
-  toastContainer:{
-    zIndex: 10
-  }
+  toastContainer: {
+    zIndex: 10,
+  },
 });

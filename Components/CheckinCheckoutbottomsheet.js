@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useDispatch, useSelector } from "react-redux";
 import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -25,8 +25,6 @@ import {
   endLunch,
   checkOut,
 } from "../Components/Redux/Slices/CheckInOutSlice";
-
-
 
 const { height, width } = Dimensions.get("window");
 const SHEET_HEIGHT = height * 0.3;
@@ -46,16 +44,30 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet }) => {
   const [checkInOffice, setCheckIn] = useState(null);
   const [checkout, setCheckOut] = useState(null);
   const [weekData, setWeekData] = useState([]);
-  const [username, setUsername] = useState('');
-  const [userlocation, setUserLocation] = useState('');
+  const [username, setUsername] = useState("");
+  const [userlocation, setUserLocation] = useState("");
   const formattedDate = `${today.getFullYear()}-${String(
     today.getMonth() + 1
   ).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
   console.log("Date", formattedDate);
 
+  useFocusEffect(
+    useCallback(() => {
+      // Refresh data when component comes into focus
+      if (traineeId && token) {
+        handleTimeLine();
 
+        // Optionally, you can also directly fetch the current status
+        // This could be more efficient than fetching the entire weekly stats
+        // fetchCurrentStatus();
+      }
 
+      return () => {
+        // Clean up if needed
+      };
+    }, [traineeId, token])
+  );
 
   // Functions
   useEffect(() => {
@@ -70,19 +82,17 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet }) => {
         setTraineeID(ID);
         setUsername(name);
         setUserLocation(location);
-
       } catch (error) {
         console.error("Message error", error);
       }
     };
     fetchUserData();
   }, []);
-   console.log(weekData);
-   console.log("NAME FROM ASYNC",username, "LOCATION FROM ASYNC", userlocation);
+  console.log(weekData);
+  console.log("NAME FROM ASYNC", username, "LOCATION FROM ASYNC", userlocation);
 
   //  https://timemanagementsystemserver.onrender.com/api/session/weekly-stats?traineeId=${traineeId}
 
- 
   const handleTimeLine = async () => {
     try {
       const response = await axios.get(
@@ -94,19 +104,34 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet }) => {
         }
       );
       setWeekData(response.data);
+
+      // Immediately process today's data after fetching
+      const todayData = response.data.dailyBreakdown?.find(
+        (day) => day.date === formattedDate
+      );
+
+      if (todayData && todayData.attended) {
+        setlunchStartTime(todayData.lunchStartTime || "N/A");
+        setlunchEndTime(todayData.lunchEndTime || "N/A");
+        setCheckOut(todayData.checkOutTime || "N/A");
+        setCheckIn(todayData.checkInTime || "N/A");
+      } else {
+        // Reset to default values if no data for today
+        setlunchStartTime("N/A");
+        setlunchEndTime("N/A");
+        setCheckOut("N/A");
+        setCheckIn("N/A");
+      }
     } catch (error) {
       console.log(error);
     }
   };
+
   useEffect(() => {
     if (traineeId && token) {
       handleTimeLine();
     }
   }, [traineeId, token]);
-
-
-
-
 
   const FindTodayData = () => {
     const todayData = weekData.dailyBreakdown?.find(
@@ -127,9 +152,7 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet }) => {
     return null;
   };
 
-
-
-
+  console.log("todays data", FindTodayData());
 
   useEffect(() => {
     if (weekData) {
@@ -150,10 +173,6 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet }) => {
   console.log("This is my start End of the day time", checkout);
   console.log("This is the check in time", checkInOffice);
 
-
-
-
-
   useEffect(() => {
     if (isVisible) {
       overlayOpacity.value = withTiming(1, { duration: 200 });
@@ -163,7 +182,6 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet }) => {
       });
     }
   }, [isVisible]);
-
 
   const closeSheet = () => {
     translateY.value = withSpring(SHEET_HEIGHT, {
@@ -177,7 +195,6 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet }) => {
       closeBottomSheet && closeBottomSheet();
     }, 300);
   };
-
 
   const gesture = Gesture.Pan()
     .onUpdate((event) => {
@@ -206,20 +223,17 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet }) => {
     opacity: overlayOpacity.value,
   }));
 
-
-
-
   const closeSheetAndNavigate = () => {
     closeSheet();
   };
-
-
-
+  // Modify your action handlers to refresh data after completion
 
   const handleCheckInLunch = async () => {
     dispatch(startLunch({ traineeId, token }))
       .unwrap()
       .then(() => {
+        // Refresh data after action completes
+        handleTimeLine();
         closeSheetAndNavigate();
       });
   };
@@ -228,6 +242,8 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet }) => {
     dispatch(endLunch({ traineeId, token }))
       .unwrap()
       .then(() => {
+        // Refresh data after action completes
+        handleTimeLine();
         closeSheetAndNavigate();
       });
   };
@@ -236,31 +252,35 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet }) => {
     dispatch(checkOut({ traineeId, token }))
       .unwrap()
       .then(() => {
+        // Refresh data after action completes
+        handleTimeLine();
         closeSheetAndNavigate();
       });
   };
 
   const handleCheckIn = () => {
-    dispatch(checkIn({ 
-      traineeId: traineeId, 
-      name: username,
-      location: userlocation
-    }));
+    dispatch(
+      checkIn({
+        traineeId: traineeId,
+        name: username,
+        location: userlocation,
+      })
+    )
+      .unwrap()
+      .then(() => {
+        // Refresh data after action completes
+        handleTimeLine();
+      });
   };
-
-
-
- 
-
   // Add another
 
   // Layout
   return (
     <View style={styles.container}>
       <View style={styles.toaster}>
-         <Toast />
+        <Toast />
       </View>
-     
+
       <Pressable onPress={closeSheet} style={StyleSheet.absoluteFill}>
         <Animated.View style={[styles.overlay, animatedOverlayStyle]} />
       </Pressable>
@@ -270,23 +290,33 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet }) => {
 
           <View style={styles.permissionButtonsContainer}>
             <View style={styles.buttonsContainer}>
-              {/* Check In to Lunch */}
+              {/* First button: Check In/Lunch In/Lunch Out */}
               <Pressable
-                disabled={loading || lunchEndtime !== "N/A"} // Disable when loading or when lunch has ended
+                disabled={
+                  loading ||
+                  (checkInOffice !== "N/A" &&
+                    lunchStartTime !== "N/A" &&
+                    lunchEndtime !== "N/A") ||
+                  checkout !== "N/A"
+                }
                 style={({ pressed }) => [
                   styles.lunchInButton,
                   pressed && { opacity: 0.8 },
-                  (loading || lunchEndtime !== "N/A") && {
-                    backgroundColor: "#ccc",
-                  }, // Disabled button styling
+                  (loading ||
+                    (checkInOffice !== "N/A" &&
+                      lunchStartTime !== "N/A" &&
+                      lunchEndtime !== "N/A") ||
+                    checkout !== "N/A") && { backgroundColor: "#ccc" },
                 ]}
-                onPress={
-                  checkInOffice === "N/A"
-                    ? handleCheckIn // Function to handle Check In
-                    : lunchStartTime === "N/A"
-                    ? handleCheckInLunch // Function to handle Check In to Lunch
-                    : handleCheckOutLunch  // Function to handle Check Out of Lunch
-                }
+                onPress={() => {
+                  if (checkInOffice === "N/A") {
+                    handleCheckIn();
+                  } else if (lunchStartTime === "N/A") {
+                    handleCheckInLunch();
+                  } else if (lunchEndtime === "N/A") {
+                    handleCheckOutLunch();
+                  }
+                }}
                 android_ripple={{ color: "rgba(0, 0, 0, 0.1)" }}
               >
                 <Text style={styles.buttonTextLight}>
@@ -296,37 +326,23 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet }) => {
                     ? "Check In"
                     : lunchStartTime === "N/A"
                     ? "Check In to Lunch"
-                    : "Check Out of Lunch"}
+                    : lunchEndtime === "N/A"
+                    ? "Check Out of Lunch"
+                    : "Check In to Lunch"}
                 </Text>
               </Pressable>
 
-              {/* Check Out of Lunch */}
-              {/* <Pressable
-                disabled={loading || lunchEndtime !== "N/A"}
-                style={({ pressed }) => [
-                  styles.lunchOutButton,
-                  pressed && { opacity: 0.8 },
-                  (loading || lunchEndtime !== "N/A") && {
-                    backgroundColor: "#ccc",
-                  },
-                ]}
-                onPress={handleCheckOutLunch}
-                android_ripple={{ color: "rgba(0, 0, 0, 0.1)" }}
-              >
-                <Text style={styles.buttonTextDark}>
-                  {loading && lunchStatus === "checkedIn"
-                    ? "Loading..."
-                    : "Check Out of Lunch"}
-                </Text>
-              </Pressable> */}
-
-              {/* Check Out (always enabled) */}
+              {/* Second button: Check Out */}
               <Pressable
-                disabled={loading || checkout !== "N/A"}
+                disabled={
+                  loading || checkInOffice === "N/A" || checkout !== "N/A"
+                }
                 style={({ pressed }) => [
                   styles.checkOutButton,
                   pressed && { opacity: 0.8 },
-                  (loading || checkout !== "N/A") && {
+                  (loading ||
+                    checkInOffice === "N/A" ||
+                    checkout !== "N/A") && {
                     backgroundColor: "#ccc",
                   },
                 ]}
@@ -334,9 +350,7 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet }) => {
                 android_ripple={{ color: "rgba(0, 0, 0, 0.1)" }}
               >
                 <Text style={styles.buttonTextLight}>
-                  {loading && lunchStatus === "checkedIn"
-                    ? "Loading..."
-                    : "Check Out"}
+                  {loading ? "Loading..." : "Check Out"}
                 </Text>
               </Pressable>
             </View>
@@ -443,9 +457,9 @@ const styles = StyleSheet.create({
     width: "100%",
     flexDirection: "column",
   },
-  toaster:{
-     zIndex:100
-  }
+  toaster: {
+    zIndex: 100,
+  },
 });
 
 export default CheckinCheckoutbottomsheet;

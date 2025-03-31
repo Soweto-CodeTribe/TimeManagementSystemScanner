@@ -47,6 +47,7 @@ const ForgetPasswordScreen = ({ navigation }) => {
         setError('Failed to send request');
       }
       console.error('Error:', error);
+      Alert.alert("Error", error);
     }
   };
   

@@ -12,7 +12,7 @@ export const getAllProgramMonths = (startTimestamp, endTimestamp) => {
     // Set to first day of start month
     const currentDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
    
-    // Loop through all months between start and end dates
+    // Loop through all months between start and end datFes
     while (currentDate <= endDate) {
       months.push({
         month: currentDate.getMonth() + 1, // 1-12 format for API

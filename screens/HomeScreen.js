@@ -84,7 +84,6 @@ const HomeScreen = ({ navigation }) => {
       return storedToken;
     } catch (error) {
       console.log("Error fetching data from storage:", error);
-      Alert.alert("Error fetching data from storage:", error);
       return null;
     }
   };
@@ -96,7 +95,6 @@ const HomeScreen = ({ navigation }) => {
         setImage(ProfileImage);
       } catch (error) {
         console.error("Error Loading Image", error);
-        Alert.alert("Error Loading Image", error);
       }
     };
 
@@ -109,8 +107,6 @@ const HomeScreen = ({ navigation }) => {
       const traineeId = (await AsyncStorage.getItem("traineeId")) || "18";
       if (!authToken) {
         console.error("Token is missing.");
-        Alert.alert("Token is missing.");
-
         return null;
       }
 
@@ -139,10 +135,6 @@ const HomeScreen = ({ navigation }) => {
       return null;
     } catch (error) {
       console.error(
-        "Error fetching program info:",
-        error.response?.data || error.message
-      );
-      Alert.alert(
         "Error fetching program info:",
         error.response?.data || error.message
       );
@@ -180,161 +172,160 @@ const HomeScreen = ({ navigation }) => {
         "Error fetching daily data:",
         error.response?.data || error.message
       );
-      Alert.alert(
-        "Error fetching daily data:",
-        error.response?.data || error.message
-      );
       return [];
     }
   };
 
-  // Fetch monthly stats for a specific month
-  const fetchMonthlyStatsForMonth = async (
-    authToken,
-    traineeId,
-    month,
-    year
-  ) => {
-    try {
-      if (!authToken) {
-        console.error("Token is missing.");
-        Alert.alert("Token is missing.");
-        return;
-      }
 
-      const monthlyResponse = await axios.get(
-        `https://timemanagementsystemserver.onrender.com/api/session/monthly-stats?traineeId=${traineeId}&month=${month}&year=${year}`,
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-        }
-      );
-
-      if (monthlyResponse.data) {
-        const stats = monthlyResponse.data.monthlyStats;
-        const percentage = Number.parseFloat(stats.attendanceRate);
-
-        // Update or add the monthly stats
-        setMonthlyStats((prevStats) => {
-          // Find if we already have this month in our stats
-          const existingIndex = prevStats.findIndex(
-            (s) => s.month === stats.monthName && s.year === year
-          );
-
-          const newStat = {
-            month: stats.monthName,
-            year: year,
-            monthYear: `${stats.monthName} ${year}`,
-            attended: stats.attendedDays,
-            total: stats.workingDaysInMonth,
-            percentage: isNaN(percentage) ? 0 : percentage,
-            sortDate: new Date(year, month - 1, 1).getTime(), // Add timestamp for sorting
-          };
-
-          if (existingIndex >= 0) {
-            // Update existing entry
-            const newStats = [...prevStats];
-            newStats[existingIndex] = newStat;
-            return newStats;
-          } else {
-            // Add new entry
-            return [...prevStats, newStat];
-          }
-        });
-
-        // Update yearly stats
-        updateYearlyStats(year, stats);
-      }
-    } catch (error) {
-      console.error(
-        "Error fetching monthly data:",
-        error.response?.data || error.message
-      );
-      Alert.alert(
-        "Error fetching monthly data:",
-        error.response?.data || error.message
-      );
-
-      // For months with no data, add an empty record
-      const monthNames = [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",
-      ];
-
-      setMonthlyStats((prevStats) => {
-        const monthName = monthNames[month - 1];
-        // Check if we already have this month
-        if (!prevStats.some((s) => s.month === monthName && s.year === year)) {
-          return [
-            ...prevStats,
-            {
-              month: monthName,
-              year: year,
-              monthYear: `${monthName} ${year}`,
-              attended: 0,
-              total: 0,
-              percentage: 0,
-              noData: true,
-              sortDate: new Date(year, month - 1, 1).getTime(),
-            },
-          ];
-        }
-        return prevStats;
-      });
+ // Fetch monthly stats for a specific month
+const fetchMonthlyStatsForMonth = async (
+  authToken,
+  traineeId,
+  month,
+  year
+) => {
+  try {
+    if (!authToken) {
+      console.error("Token is missing.");
+      return;
     }
-  };
 
-  // Update yearly stats when monthly stats are fetched
-  const updateYearlyStats = (year, monthStats) => {
-    setYearlyStats((prevYearlyStats) => {
-      // Find if we already have this year in our stats
-      const existingIndex = prevYearlyStats.findIndex((s) => s.year === year);
+    const monthlyResponse = await axios.get(
+      `https://timemanagementsystemserver.onrender.com/api/session/monthly-stats?traineeId=${traineeId}&month=${month}&year=${year}`,
+      {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      }
+    );
 
-      if (existingIndex >= 0) {
-        // Update existing entry
-        const newYearlyStats = [...prevYearlyStats];
-        const existingYearStat = newYearlyStats[existingIndex];
+    if (monthlyResponse.data) {
+      const stats = monthlyResponse.data.monthlyStats;
+      
+      // Convert the percentage string to a number
+      const percentageStr = stats.attendanceRate;
+      const percentage = parseFloat(percentageStr.replace('%', ''));
 
-        // Add month's attendance to yearly total
-        const newAttended = existingYearStat.attended + monthStats.attendedDays;
-        const newTotal = existingYearStat.total + monthStats.workingDaysInMonth;
-        const newPercentage = (newAttended / newTotal) * 100;
+      // Update or add the monthly stats
+      setMonthlyStats((prevStats) => {
+        // Find if we already have this month in our stats
+        const existingIndex = prevStats.findIndex(
+          (s) => s.month === stats.monthName && s.year === year
+        );
 
-        newYearlyStats[existingIndex] = {
-          ...existingYearStat,
-          attended: newAttended,
-          total: newTotal,
-          percentage: isNaN(newPercentage) ? 0 : newPercentage,
-          months: [...(existingYearStat.months || []), monthStats.monthName],
+        const newStat = {
+          month: stats.monthName,
+          year: year,
+          monthYear: `${stats.monthName} ${year}`,
+          attended: stats.attendedDays,
+          total: stats.workingDaysInMonth,
+          percentage: isNaN(percentage) ? 0 : percentage,
+          sortDate: new Date(year, month - 1, 1).getTime(), // Add timestamp for sorting
         };
 
-        return newYearlyStats;
-      } else {
-        // Add new entry for this year
+        if (existingIndex >= 0) {
+          // Update existing entry
+          const newStats = [...prevStats];
+          newStats[existingIndex] = newStat;
+          return newStats;
+        } else {
+          // Add new entry
+          return [...prevStats, newStat];
+        }
+      });
+
+      // Update yearly stats with correct data
+      updateYearlyStats(year, stats);
+    }
+  } catch (error) {
+    console.error(
+      "Error fetching monthly data:",
+      error.response?.data || error.message
+    );
+    // For months with no data, add an empty record
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    setMonthlyStats((prevStats) => {
+      const monthName = monthNames[month - 1];
+      // Check if we already have this month
+      if (!prevStats.some((s) => s.month === monthName && s.year === year)) {
         return [
-          ...prevYearlyStats,
+          ...prevStats,
           {
+            month: monthName,
             year: year,
-            attended: monthStats.attendedDays,
-            total: monthStats.workingDaysInMonth,
-            percentage: Number.parseFloat(monthStats.attendanceRate),
-            months: [monthStats.monthName],
+            monthYear: `${monthName} ${year}`,
+            attended: 0,
+            total: 0,
+            percentage: 0,
+            noData: true,
+            sortDate: new Date(year, month - 1, 1).getTime(),
           },
         ];
       }
+      return prevStats;
     });
-  };
+  }
+};
+
+  // Update yearly stats when monthly stats are fetched
+// Update yearly stats when monthly stats are fetched
+const updateYearlyStats = (year, monthStats) => {
+  setYearlyStats((prevYearlyStats) => {
+    // Find if we already have this year in our stats
+    const existingIndex = prevYearlyStats.findIndex((s) => s.year === year);
+
+    // Parse attendance rate properly
+    const attendanceRateStr = monthStats.attendanceRate;
+    const attendanceRate = parseFloat(attendanceRateStr.replace('%', ''));
+
+    if (existingIndex >= 0) {
+      // Update existing entry
+      const newYearlyStats = [...prevYearlyStats];
+      const existingYearStat = newYearlyStats[existingIndex];
+
+      // Add month's attendance to yearly total
+      const newAttended = existingYearStat.attended + monthStats.attendedDays;
+      const newTotal = existingYearStat.total + monthStats.workingDaysInMonth;
+      const newPercentage = (newAttended / newTotal) * 100;
+
+      newYearlyStats[existingIndex] = {
+        ...existingYearStat,
+        attended: newAttended,
+        total: newTotal,
+        percentage: isNaN(newPercentage) ? 0 : newPercentage,
+        months: [...(existingYearStat.months || []), monthStats.monthName],
+      };
+
+      return newYearlyStats;
+    } else {
+      // Add new entry for this year
+      return [
+        ...prevYearlyStats,
+        {
+          year: year,
+          attended: monthStats.attendedDays,
+          total: monthStats.workingDaysInMonth,
+          percentage: isNaN(attendanceRate) ? 0 : attendanceRate,
+          months: [monthStats.monthName],
+        },
+      ];
+    }
+  });
+};
 
   // Fetch all monthly stats for the program duration
   const fetchAllMonthlyStats = async (authToken, traineeId, months) => {
@@ -358,7 +349,6 @@ const HomeScreen = ({ navigation }) => {
       await Promise.all(fetchPromises);
     } catch (error) {
       console.error("Error fetching all monthly stats:", error);
-      Alert.alert("Error fetching all monthly stats:", error.message);
     }
   };
 
@@ -381,7 +371,6 @@ const HomeScreen = ({ navigation }) => {
       const programData = await fetchProgramInfo(authToken);
       if (!programData) {
         console.error("Failed to fetch program info");
-        Alert.alert("Failed to fetch program info");
         return;
       }
 
@@ -401,7 +390,6 @@ const HomeScreen = ({ navigation }) => {
       setDataInitialized(true);
     } catch (error) {
       console.error("Error initializing data:", error);
-      Alert.alert("Error initializing data:", error.message);
     } finally {
       // Hide loader when all data is loaded
       setLoading(false);

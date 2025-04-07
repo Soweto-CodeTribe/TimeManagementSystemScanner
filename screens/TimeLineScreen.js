@@ -146,44 +146,47 @@ const TimelineScreen = () => {
     const monthIndex = months.indexOf(selectedMonth);
     const selectedDateObj = new Date(selectedYear, monthIndex, selectedDate);
     const dayOfWeek = selectedDateObj.getDay(); // 0 = Sunday, 1 = Monday, etc.
-
+  
     // Calculate the Monday date of this week
     const mondayOffset = dayOfWeek === 0 ? -6 : -(dayOfWeek - 1);
     const mondayDate = new Date(selectedDateObj);
     mondayDate.setDate(selectedDateObj.getDate() + mondayOffset);
-
+  
     // Generate dates for Monday through Friday
     const weekDateArray = [];
     const displayDaysArray = [];
-
+  
     for (let i = 0; i < 5; i++) {
       // Monday to Friday (5 days)
       const currentDate = new Date(mondayDate);
       currentDate.setDate(mondayDate.getDate() + i);
-
+  
       const day = currentDate.getDate();
       const month = currentDate.getMonth();
       const year = currentDate.getFullYear();
-      
+  
       // Format the date string to match API response format (YYYY-MM-DD)
       const monthNum = month + 1;
       const formattedMonth = monthNum.toString().padStart(2, "0");
       const formattedDay = day.toString().padStart(2, "0");
       const formattedDate = `${year}-${formattedMonth}-${formattedDay}`;
-      
+  
+      // Check if the date is in the future
+      const isFutureDate = currentDate > new Date();
+  
       // Find data for this day in the weekly data
       const dayData = weeklyDataArray.find(data => data.date === formattedDate);
-
+  
       weekDateArray.push({
         date: day,
         month: months[month],
         year: year,
         dayName: weekDayNames[i],
       });
-
+  
       // Create time ranges based on actual data or default
       let timeRanges = [];
-      if (dayData) {
+      if (dayData && !isFutureDate) {
         if (dayData.checkInTime && dayData.checkOutTime) {
           timeRanges.push({ 
             start: formatTime(dayData.checkInTime), 
@@ -197,27 +200,28 @@ const TimelineScreen = () => {
           });
         }
       }
-      
+  
       // If no time ranges were added, add default
       if (timeRanges.length === 0) {
         timeRanges = [{ start: "N/A", end: "N/A" }];
       }
-
+  
       // Create display day object with appropriate styling
       displayDaysArray.push({
         date: day,
         month: months[month],
         year: year,
         dayName: weekDayNames[i],
-        backgroundColor: getBackgroundColorForDay(i),
-        textColor: getTextColorForDay(i),
+        backgroundColor: isFutureDate ? "#E0E0E0" : getBackgroundColorForDay(i), // Grey out future dates
+        textColor: isFutureDate ? "#9E9E9E" : getTextColorForDay(i), // Grey text for future dates
         timeRanges: timeRanges,
-        dayData: dayData || null, // Store the full day data
+        dayData: isFutureDate ? null : dayData || null, // No data for future dates
         formattedDate: formattedDate,
-        isToday: isDateToday(year, month, day)
+        isToday: isDateToday(year, month, day),
+        isFutureDate: isFutureDate, // Add a flag for future dates
       });
     }
-
+  
     setWeekDates(weekDateArray);
     setDisplayDays(displayDaysArray);
   };

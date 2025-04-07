@@ -128,6 +128,7 @@ export default function ScannerAuth({ navigation }) {
 
   useFocusEffect(
     useCallback(() => {
+
       const isInLocation = async () => {
         try {
           let withInLocation = await AsyncStorage.getItem(
@@ -160,6 +161,7 @@ export default function ScannerAuth({ navigation }) {
           Alert.alert("Error retrieving location verification status:", error);
         }
       };
+
 
       isInLocation();
     }, [navigation])

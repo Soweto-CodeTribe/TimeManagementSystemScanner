@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "TimeManagementScanner",
+    "name": "Codetribe Time Management",
     "slug": "TimeManagementScanner",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -30,7 +30,7 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.alson_24.TimeManagementScanner"
+      "package": "com.mlab.Codetribe"
     },
     "web": {
       "favicon": "./assets/favicon.png"

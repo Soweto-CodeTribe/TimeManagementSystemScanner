@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
@@ -13,7 +14,8 @@ import {
   SafeAreaView,
   ActivityIndicator,
   FlatList,
-  Modal
+  Modal,
+  TouchableWithoutFeedback
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
@@ -388,92 +390,93 @@ const TicketScreen = ({ navigation }) => {
         transparent={true}
         onRequestClose={() => setIsCreateModalVisible(false)}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalOverlay}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Create New Ticket</Text>
-              <TouchableOpacity onPress={() => setIsCreateModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#333333" />
-              </TouchableOpacity>
-            </View>
-            
-            <ScrollView contentContainerStyle={styles.modalContent}>
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Title</Text>
-                <TextInput
-                  style={[styles.input, errors.title && styles.inputError]}
-                  placeholder="Enter ticket title"
-                  value={ticketData.title}
-                  onChangeText={(text) => handleChange('title', text)}
-                  placeholderTextColor="#999999"
-                />
-                {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Description</Text>
-                <TextInput
-                  style={[styles.textArea, errors.description && styles.inputError]}
-                  placeholder="Describe the issue or request in detail"
-                  multiline
-                  numberOfLines={6}
-                  value={ticketData.description}
-                  onChangeText={(text) => handleChange('description', text)}
-                  placeholderTextColor="#999999"
-                />
-                {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Priority</Text>
-                <View style={styles.pickerContainer}>
-                  <Picker
-                    selectedValue={ticketData.priority}
-                    onValueChange={(value) => handleChange('priority', value)}
-                    style={styles.picker}
-                  >
-                    <Picker.Item label="Low" value="low" />
-                    <Picker.Item label="Medium" value="medium" />
-                    <Picker.Item label="High" value="high" />
-                    <Picker.Item label="Critical" value="critical" />
-                  </Picker>
-                </View>
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Category</Text>
-                <View style={styles.pickerContainer}>
-                  <Picker
-                    selectedValue={ticketData.category}
-                    onValueChange={(value) => handleChange('category', value)}
-                    style={styles.picker}
-                  >
-                    <Picker.Item label="Bug" value="bug" />
-                    <Picker.Item label="Feature Request" value="feature" />
-                    <Picker.Item label="Technical Support" value="support" />
-                    <Picker.Item label="Documentation" value="docs" />
-                    <Picker.Item label="Other" value="other" />
-                  </Picker>
-                </View>
-              </View>
-
-              <TouchableOpacity
-                style={styles.editProfileButton}
-                onPress={handleCreateTicket}
-                disabled={loading}
+        <TouchableWithoutFeedback onPress={() => setIsCreateModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.bottomSheet}
               >
-                {loading ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <Text style={styles.editProfileText}>Create Ticket</Text>
-                )}
-              </TouchableOpacity>
-            </ScrollView>
+                <View style={styles.indicator} />
+                <Text style={styles.title}>Create New Ticket</Text>
+                <Text style={styles.subtitle}>
+                  Create a new support ticket to get help from our team
+                </Text>
+                
+                <ScrollView contentContainerStyle={styles.formContainer}>
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Title</Text>
+                    <TextInput
+                      style={[styles.input, errors.title && styles.inputError]}
+                      placeholder="Enter ticket title"
+                      value={ticketData.title}
+                      onChangeText={(text) => handleChange('title', text)}
+                      placeholderTextColor="#BBBBBB"
+                    />
+                    {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
+                  </View>
+
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Description</Text>
+                    <TextInput
+                      style={[styles.textArea, errors.description && styles.inputError]}
+                      placeholder="Describe the issue or request in detail"
+                      multiline
+                      numberOfLines={6}
+                      value={ticketData.description}
+                      onChangeText={(text) => handleChange('description', text)}
+                      placeholderTextColor="#BBBBBB"
+                    />
+                    {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
+                  </View>
+
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Priority</Text>
+                    <View style={styles.pickerContainer}>
+                      <Picker
+                        selectedValue={ticketData.priority}
+                        onValueChange={(value) => handleChange('priority', value)}
+                        style={styles.picker}
+                      >
+                        <Picker.Item label="Low" value="low" />
+                        <Picker.Item label="Medium" value="medium" />
+                        <Picker.Item label="High" value="high" />
+                        <Picker.Item label="Critical" value="critical" />
+                      </Picker>
+                    </View>
+                  </View>
+
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Category</Text>
+                    <View style={styles.pickerContainer}>
+                      <Picker
+                        selectedValue={ticketData.category}
+                        onValueChange={(value) => handleChange('category', value)}
+                        style={styles.picker}
+                      >
+                        <Picker.Item label="Bug" value="bug" />
+                        <Picker.Item label="Feature Request" value="feature" />
+                        <Picker.Item label="Technical Support" value="support" />
+                        <Picker.Item label="Documentation" value="docs" />
+                        <Picker.Item label="Other" value="other" />
+                      </Picker>
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.submitButton}
+                    onPress={handleCreateTicket}
+                    disabled={loading}
+                  >
+                    <Text style={styles.submitButtonText}>
+                      {loading ? 'Creating...' : 'Create Ticket'}
+                    </Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              </KeyboardAvoidingView>
+            </TouchableWithoutFeedback>
           </View>
-        </KeyboardAvoidingView>
+        </TouchableWithoutFeedback>
       </Modal>
 
       {/* Edit Ticket Modal */}
@@ -483,92 +486,93 @@ const TicketScreen = ({ navigation }) => {
         transparent={true}
         onRequestClose={() => setIsEditModalVisible(false)}
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalOverlay}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Edit Ticket</Text>
-              <TouchableOpacity onPress={() => setIsEditModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#333333" />
-              </TouchableOpacity>
-            </View>
-            
-            <ScrollView contentContainerStyle={styles.modalContent}>
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Title</Text>
-                <TextInput
-                  style={[styles.input, errors.title && styles.inputError]}
-                  placeholder="Enter ticket title"
-                  value={ticketData.title}
-                  onChangeText={(text) => handleChange('title', text)}
-                  placeholderTextColor="#999999"
-                />
-                {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Description</Text>
-                <TextInput
-                  style={[styles.textArea, errors.description && styles.inputError]}
-                  placeholder="Describe the issue or request in detail"
-                  multiline
-                  numberOfLines={6}
-                  value={ticketData.description}
-                  onChangeText={(text) => handleChange('description', text)}
-                  placeholderTextColor="#999999"
-                />
-                {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Priority</Text>
-                <View style={styles.pickerContainer}>
-                  <Picker
-                    selectedValue={ticketData.priority}
-                    onValueChange={(value) => handleChange('priority', value)}
-                    style={styles.picker}
-                  >
-                    <Picker.Item label="Low" value="low" />
-                    <Picker.Item label="Medium" value="medium" />
-                    <Picker.Item label="High" value="high" />
-                    <Picker.Item label="Critical" value="critical" />
-                  </Picker>
-                </View>
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Category</Text>
-                <View style={styles.pickerContainer}>
-                  <Picker
-                    selectedValue={ticketData.category}
-                    onValueChange={(value) => handleChange('category', value)}
-                    style={styles.picker}
-                  >
-                    <Picker.Item label="Bug" value="bug" />
-                    <Picker.Item label="Feature Request" value="feature" />
-                    <Picker.Item label="Technical Support" value="support" />
-                    <Picker.Item label="Documentation" value="docs" />
-                    <Picker.Item label="Other" value="other" />
-                  </Picker>
-                </View>
-              </View>
-
-              <TouchableOpacity
-                style={styles.editProfileButton}
-                onPress={handleUpdateTicket}
-                disabled={loading}
+        <TouchableWithoutFeedback onPress={() => setIsEditModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.bottomSheet}
               >
-                {loading ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <Text style={styles.editProfileText}>Update Ticket</Text>
-                )}
-              </TouchableOpacity>
-            </ScrollView>
+                <View style={styles.indicator} />
+                <Text style={styles.title}>Edit Ticket</Text>
+                <Text style={styles.subtitle}>
+                  Update your ticket information
+                </Text>
+                
+                <ScrollView contentContainerStyle={styles.formContainer}>
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Title</Text>
+                    <TextInput
+                      style={[styles.input, errors.title && styles.inputError]}
+                      placeholder="Enter ticket title"
+                      value={ticketData.title}
+                      onChangeText={(text) => handleChange('title', text)}
+                      placeholderTextColor="#BBBBBB"
+                    />
+                    {errors.title && <Text style={styles.errorText}>{errors.title}</Text>}
+                  </View>
+
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Description</Text>
+                    <TextInput
+                      style={[styles.textArea, errors.description && styles.inputError]}
+                      placeholder="Describe the issue or request in detail"
+                      multiline
+                      numberOfLines={6}
+                      value={ticketData.description}
+                      onChangeText={(text) => handleChange('description', text)}
+                      placeholderTextColor="#BBBBBB"
+                    />
+                    {errors.description && <Text style={styles.errorText}>{errors.description}</Text>}
+                  </View>
+
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Priority</Text>
+                    <View style={styles.pickerContainer}>
+                      <Picker
+                        selectedValue={ticketData.priority}
+                        onValueChange={(value) => handleChange('priority', value)}
+                        style={styles.picker}
+                      >
+                        <Picker.Item label="Low" value="low" />
+                        <Picker.Item label="Medium" value="medium" />
+                        <Picker.Item label="High" value="high" />
+                        <Picker.Item label="Critical" value="critical" />
+                      </Picker>
+                    </View>
+                  </View>
+
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Category</Text>
+                    <View style={styles.pickerContainer}>
+                      <Picker
+                        selectedValue={ticketData.category}
+                        onValueChange={(value) => handleChange('category', value)}
+                        style={styles.picker}
+                      >
+                        <Picker.Item label="Bug" value="bug" />
+                        <Picker.Item label="Feature Request" value="feature" />
+                        <Picker.Item label="Technical Support" value="support" />
+                        <Picker.Item label="Documentation" value="docs" />
+                        <Picker.Item label="Other" value="other" />
+                      </Picker>
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.submitButton}
+                    onPress={handleUpdateTicket}
+                    disabled={loading}
+                  >
+                    <Text style={styles.submitButtonText}>
+                      {loading ? 'Updating...' : 'Update Ticket'}
+                    </Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              </KeyboardAvoidingView>
+            </TouchableWithoutFeedback>
           </View>
-        </KeyboardAvoidingView>
+        </TouchableWithoutFeedback>
       </Modal>
 
       {/* Ticket Details Modal */}
@@ -578,114 +582,114 @@ const TicketScreen = ({ navigation }) => {
         transparent={true}
         onRequestClose={() => setIsDetailModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Ticket Details</Text>
-              <TouchableOpacity onPress={() => setIsDetailModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#333333" />
-              </TouchableOpacity>
-            </View>
-            
-            {currentTicket && (
-              <ScrollView contentContainerStyle={styles.modalContent}>
-                <View style={styles.profileInfo}>
-                  <Text style={styles.profileName}>{currentTicket.title}</Text>
-                  <View style={styles.locationContainer}>
-                    <Ionicons name="document-text-outline" size={16} color="#8BC34A" />
-                    <Text style={styles.locationText}>{currentTicket.category}</Text>
-                  </View>
-                </View>
-
-                <View style={[styles.menuItem, { marginTop: 15 }]}>
-                  <View style={styles.menuItemLeft}>
-                    <View style={[styles.iconContainer, { backgroundColor: '#8BC34A20' }]}>
-                      <Ionicons name="flag-outline" size={20} color="#8BC34A" />
-                    </View>
-                    <View>
-                      <Text style={styles.menuItemText}>Priority</Text>
-                      <Text style={[styles.ticketSubtext, { 
-                        color: getPriorityColor(currentTicket.priority) 
-                      }]}>
-                        {currentTicket.priority}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-
-                <View style={styles.menuItem}>
-                  <View style={styles.menuItemLeft}>
-                    <View style={[styles.iconContainer, { backgroundColor: '#8BC34A20' }]}>
-                      <Ionicons name="time-outline" size={20} color="#8BC34A" />
-                    </View>
-                    <View>
-                      <Text style={styles.menuItemText}>Status</Text>
-                      <Text style={[styles.ticketSubtext, { 
-                        color: currentTicket.status === 'closed' ? '#4CAF50' : 
-                               currentTicket.status === 'cancelled' ? '#F44336' : 
-                               currentTicket.status === 'in-progress' ? '#FFC107' : '#2196F3'
-                      }]}>
-                        {currentTicket.status}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-
-                <View style={styles.menuItem}>
-                  <View style={styles.menuItemLeft}>
-                    <View style={[styles.iconContainer, { backgroundColor: '#8BC34A20' }]}>
-                      <Ionicons name="calendar-outline" size={20} color="#8BC34A" />
-                    </View>
-                    <View>
-                      <Text style={styles.menuItemText}>Created At</Text>
-                      <Text style={styles.ticketSubtext}>
-                        {new Date(currentTicket.createdAt).toLocaleString()}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-
-                {currentTicket.updatedAt && (
-                  <View style={styles.menuItem}>
-                    <View style={styles.menuItemLeft}>
-                      <View style={[styles.iconContainer, { backgroundColor: '#8BC34A20' }]}>
-                        <Ionicons name="refresh-outline" size={20} color="#8BC34A" />
-                      </View>
-                      <View>
-                        <Text style={styles.menuItemText}>Last Updated</Text>
-                        <Text style={styles.ticketSubtext}>
-                          {new Date(currentTicket.updatedAt).toLocaleString()}
-                        </Text>
+        <TouchableWithoutFeedback onPress={() => setIsDetailModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={styles.bottomSheet}>
+                <View style={styles.indicator} />
+                <Text style={styles.title}>Ticket Details</Text>
+                
+                {currentTicket && (
+                  <ScrollView contentContainerStyle={styles.detailsContainer}>
+                    <View style={styles.profileInfo}>
+                      <Text style={styles.profileName}>{currentTicket.title}</Text>
+                      <View style={styles.categoryContainer}>
+                        <Ionicons name="document-text-outline" size={16} color="#8BC34A" />
+                        <Text style={styles.categoryText}>{currentTicket.category}</Text>
                       </View>
                     </View>
-                  </View>
-                )}
 
-                <View style={styles.descriptionContainer}>
-                  <Text style={styles.label}>Description</Text>
-                  <Text style={styles.descriptionText}>{currentTicket.description}</Text>
-                </View>
+                    <View style={styles.detailItem}>
+                      <View style={styles.detailItemLeft}>
+                        <View style={[styles.iconContainer, { backgroundColor: '#8BC34A20' }]}>
+                          <Ionicons name="flag-outline" size={20} color="#8BC34A" />
+                        </View>
+                        <View>
+                          <Text style={styles.detailLabel}>Priority</Text>
+                          <Text style={[styles.detailValue, { 
+                            color: getPriorityColor(currentTicket.priority) 
+                          }]}>
+                            {currentTicket.priority}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
 
-                {currentTicket.status === 'open' && (
-                  <View style={styles.buttonGroup}>
-                    <TouchableOpacity
-                      style={[styles.editButton, { backgroundColor: '#8BC34A' }]}
-                      onPress={() => handleEditSetup(currentTicket)}
-                    >
-                      <Text style={styles.buttonText}>Edit Ticket</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.editButton, { backgroundColor: '#F44336' }]}
-                      onPress={() => handleCancelTicket(currentTicket.id)}
-                    >
-                      <Text style={styles.buttonText}>Cancel Ticket</Text>
-                    </TouchableOpacity>
-                  </View>
+                    <View style={styles.detailItem}>
+                      <View style={styles.detailItemLeft}>
+                        <View style={[styles.iconContainer, { backgroundColor: '#8BC34A20' }]}>
+                          <Ionicons name="time-outline" size={20} color="#8BC34A" />
+                        </View>
+                        <View>
+                          <Text style={styles.detailLabel}>Status</Text>
+                          <Text style={[styles.detailValue, { 
+                            color: currentTicket.status === 'closed' ? '#4CAF50' : 
+                                  currentTicket.status === 'cancelled' ? '#F44336' : 
+                                  currentTicket.status === 'in-progress' ? '#FFC107' : '#2196F3'
+                          }]}>
+                            {currentTicket.status}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    <View style={styles.detailItem}>
+                      <View style={styles.detailItemLeft}>
+                        <View style={[styles.iconContainer, { backgroundColor: '#8BC34A20' }]}>
+                          <Ionicons name="calendar-outline" size={20} color="#8BC34A" />
+                        </View>
+                        <View>
+                          <Text style={styles.detailLabel}>Created At</Text>
+                          <Text style={styles.detailValue}>
+                            {new Date(currentTicket.createdAt).toLocaleString()}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    {currentTicket.updatedAt && (
+                      <View style={styles.detailItem}>
+                        <View style={styles.detailItemLeft}>
+                          <View style={[styles.iconContainer, { backgroundColor: '#8BC34A20' }]}>
+                            <Ionicons name="refresh-outline" size={20} color="#8BC34A" />
+                          </View>
+                          <View>
+                            <Text style={styles.detailLabel}>Last Updated</Text>
+                            <Text style={styles.detailValue}>
+                              {new Date(currentTicket.updatedAt).toLocaleString()}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    )}
+
+                    <View style={styles.descriptionContainer}>
+                      <Text style={styles.label}>Description</Text>
+                      <Text style={styles.descriptionText}>{currentTicket.description}</Text>
+                    </View>
+
+                    {currentTicket.status === 'open' && (
+                      <View style={styles.buttonGroup}>
+                        <TouchableOpacity
+                          style={[styles.actionButton, { backgroundColor: '#8BC34A' }]}
+                          onPress={() => handleEditSetup(currentTicket)}
+                        >
+                          <Text style={styles.actionButtonText}>Edit Ticket</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.actionButton, { backgroundColor: '#F44336' }]}
+                          onPress={() => handleCancelTicket(currentTicket.id)}
+                        >
+                          <Text style={styles.actionButtonText}>Cancel Ticket</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </ScrollView>
                 )}
-              </ScrollView>
-            )}
+              </View>
+            </TouchableWithoutFeedback>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
     </SafeAreaView>
   );
@@ -701,13 +705,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    // backgroundColor: "#F5F5F5",
     marginTop: 40,
   },
   backButton: {
     padding: 5,
-    zIndex:10,
-    flexDirection:"row"
+    zIndex: 10,
+    flexDirection: "row"
   },
   navBarTitle: {
     fontSize: 18,
@@ -815,131 +818,175 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
+  
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
-  modalContainer: {
-    backgroundColor: '#FFFFFF',
+  bottomSheet: {
+    backgroundColor: 'white',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: '90%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
+    paddingTop: 10,
+    minHeight: '70%', // Make sure modal takes up decent space
+    width: '100%',
   },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333333',
+  indicator: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 2,
+    marginBottom: 20,
+    alignSelf: 'center', // Center the indicator
   },
-  modalContent: {
-    padding: 20,
-    paddingBottom: 30,
+  title: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#0F3B4C',
+    marginBottom: 10,
+    alignSelf: 'center', // Center the title
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#7A8A97',
+    textAlign: 'center',
+    marginBottom: 24, // Increased margin
+    paddingHorizontal: 10,
+    lineHeight: 22,
+    alignSelf: 'center', // Center the subtitle
+  },
+  formContainer: {
+    width: '100%',
+    paddingBottom: 30, // Extra padding at bottom
+  },
+  detailsContainer: {
+    width: '100%',
+    paddingBottom: 30, // Extra padding at bottom
   },
   formGroup: {
-    marginBottom: 15,
+    marginBottom: 20, // Increased margin
+    width: '100%',
   },
   label: {
-    fontSize: 14,
-    color: '#666666',
+    fontSize: 15, // Slight increase
+    color: '#555555', // Darker for better contrast
     marginBottom: 8,
     fontWeight: '600',
   },
   input: {
     backgroundColor: '#F5F5F5',
     borderRadius: 8,
-    padding: 12,
+    padding: 15, // Increased padding
     fontSize: 16,
-  },
-  inputError: {
-    borderColor: 'red',
-    borderWidth: 1,
-  },
-  errorText: {
-    color: 'red',
-    fontSize: 12,
-    marginTop: 5,
+    height: 50, // Fixed height for consistency
   },
   textArea: {
     backgroundColor: '#F5F5F5',
     borderRadius: 8,
-    padding: 12,
+    padding: 15, // Increased padding
     fontSize: 16,
-    minHeight: 100,
+    minHeight: 120, // Taller text area
     textAlignVertical: 'top',
   },
   pickerContainer: {
     backgroundColor: '#F5F5F5',
     borderRadius: 8,
     overflow: 'hidden',
+    marginBottom: 5, // Added margin bottom
   },
   picker: {
     height: 50,
   },
-  editProfileButton: {
+  submitButton: {
     backgroundColor: '#8BC34A',
     borderRadius: 8,
-    paddingVertical: 15,
+    paddingVertical: 8,
     alignItems: 'center',
-    marginTop: 15,
+    marginTop: 10, // Increased margin
+    // marginBottom: 2, // Added margin bottom
   },
-  editProfileText: {
+  submitButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
   },
   descriptionContainer: {
-    marginTop: 15,
-    marginBottom: 15,
+    marginTop: 20, // Increased margin
+    marginBottom: 20, // Increased margin
+    width: '100%',
   },
   descriptionText: {
-    fontSize: 14,
-    color: '#666666',
+    fontSize: 15, // Slightly larger
+    color: '#555555', // Darker for better contrast
     backgroundColor: '#F5F5F5',
     borderRadius: 8,
-    padding: 12,
+    padding: 15, // Increased padding
     marginTop: 8,
+    lineHeight: 22, // Added line height for better readability
   },
   profileInfo: {
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 25, // Increased margin
+    width: '100%',
   },
   profileName: {
-    fontSize: 20,
+    fontSize: 22, // Larger
     fontWeight: 'bold',
     color: '#333333',
-    marginBottom: 8,
+    marginBottom: 10, // Increased margin
+    textAlign: 'center',
   },
-  locationContainer: {
+  categoryContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 5, // Added margin
+  },
+  categoryText: {
+    fontSize: 14,
+    color: '#8BC34A',
+    marginLeft: 6, // Increased margin
+    fontWeight: '600',
+    textTransform: 'capitalize', // Capitalize category
+  },
+  detailItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12, // Added padding
+    borderBottomWidth: 1, // Added border
+    borderBottomColor: '#F0F0F0', // Light border color
+    width: '100%',
+  },
+  detailItemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  locationText: {
+  detailLabel: {
     fontSize: 14,
-    color: '#8BC34A',
-    marginLeft: 4,
+    color: '#999999',
+  },
+  detailValue: {
+    fontSize: 15,
     fontWeight: '600',
+    color: '#333333',
+    marginTop: 3, // Added margin
   },
   buttonGroup: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 15,
+    marginTop: 25, // Increased margin
+    width: '100%',
   },
-  editButton: {
+  actionButton: {
     flex: 1,
     borderRadius: 8,
     paddingVertical: 15,
     alignItems: 'center',
     marginHorizontal: 5,
   },
-  buttonText: {
+  actionButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',

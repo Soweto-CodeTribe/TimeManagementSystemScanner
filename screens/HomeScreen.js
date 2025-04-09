@@ -1,23 +1,27 @@
 "use client";
 
 import { StatusBar } from "expo-status-bar";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef} from "react";
 import {
   View,
   Text,
-  StyleSheet,
   SafeAreaView,
   ScrollView,
   Dimensions,
   TouchableOpacity,
   Image,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { BarChart } from "react-native-chart-kit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import LoaderPopup, { Loader } from "../Components/LoaderPopup";
 import axios from "axios";
 import DocumentsUpload from "../Components/DocumentsUpload";
-import { Ionicons } from "@expo/vector-icons"; // Import Ionicons for the bell icon
+import { Ionicons } from "@expo/vector-icons";
+import { useDispatch } from "react-redux";
+import { logout } from "../Components/Redux/Slices/AuthenticationSlice";
 
 // Import the function to get all months
 import { getAllProgramMonths } from "./DateUtils";
@@ -59,6 +63,7 @@ const AttendanceProgressBar = ({ percentage, showLabel = false }) => {
 };
 
 const HomeScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
   const [activeStats, setActiveStats] = useState("monthly");
   const [isDayMissed, setIsDayMissed] = useState(false);
   const [name, setName] = useState("User");
@@ -71,6 +76,51 @@ const HomeScreen = ({ navigation }) => {
   const [token, setToken] = useState("");
   const [dataInitialized, setDataInitialized] = useState(false);
   const [image, setImage] = useState(null);
+  const [activity, setActivity] = useState(false);
+
+  // Function to handle expired token
+  const handleExpiredToken = async () => {
+    Alert.alert(
+      "Session Expired",
+      "Your session has expired. Please sign in again.",
+      [
+        {
+          text: "OK",
+          onPress: async () => {
+            // Set activity to true and wait for state update
+            setActivity(true);
+            await logUserOut();
+            
+            // Use setTimeout to ensure state update completes
+            setTimeout(() => {
+              dispatch(logout()); // Dispatch logout action
+              setTimeout(() => {
+                setActivity(false);
+                navigation.navigate("PermissionsScreen");
+              }, 3000);
+            }, 100);
+          }
+        }
+      ]
+    );
+  };
+  
+  // Add logout function similar to ProfileScreen
+  const logUserOut = async () => {
+    const token = await AsyncStorage.getItem("token");
+
+    try {
+      await axios.post(
+        "https://timemanagementsystemserver.onrender.com/api/auth/logout",
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+    } catch (error) {
+      console.error("Logout Error:", error.response?.data || error);
+    }
+  };
 
   // Fetch name and token from AsyncStorage
   const fetchNameAndToken = async () => {
@@ -107,6 +157,7 @@ const HomeScreen = ({ navigation }) => {
       const traineeId = (await AsyncStorage.getItem("traineeId")) || "18";
       if (!authToken) {
         console.error("Token is missing.");
+        handleExpiredToken();
         return null;
       }
 
@@ -138,6 +189,11 @@ const HomeScreen = ({ navigation }) => {
         "Error fetching program info:",
         error.response?.data || error.message
       );
+      
+      // Check if error is due to expired token
+      if (error.response && error.response.status === 401) {
+        handleExpiredToken();
+      }
       return null;
     }
   };
@@ -147,6 +203,7 @@ const HomeScreen = ({ navigation }) => {
     try {
       if (!authToken || !traineeId) {
         console.error("Token or traineeId is missing.");
+        handleExpiredToken();
         return;
       }
 
@@ -172,160 +229,208 @@ const HomeScreen = ({ navigation }) => {
         "Error fetching daily data:",
         error.response?.data || error.message
       );
+      
+      // Check if error is due to expired token
+      if (error.response && error.response.status === 401) {
+        handleExpiredToken();
+      }
       return [];
     }
   };
 
-
- // Fetch monthly stats for a specific month
-const fetchMonthlyStatsForMonth = async (
-  authToken,
-  traineeId,
-  month,
-  year
-) => {
-  try {
-    if (!authToken) {
-      console.error("Token is missing.");
-      return;
-    }
-
-    const monthlyResponse = await axios.get(
-      `https://timemanagementsystemserver.onrender.com/api/session/monthly-stats?traineeId=${traineeId}&month=${month}&year=${year}`,
-      {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
+  // Fetch monthly stats for a specific month
+  const fetchMonthlyStatsForMonth = async (
+    authToken,
+    traineeId,
+    month,
+    year
+  ) => {
+    try {
+      if (!authToken) {
+        console.error("Token is missing.");
+        handleExpiredToken();
+        return;
       }
-    );
 
-    if (monthlyResponse.data) {
-      const stats = monthlyResponse.data.monthlyStats;
-      
-      // Convert the percentage string to a number
-      const percentageStr = stats.attendanceRate;
-      const percentage = parseFloat(percentageStr.replace('%', ''));
-
-      // Update or add the monthly stats
-      setMonthlyStats((prevStats) => {
-        // Find if we already have this month in our stats
-        const existingIndex = prevStats.findIndex(
-          (s) => s.month === stats.monthName && s.year === year
-        );
-
-        const newStat = {
-          month: stats.monthName,
-          year: year,
-          monthYear: `${stats.monthName} ${year}`,
-          attended: stats.attendedDays,
-          total: stats.workingDaysInMonth,
-          percentage: isNaN(percentage) ? 0 : percentage,
-          sortDate: new Date(year, month - 1, 1).getTime(), // Add timestamp for sorting
-        };
-
-        if (existingIndex >= 0) {
-          // Update existing entry
-          const newStats = [...prevStats];
-          newStats[existingIndex] = newStat;
-          return newStats;
-        } else {
-          // Add new entry
-          return [...prevStats, newStat];
-        }
-      });
-
-      // Update yearly stats with correct data
-      updateYearlyStats(year, stats);
-    }
-  } catch (error) {
-    console.error(
-      "Error fetching monthly data:",
-      error.response?.data || error.message
-    );
-    // For months with no data, add an empty record
-    const monthNames = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-
-    setMonthlyStats((prevStats) => {
-      const monthName = monthNames[month - 1];
-      // Check if we already have this month
-      if (!prevStats.some((s) => s.month === monthName && s.year === year)) {
-        return [
-          ...prevStats,
-          {
-            month: monthName,
-            year: year,
-            monthYear: `${monthName} ${year}`,
-            attended: 0,
-            total: 0,
-            percentage: 0,
-            noData: true,
-            sortDate: new Date(year, month - 1, 1).getTime(),
+      const monthlyResponse = await axios.get(
+        `https://timemanagementsystemserver.onrender.com/api/session/monthly-stats?traineeId=${traineeId}&month=${month}&year=${year}`,
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
           },
-        ];
+        }
+      );
+
+      if (monthlyResponse.data) {
+        const stats = monthlyResponse.data.monthlyStats;
+        
+        // Convert the percentage string to a number
+        const percentageStr = stats.attendanceRate;
+        const percentage = parseFloat(percentageStr.replace('%', ''));
+
+        // Update or add the monthly stats
+        setMonthlyStats((prevStats) => {
+          // Find if we already have this month in our stats
+          const existingIndex = prevStats.findIndex(
+            (s) => s.month === stats.monthName && s.year === year
+          );
+
+          const newStat = {
+            month: stats.monthName,
+            year: year,
+            monthYear: `${stats.monthName} ${year}`,
+            attended: stats.attendedDays,
+            total: stats.workingDaysInMonth,
+            percentage: isNaN(percentage) ? 0 : percentage,
+            sortDate: new Date(year, month - 1, 1).getTime(), // Add timestamp for sorting
+          };
+
+          if (existingIndex >= 0) {
+            // Update existing entry
+            const newStats = [...prevStats];
+            newStats[existingIndex] = newStat;
+            return newStats;
+          } else {
+            // Add new entry
+            return [...prevStats, newStat];
+          }
+        });
+
+        // Update yearly stats with correct data
+        updateYearlyStats(year, stats);
       }
-      return prevStats;
-    });
+    } catch (error) {
+      console.error(
+        "Error fetching monthly data:",
+        error.response?.data || error.message
+      );
+      
+      // Check if error is due to expired token
+      if (error.response && error.response.status === 401) {
+        handleExpiredToken();
+        return;
+      }
+      
+      // For months with no data, add an empty record
+      const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
+
+      setMonthlyStats((prevStats) => {
+        const monthName = monthNames[month - 1];
+        // Check if we already have this month
+        if (!prevStats.some((s) => s.month === monthName && s.year === year)) {
+          return [
+            ...prevStats,
+            {
+              month: monthName,
+              year: year,
+              monthYear: `${monthName} ${year}`,
+              attended: 0,
+              total: 0,
+              percentage: 0,
+              noData: true,
+              sortDate: new Date(year, month - 1, 1).getTime(),
+            },
+          ];
+        }
+        return prevStats;
+      });
+    }
+  };
+
+  // First, add a function to identify the current month
+const isCurrentMonth = (monthName, year) => {
+  const today = new Date();
+  const currentMonthName = months[today.getMonth()];
+  const currentYear = today.getFullYear();
+  return monthName === currentMonthName && year === currentYear;
+};
+
+// Create a ref for the ScrollView
+const scrollViewRef = useRef(null);
+
+// Create a ref for the current month card position
+const currentMonthRef = useRef(null);
+
+// Function to scroll to current month
+const scrollToCurrentMonth = () => {
+  if (currentMonthRef.current && scrollViewRef.current) {
+    // Add a slight delay to ensure layout is complete
+    setTimeout(() => {
+      currentMonthRef.current.measureLayout(
+        scrollViewRef.current,
+        (x, y) => {
+          scrollViewRef.current.scrollTo({ y: y - 150, animated: true });
+        },
+        () => console.log("Failed to measure")
+      );
+    }, 100);
   }
 };
 
+
+// Scroll to current month when activeStats changes to "monthly"
+useEffect(() => {
+  if (activeStats === "monthly" && sortedMonthlyStats && sortedMonthlyStats.length > 0) {
+    scrollToCurrentMonth();
+  }
+}, [activeStats, sortedMonthlyStats]);
   // Update yearly stats when monthly stats are fetched
-// Update yearly stats when monthly stats are fetched
-const updateYearlyStats = (year, monthStats) => {
-  setYearlyStats((prevYearlyStats) => {
-    // Find if we already have this year in our stats
-    const existingIndex = prevYearlyStats.findIndex((s) => s.year === year);
+  const updateYearlyStats = (year, monthStats) => {
+    setYearlyStats((prevYearlyStats) => {
+      // Find if we already have this year in our stats
+      const existingIndex = prevYearlyStats.findIndex((s) => s.year === year);
 
-    // Parse attendance rate properly
-    const attendanceRateStr = monthStats.attendanceRate;
-    const attendanceRate = parseFloat(attendanceRateStr.replace('%', ''));
+      // Parse attendance rate properly
+      const attendanceRateStr = monthStats.attendanceRate;
+      const attendanceRate = parseFloat(attendanceRateStr.replace('%', ''));
 
-    if (existingIndex >= 0) {
-      // Update existing entry
-      const newYearlyStats = [...prevYearlyStats];
-      const existingYearStat = newYearlyStats[existingIndex];
+      if (existingIndex >= 0) {
+        // Update existing entry
+        const newYearlyStats = [...prevYearlyStats];
+        const existingYearStat = newYearlyStats[existingIndex];
 
-      // Add month's attendance to yearly total
-      const newAttended = existingYearStat.attended + monthStats.attendedDays;
-      const newTotal = existingYearStat.total + monthStats.workingDaysInMonth;
-      const newPercentage = (newAttended / newTotal) * 100;
+        // Add month's attendance to yearly total
+        const newAttended = existingYearStat.attended + monthStats.attendedDays;
+        const newTotal = existingYearStat.total + monthStats.workingDaysInMonth;
+        const newPercentage = (newAttended / newTotal) * 100;
 
-      newYearlyStats[existingIndex] = {
-        ...existingYearStat,
-        attended: newAttended,
-        total: newTotal,
-        percentage: isNaN(newPercentage) ? 0 : newPercentage,
-        months: [...(existingYearStat.months || []), monthStats.monthName],
-      };
+        newYearlyStats[existingIndex] = {
+          ...existingYearStat,
+          attended: newAttended,
+          total: newTotal,
+          percentage: isNaN(newPercentage) ? 0 : newPercentage,
+          months: [...(existingYearStat.months || []), monthStats.monthName],
+        };
 
-      return newYearlyStats;
-    } else {
-      // Add new entry for this year
-      return [
-        ...prevYearlyStats,
-        {
-          year: year,
-          attended: monthStats.attendedDays,
-          total: monthStats.workingDaysInMonth,
-          percentage: isNaN(attendanceRate) ? 0 : attendanceRate,
-          months: [monthStats.monthName],
-        },
-      ];
-    }
-  });
-};
+        return newYearlyStats;
+      } else {
+        // Add new entry for this year
+        return [
+          ...prevYearlyStats,
+          {
+            year: year,
+            attended: monthStats.attendedDays,
+            total: monthStats.workingDaysInMonth,
+            percentage: isNaN(attendanceRate) ? 0 : attendanceRate,
+            months: [monthStats.monthName],
+          },
+        ];
+      }
+    });
+  };
 
   // Fetch all monthly stats for the program duration
   const fetchAllMonthlyStats = async (authToken, traineeId, months) => {
@@ -349,6 +454,9 @@ const updateYearlyStats = (year, monthStats) => {
       await Promise.all(fetchPromises);
     } catch (error) {
       console.error("Error fetching all monthly stats:", error);
+      if (error.response && error.response.status === 401) {
+        handleExpiredToken();
+      }
     }
   };
 
@@ -364,6 +472,7 @@ const updateYearlyStats = (year, monthStats) => {
       const authToken = await fetchNameAndToken();
       if (!authToken) {
         console.error("Failed to get authentication token");
+        handleExpiredToken();
         return;
       }
 
@@ -390,6 +499,9 @@ const updateYearlyStats = (year, monthStats) => {
       setDataInitialized(true);
     } catch (error) {
       console.error("Error initializing data:", error);
+      if (error.response && error.response.status === 401) {
+        handleExpiredToken();
+      }
     } finally {
       // Hide loader when all data is loaded
       setLoading(false);
@@ -490,6 +602,15 @@ const updateYearlyStats = (year, monthStats) => {
   const currentDate = `${days[today.getDay()]}, ${
     months[today.getMonth()]
   } ${today.getDate()}, ${today.getFullYear()}`;
+
+  // Show loading indicator when logging out
+  if (activity) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#8CC63F" />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -617,30 +738,45 @@ const updateYearlyStats = (year, monthStats) => {
           onClose={() => setIsDayMissed(false)}
         />
       )}
-      <ScrollView>
+        <ScrollView ref={scrollViewRef}>
         {/* Stats Cards based on active view */}
         <View style={styles.statsCards}>
           {activeStats === "monthly" &&
-            sortedMonthlyStats.map((stat, index) => (
-              <View key={index} style={styles.statCard}>
-                <Text style={styles.monthTitle}>{stat.monthYear}</Text>
-                {stat.noData ? (
-                  <Text style={styles.attendanceText}>
-                    No data available yet
+            sortedMonthlyStats.map((stat, index) => {
+              const isCurrentMonthStat = isCurrentMonth(stat.month, stat.year);
+              return (
+                <View 
+                  key={index} 
+                  ref={isCurrentMonthStat ? currentMonthRef : null}
+                  style={[
+                    styles.statCard,
+                    isCurrentMonthStat && styles.currentMonthCard
+                  ]}
+                >
+                  <Text style={[
+                    styles.monthTitle,
+                    isCurrentMonthStat && styles.currentMonthTitle
+                  ]}>
+                    {stat.monthYear} {isCurrentMonthStat && '(Current)'}
                   </Text>
-                ) : (
-                  <>
+                  {stat.noData ? (
                     <Text style={styles.attendanceText}>
-                      {stat.attended} of {stat.total} days
+                      No data available yet
                     </Text>
-                    <AttendanceProgressBar percentage={stat.percentage} />
-                    <Text style={styles.percentageText}>
-                      {stat.percentage.toFixed(1)}%
-                    </Text>
-                  </>
-                )}
-              </View>
-            ))}
+                  ) : (
+                    <>
+                      <Text style={styles.attendanceText}>
+                        {stat.attended} of {stat.total} days
+                      </Text>
+                      <AttendanceProgressBar percentage={stat.percentage} />
+                      <Text style={styles.percentageText}>
+                        {stat.percentage.toFixed(1)}%
+                      </Text>
+                    </>
+                  )}
+                </View>
+              );
+            })}
 
           {activeStats === "yearly" &&
             sortedYearlyStats.map((stat, index) => (
@@ -827,6 +963,15 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#333333",
     alignSelf: "flex-end",
+  },
+  currentMonthCard: {
+    borderWidth: 2,
+    borderColor: '#8CC63F',
+    backgroundColor: '#F9FFF4',
+  },
+  currentMonthTitle: {
+    color: '#8CC63F',
+    fontWeight: '700',
   },
   monthsCountText: {
     fontSize: 12,

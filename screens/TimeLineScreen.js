@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import CalendarModal from "../Components/CalendarModal";
@@ -25,11 +27,12 @@ const TimelineScreen = () => {
   const [openDocumentsheet, setDocumentsheet] = useState(false);
   const [weeklyData, setWeeklyData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [token, setToken]= useState(null);
-  const [TraineeID, setTraineeID]= useState(null);
+  const [token, setToken] = useState(null);
+  const [TraineeID, setTraineeID] = useState(null);
   const [currentWeekStart, setCurrentWeekStart] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState(null);
 
- 
   const months = [
     "January",
     "February",
@@ -71,9 +74,17 @@ const TimelineScreen = () => {
     const formattedDay = monday.getDate().toString().padStart(2, "0");
     const formattedDate = `${monday.getFullYear()}-${formattedMonth}-${formattedDay}`;
     console.log("Auto-selected week starting at:", formattedDate);
+
+    // Set initial refresh time
+    setLastRefreshTime(new Date());
   }, []);
 
   const fetchWeeklyData = async () => {
+    if (!token || !TraineeID) {
+      console.log("Token or TraineeID not available yet");
+      return [];
+    }
+
     setIsLoading(true);
     try {
       // Format the date parameter for the API
@@ -99,35 +110,51 @@ const TimelineScreen = () => {
       
       console.log("Weekly data fetched:", JSON.stringify(weeklyDataResponse, null, 2));
       setWeeklyData(weeklyDataResponse);
+      
+      // Update last refresh time
+      setLastRefreshTime(new Date());
+      
+      // Return the data for use in calculateWeekDates
       return weeklyDataResponse;
     } catch (error) {
       console.log("Error fetching timeline:", error);
       return [];
     } finally {
       setIsLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const handleUpload = (dayName) => {
-    // Implement your upload functionality here
-    console.log(`Upload for ${dayName}`);
-  };
-
-  useEffect(()=>{
-    const fetchUserData = async ()=>{
-     try {
-       const ID = await AsyncStorage.getItem('traineeID');
-       const Token = await AsyncStorage.getItem('token');
-
-       setToken(Token);
-       setTraineeID(ID)
-       console.log("This is the Token", Token);
-     } catch (error) {
-       console.error("Message error", error)
-     }
+  // Handle pull-to-refresh
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const data = await fetchWeeklyData();
+      calculateWeekDates(data);
+    } catch (error) {
+      console.log("Error refreshing data:", error);
+    } finally {
+      setRefreshing(false);
     }
+  }, [selectedDate, selectedMonth, selectedYear, token, TraineeID]);
+
+  // Removed the auto-refresh functionality as requested
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const ID = await AsyncStorage.getItem('traineeID');
+        const Token = await AsyncStorage.getItem('token');
+
+        setToken(Token);
+        setTraineeID(ID);
+        console.log("This is the Token", Token);
+      } catch (error) {
+        console.error("Message error", error);
+      }
+    };
     fetchUserData();
- },[])
+  }, []);
 
   // Initialize the week days when component mounts or when selectedDate changes
   useEffect(() => {
@@ -293,16 +320,24 @@ const TimelineScreen = () => {
   };
 
   const applyCalendarSelection = async () => {
+    setShowCalendar(false);
+    // Load fresh data when date changes
     const data = await fetchWeeklyData();
     calculateWeekDates(data);
-    setShowCalendar(false);
   };
 
-  const jumpToCurrentWeek = () => {
+  const jumpToCurrentWeek = async () => {
     const monday = getCurrentWeekMonday();
     setSelectedDate(monday.getDate());
     setSelectedMonth(months[monday.getMonth()]);
     setSelectedYear(monday.getFullYear());
+    
+    // Immediately load fresh data after jumping to current week
+    // We need to wait for the state to update before fetching
+    setTimeout(async () => {
+      const data = await fetchWeeklyData();
+      calculateWeekDates(data);
+    }, 100);
   };
 
   const renderTimelineItem = (icon, title, time, dayData) => (
@@ -317,6 +352,17 @@ const TimelineScreen = () => {
       </View>
     </View>
   );
+
+  // Format the last refresh time
+  const formatLastRefreshTime = () => {
+    if (!lastRefreshTime) return "";
+    
+    return lastRefreshTime.toLocaleTimeString([], { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      second: '2-digit' 
+    });
+  };
 
   return (
     <View style={styles.container}>
@@ -346,6 +392,11 @@ const TimelineScreen = () => {
               }, ${weekDates[0].year}`
             : selectedMonth}
         </Text>
+        {lastRefreshTime && (
+          <Text style={styles.lastRefreshText}>
+            Last updated: {formatLastRefreshTime()}
+          </Text>
+        )}
       </View>
 
       {/* Calendar Modal Component */}
@@ -360,125 +411,138 @@ const TimelineScreen = () => {
         onApply={applyCalendarSelection}
       />
 
-      {isLoading ? (
+      {isLoading && !refreshing ? (
         <View style={styles.loadingContainer}>
-          <Text>Loading timeline data...</Text>
+          <ActivityIndicator size="large" color="#4CAF50" />
+          <Text style={styles.loadingText}>Loading timeline data...</Text>
         </View>
       ) : (
-        <ScrollView style={styles.scrollView}>
-        {displayDays.map((day, index) => (
-          <View key={index}>
-            <View style={[
-              styles.dayCard,
-              day.isToday ? styles.todayCard : null
-            ]}>
-              <View
-                style={[
-                  styles.dateContainer,
-                  { backgroundColor: day.backgroundColor },
-                  day.isToday ? styles.todayDateContainer : null
-                ]}
-              >
-                <Text style={[styles.dateNumber, { color: day.textColor }]}>
-                  {day.date}
-                </Text>
-                {day.isToday && (
-                  <Text style={styles.todayLabel}>TODAY</Text>
-                )}
-              </View>
-              <View style={styles.dayInfoContainer}>
-                <View style={styles.dayHeaderContainer}>
-                  <Text style={[
-                    styles.dayName,
-                    day.isToday ? styles.todayText : null
-                  ]}>
-                    {day.dayName}
+        <ScrollView 
+          style={styles.scrollView}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#4CAF50"]}
+              tintColor={"#4CAF50"}
+              title={"Pull to refresh..."}
+              titleColor={"#999"}
+            />
+          }
+        >
+          {displayDays.map((day, index) => (
+            <View key={index}>
+              <View style={[
+                styles.dayCard,
+                day.isToday ? styles.todayCard : null
+              ]}>
+                <View
+                  style={[
+                    styles.dateContainer,
+                    { backgroundColor: day.backgroundColor },
+                    day.isToday ? styles.todayDateContainer : null
+                  ]}
+                >
+                  <Text style={[styles.dateNumber, { color: day.textColor }]}>
+                    {day.date}
                   </Text>
-                  <View style={styles.headerButtonsContainer}>
-                    <TouchableOpacity onPress={() => toggleExpand(day.dayName)}>
-                      <Ionicons
-                        name={
-                          expandedDay === day.dayName
-                            ? "chevron-down"
-                            : "chevron-forward"
-                        }
-                        size={24}
-                        color="#999"
-                      />
-                    </TouchableOpacity>
-                  </View>
+                  {day.isToday && (
+                    <Text style={styles.todayLabel}>TODAY</Text>
+                  )}
                 </View>
-                {day.timeRanges.map((timeRange, timeIndex) => (
-                  <View key={timeIndex} style={styles.timeRangeContainer}>
-                    <Ionicons name="time-outline" size={16} color="#999" />
-                    <Text style={styles.timeRange}>
-                      {timeRange.start === "N/A" ? 
-                        "No data available" : 
-                        `${timeRange.start} - ${timeRange.end}`}
+                <View style={styles.dayInfoContainer}>
+                  <View style={styles.dayHeaderContainer}>
+                    <Text style={[
+                      styles.dayName,
+                      day.isToday ? styles.todayText : null
+                    ]}>
+                      {day.dayName}
                     </Text>
+                    <View style={styles.headerButtonsContainer}>
+                      <TouchableOpacity onPress={() => toggleExpand(day.dayName)}>
+                        <Ionicons
+                          name={
+                            expandedDay === day.dayName
+                              ? "chevron-down"
+                              : "chevron-forward"
+                          }
+                          size={24}
+                          color="#999"
+                        />
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                ))}
-                <View style={styles.statusAndUploadContainer}>
-                  {day.dayData?.status && (
-                    <View style={styles.statusContainer}>
-                      <Text style={[
-                        styles.statusText, 
-                        { color: day.dayData.status === "Present" ? "#4CAF50" : "#F44336" }
-                      ]}>
-                        {day.dayData.status}
+                  {day.timeRanges.map((timeRange, timeIndex) => (
+                    <View key={timeIndex} style={styles.timeRangeContainer}>
+                      <Ionicons name="time-outline" size={16} color="#999" />
+                      <Text style={styles.timeRange}>
+                        {timeRange.start === "N/A" ? 
+                          "No data available" : 
+                          `${timeRange.start} - ${timeRange.end}`}
                       </Text>
                     </View>
-                  )}
-                  {day.dayData?.status === "Absent" && (
-                    <TouchableOpacity 
-                      onPress={() => setDocumentsheet(true)}
-                      style={styles.uploadButton}
-                    >
-                      <Ionicons name="cloud-upload-outline" size={24} color="#FF7043" />
-                      <View style={styles.radiatingEffect} />
-                    </TouchableOpacity>
-                  )}
+                  ))}
+                  <View style={styles.statusAndUploadContainer}>
+                    {day.dayData?.status && (
+                      <View style={styles.statusContainer}>
+                        <Text style={[
+                          styles.statusText, 
+                          { color: day.dayData.status === "Present" ? "#4CAF50" : "#F44336" }
+                        ]}>
+                          {day.dayData.status}
+                        </Text>
+                      </View>
+                    )}
+                    {day.dayData?.status === "Absent" && (
+                      <TouchableOpacity 
+                        onPress={() => setDocumentsheet(true)}
+                        style={styles.uploadButton}
+                      >
+                        <Ionicons name="cloud-upload-outline" size={24} color="#FF7043" />
+                        <View style={styles.radiatingEffect} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
               </View>
-            </View>
-              {/* Expanded Timeline Under the Day */}
-              {expandedDay === day.dayName && (
-                <View style={styles.timelineContainer}>
-                  <View style={styles.timelineLine} />
-                  {renderTimelineItem(
-                    "enter-outline",
-                    "Check-in",
-                    day.dayData?.checkInTime ? formatTime(day.dayData.checkInTime) : "Data not available"
-                  )}
-                  {renderTimelineItem(
-                    "restaurant-outline",
-                    "Lunch-in",
-                    day.dayData?.lunchStartTime ? formatTime(day.dayData.lunchStartTime) : "Data not available"
-                  )}
-                  {renderTimelineItem(
-                    "fast-food-outline",
-                    "Lunch-out",
-                    day.dayData?.lunchEndTime ? formatTime(day.dayData.lunchEndTime) : "Data not available"
-                  )}
-                  {renderTimelineItem(
-                    "exit-outline",
-                    "Check-out",
-                    day.dayData?.checkOutTime ? formatTime(day.dayData.checkOutTime) : "Data not available"
-                  )}
-                </View>
-              )}
-            </View>
-          ))}
-        </ScrollView>
-      )}
-      {
-         openDocumentsheet && (
-          <DocumentsUpload
-          openDocumentsheet={openDocumentsheet}
-          onClose={() => setDocumentsheet(false)}
-          />
-        )
-      }
+                {/* Expanded Timeline Under the Day */}
+                {expandedDay === day.dayName && (
+                  <View style={styles.timelineContainer}>
+                    <View style={styles.timelineLine} />
+                    {renderTimelineItem(
+                      "enter-outline",
+                      "Check-in",
+                      day.dayData?.checkInTime ? formatTime(day.dayData.checkInTime) : "Data not available"
+                    )}
+                    {renderTimelineItem(
+                      "restaurant-outline",
+                      "Lunch-in",
+                      day.dayData?.lunchStartTime ? formatTime(day.dayData.lunchStartTime) : "Data not available"
+                    )}
+                    {renderTimelineItem(
+                      "fast-food-outline",
+                      "Lunch-out",
+                      day.dayData?.lunchEndTime ? formatTime(day.dayData.lunchEndTime) : "Data not available"
+                    )}
+                    {renderTimelineItem(
+                      "exit-outline",
+                      "Check-out",
+                      day.dayData?.checkOutTime ? formatTime(day.dayData.checkOutTime) : "Data not available"
+                    )}
+                  </View>
+                )}
+              </View>
+            ))}
+          </ScrollView>
+        )}
+        {
+          openDocumentsheet && (
+            <DocumentsUpload
+              openDocumentsheet={openDocumentsheet}
+              onClose={() => setDocumentsheet(false)}
+            />
+          )
+        }
     </View>
   );
 };
@@ -538,10 +602,20 @@ const styles = StyleSheet.create({
     color: "#666",
     fontWeight: "500",
   },
+  lastRefreshText: {
+    textAlign: "center",
+    fontSize: 12,
+    color: "#999",
+    marginTop: 4,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 10,
+    color: "#666",
   },
   scrollView: {
     flex: 1,

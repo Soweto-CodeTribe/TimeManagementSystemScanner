@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/codetribetext.png",
+        "foregroundImage": "./assets/codetribeicon.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [

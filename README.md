@@ -1,4 +1,4 @@
-![Screenshot_20250409_095037_com alson_24 TimeManagementScanner](https://github.com/user-attachments/assets/803b0b11-3001-41cb-afbe-7d2514ceaeba)# Time Management System
+# Time Management System
 
 **A comprehensive solution for precise attendance and time tracking through QR code scanning, geofencing, and intelligent automation.**
 

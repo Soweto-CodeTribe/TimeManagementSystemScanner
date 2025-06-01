@@ -127,7 +127,7 @@ const ProfileScreen = ({ navigation }) => {
             dispatch(logout()); // Dispatch logout action
             setTimeout(() => {
               setActivity(false);
-              navigation.navigate("GetStartedScreen");
+              navigation.navigate("TraineeLoginScreen");
             }, 3000);
           }, 100); // Small delay to ensure state update completes
         },
@@ -195,12 +195,12 @@ const ProfileScreen = ({ navigation }) => {
               iconColor="#8BC34A"
               onPress={() => setDocumentsheet(true)}
             />
-            {/* <MenuItem
+            <MenuItem
               icon="settings-outline"
               title="Settings"
               iconColor="#8BC34A"
               onPress={() => navigation.navigate("SettingsScreen")}
-            /> */}
+            />
             <MenuItem
               icon="ticket-outline"
               title="Tickets"

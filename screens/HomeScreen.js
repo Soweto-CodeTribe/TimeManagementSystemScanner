@@ -1,5 +1,3 @@
-"use client";
-
 import { StatusBar } from "expo-status-bar";
 import { useState, useEffect, useCallback, useMemo, useRef} from "react";
 import {
@@ -77,9 +75,20 @@ const HomeScreen = ({ navigation }) => {
   const [dataInitialized, setDataInitialized] = useState(false);
   const [image, setImage] = useState(null);
   const [activity, setActivity] = useState(false);
+  
+  // Add state to track if logout is already in progress
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const tokenExpiredRef = useRef(false);
 
-  // Function to handle expired token
-  const handleExpiredToken = async () => {
+  // Function to handle expired token - now with protection against multiple calls
+  const handleExpiredToken = useCallback(async () => {
+    // Prevent multiple simultaneous calls
+    if (tokenExpiredRef.current || isLoggingOut) {
+      return;
+    }
+    
+    tokenExpiredRef.current = true;
+    
     Alert.alert(
       "Session Expired",
       "Your session has expired. Please sign in again.",
@@ -87,9 +96,16 @@ const HomeScreen = ({ navigation }) => {
         {
           text: "OK",
           onPress: async () => {
-            // Set activity to true and wait for state update
+            if (isLoggingOut) return; // Double check
+            
+            setIsLoggingOut(true);
             setActivity(true);
-            await logUserOut();
+            
+            try {
+              await logUserOut();
+            } catch (error) {
+              console.error("Error during logout:", error);
+            }
             
             // Use setTimeout to ensure state update completes
             setTimeout(() => {
@@ -97,13 +113,14 @@ const HomeScreen = ({ navigation }) => {
               setTimeout(() => {
                 setActivity(false);
                 navigation.navigate("PermissionsScreen");
-              }, 3000);
+              }, 1000); // Reduced timeout
             }, 100);
           }
         }
-      ]
+      ],
+      { cancelable: false } // Prevent dismissing by tapping outside
     );
-  };
+  }, [isLoggingOut, dispatch, navigation]);
   
   // Add logout function similar to ProfileScreen
   const logUserOut = async () => {
@@ -121,6 +138,16 @@ const HomeScreen = ({ navigation }) => {
       console.error("Logout Error:", error.response?.data || error);
     }
   };
+
+  // Helper function to check if error is 401 and handle token expiration
+  const handleApiError = useCallback((error, context = "") => {
+    console.error(`Error in ${context}:`, error.response?.data || error.message);
+    
+    // Only handle token expiration if we haven't already started the process
+    if (error.response && error.response.status === 401 && !tokenExpiredRef.current) {
+      handleExpiredToken();
+    }
+  }, [handleExpiredToken]);
 
   // Fetch name and token from AsyncStorage
   const fetchNameAndToken = async () => {
@@ -157,7 +184,9 @@ const HomeScreen = ({ navigation }) => {
       const traineeId = (await AsyncStorage.getItem("traineeId")) || "18";
       if (!authToken) {
         console.error("Token is missing.");
-        handleExpiredToken();
+        if (!tokenExpiredRef.current) {
+          handleExpiredToken();
+        }
         return null;
       }
 
@@ -185,15 +214,7 @@ const HomeScreen = ({ navigation }) => {
 
       return null;
     } catch (error) {
-      console.error(
-        "Error fetching program info:",
-        error.response?.data || error.message
-      );
-      
-      // Check if error is due to expired token
-      if (error.response && error.response.status === 401) {
-        handleExpiredToken();
-      }
+      handleApiError(error, "fetchProgramInfo");
       return null;
     }
   };
@@ -203,7 +224,9 @@ const HomeScreen = ({ navigation }) => {
     try {
       if (!authToken || !traineeId) {
         console.error("Token or traineeId is missing.");
-        handleExpiredToken();
+        if (!tokenExpiredRef.current) {
+          handleExpiredToken();
+        }
         return;
       }
 
@@ -225,15 +248,7 @@ const HomeScreen = ({ navigation }) => {
       }
       return [];
     } catch (error) {
-      console.error(
-        "Error fetching daily data:",
-        error.response?.data || error.message
-      );
-      
-      // Check if error is due to expired token
-      if (error.response && error.response.status === 401) {
-        handleExpiredToken();
-      }
+      handleApiError(error, "fetchDailyData");
       return [];
     }
   };
@@ -248,7 +263,9 @@ const HomeScreen = ({ navigation }) => {
     try {
       if (!authToken) {
         console.error("Token is missing.");
-        handleExpiredToken();
+        if (!tokenExpiredRef.current) {
+          handleExpiredToken();
+        }
         return;
       }
 
@@ -300,53 +317,46 @@ const HomeScreen = ({ navigation }) => {
         updateYearlyStats(year, stats);
       }
     } catch (error) {
-      console.error(
-        "Error fetching monthly data:",
-        error.response?.data || error.message
-      );
+      handleApiError(error, "fetchMonthlyStatsForMonth");
       
-      // Check if error is due to expired token
-      if (error.response && error.response.status === 401) {
-        handleExpiredToken();
-        return;
-      }
-      
-      // For months with no data, add an empty record
-      const monthNames = [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",
-      ];
+      // For months with no data, add an empty record (only if not a 401 error)
+      if (!error.response || error.response.status !== 401) {
+        const monthNames = [
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
 
-      setMonthlyStats((prevStats) => {
-        const monthName = monthNames[month - 1];
-        // Check if we already have this month
-        if (!prevStats.some((s) => s.month === monthName && s.year === year)) {
-          return [
-            ...prevStats,
-            {
-              month: monthName,
-              year: year,
-              monthYear: `${monthName} ${year}`,
-              attended: 0,
-              total: 0,
-              percentage: 0,
-              noData: true,
-              sortDate: new Date(year, month - 1, 1).getTime(),
-            },
-          ];
-        }
-        return prevStats;
-      });
+        setMonthlyStats((prevStats) => {
+          const monthName = monthNames[month - 1];
+          // Check if we already have this month
+          if (!prevStats.some((s) => s.month === monthName && s.year === year)) {
+            return [
+              ...prevStats,
+              {
+                month: monthName,
+                year: year,
+                monthYear: `${monthName} ${year}`,
+                attended: 0,
+                total: 0,
+                percentage: 0,
+                noData: true,
+                sortDate: new Date(year, month - 1, 1).getTime(),
+              },
+            ];
+          }
+          return prevStats;
+        });
+      }
     }
   };
 
@@ -453,16 +463,13 @@ useEffect(() => {
 
       await Promise.all(fetchPromises);
     } catch (error) {
-      console.error("Error fetching all monthly stats:", error);
-      if (error.response && error.response.status === 401) {
-        handleExpiredToken();
-      }
+      handleApiError(error, "fetchAllMonthlyStats");
     }
   };
 
   // Initialize all data with a single loader
   const initializeData = useCallback(async () => {
-    if (dataInitialized) return;
+    if (dataInitialized || tokenExpiredRef.current) return;
 
     try {
       // Show loader only once at the beginning
@@ -472,7 +479,9 @@ useEffect(() => {
       const authToken = await fetchNameAndToken();
       if (!authToken) {
         console.error("Failed to get authentication token");
-        handleExpiredToken();
+        if (!tokenExpiredRef.current) {
+          handleExpiredToken();
+        }
         return;
       }
 
@@ -498,16 +507,13 @@ useEffect(() => {
       // Mark data as initialized
       setDataInitialized(true);
     } catch (error) {
-      console.error("Error initializing data:", error);
-      if (error.response && error.response.status === 401) {
-        handleExpiredToken();
-      }
+      handleApiError(error, "initializeData");
     } finally {
       // Hide loader when all data is loaded
       setLoading(false);
       Loader.hide();
     }
-  }, [dataInitialized]);
+  }, [dataInitialized, handleExpiredToken]);
 
   // Initialize data on component mount
   useEffect(() => {

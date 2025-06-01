@@ -533,6 +533,7 @@ const authSlice = createSlice({
       AsyncStorage.removeItem("name");
       AsyncStorage.removeItem("checkInData");
       AsyncStorage.removeItem("AsyncStorage.removeItem");
+      AsyncStorage.removeItem("inLocationAndVerified")
     },
     // Reducer to set token from AsyncStorage on app startup
     setToken: (state, action) => {

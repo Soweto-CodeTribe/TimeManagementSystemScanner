@@ -14,6 +14,7 @@ import {
 
 import getstartedattendaceImage from "../assets/getstartedAttendance.png"
 import CodeTribe from "../assets/codetribetext.png";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -45,8 +46,9 @@ const GetStartedAttendance = ({ navigation, onComplete }) => {
     }
   };
 
-  const handleSkip = () => {
+  const handleSkip =  async () => {
     if (navigation) {
+      await AsyncStorage.setItem('onBoarded', 'true');
       navigation.navigate('PermissionsScreen');
     } else if (onComplete) {
       onComplete(true);

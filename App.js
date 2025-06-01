@@ -109,12 +109,19 @@ function BottomTabNavigator() {
 function AppNavigator() {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(null);
+  const [onBoarded, setOnBoarded] = useState(false);
+  const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
 
   useEffect(() => {
     const checkToken = async () => {
       try {
         const storedToken = await AsyncStorage.getItem("token");
+        const onBoarded = await AsyncStorage.getItem("onBoarded");
+        const location = await AsyncStorage.getItem("locationPermissionGranted");
+
         setToken(storedToken);
+        setOnBoarded(onBoarded);
+        setLocationPermissionGranted(location);
       } catch (error) {
         console.error("Error retrieving token:", error);
       } finally {
@@ -128,7 +135,7 @@ function AppNavigator() {
 
   return (
     <Stack.Navigator 
-      initialRouteName={token ? "MainApp" : "GetStartedScreen"}
+      initialRouteName={onBoarded && locationPermissionGranted ? "TraineeLoginScreen" : "GetStartedScreen"}
       screenOptions={{ headerShown: false }}
     >
       {/* <Stack.Screen name="SplashScreen" component={SplashScreen} /> */}

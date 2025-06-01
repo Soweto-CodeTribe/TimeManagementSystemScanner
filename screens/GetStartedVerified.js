@@ -14,6 +14,7 @@ import {
 
 import getstartedattendaceImage from "../assets/getstartedVerified.png"
 import CodeTribe from "../assets/codetribetext.png";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -37,16 +38,19 @@ const GetStartedVerified = ({ navigation, onComplete }) => {
     ]).start();
   }, []);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (navigation) {
+      await AsyncStorage.setItem('onBoarded', 'true');
       navigation.navigate('PermissionsScreen');
     } else if (onComplete) {
       onComplete();
     }
   };
 
-  const handleSkip = () => {
+  const handleSkip = async () => {
     if (navigation) {
+      await AsyncStorage.setItem('onBoarded', 'true');
+
       navigation.navigate('PermissionsScreen');
     } else if (onComplete) {
       onComplete(true);

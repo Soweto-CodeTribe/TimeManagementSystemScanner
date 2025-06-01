@@ -778,7 +778,7 @@ useEffect(() => {
               );
             })}
 
-          {activeStats === "yearly" &&
+          {activeStats === "yearly" && hasYearlyStats ? (
             sortedYearlyStats.map((stat, index) => (
               <View key={index} style={styles.statCard}>
                 <Text style={styles.monthTitle}>Year {stat.year}</Text>
@@ -802,7 +802,14 @@ useEffect(() => {
                   </>
                 )}
               </View>
-            ))}
+            ))
+          ) : (
+            activeStats === "yearly" && !hasYearlyStats && (
+              <View style={styles.noDataCard}>
+                <Text style={styles.noDataText}>No yearly data available yet</Text>
+              </View>
+            )
+          )}
         </View>
 
         {/* Spacer for bottom tabs */}

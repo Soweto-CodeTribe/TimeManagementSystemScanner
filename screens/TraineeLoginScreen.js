@@ -58,7 +58,7 @@ const TraineeLoginScreen = ({ navigation }) => {
             keyboardType="email-address"
             value={email}
             onChangeText={setEmail}
-          />
+            />
         </View>
         <Text style={styles.label}>Password</Text>
         <View style={styles.inputContainer}>
@@ -68,7 +68,7 @@ const TraineeLoginScreen = ({ navigation }) => {
             secureTextEntry={!passwordVisible}
             value={password}
             onChangeText={setPassword}
-          />
+            />
           <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)}>
             <MaterialCommunityIcons name={passwordVisible ? "eye-off-outline" : "eye-outline"} size={20} color="#88879C" />
           </TouchableOpacity>
@@ -79,13 +79,14 @@ const TraineeLoginScreen = ({ navigation }) => {
               name={keepSignedIn ? "checkbox-marked-outline" : "checkbox-blank-outline"}
               size={20}
               color="#8AC052"
-            />
+              />
             <Text style={styles.checkboxLabel}>Keep me signed in</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.replace("ForgetPassword")}>
             <Text style={styles.forgotPassword}>Forgot Password?</Text>
           </TouchableOpacity>
         </View>
+              {error && <Text style={styles.errorText}>{`Oops, Something went wrong, check your credentials and try again!!`}</Text>}
         <TouchableOpacity
           style={[styles.button, { backgroundColor: isLoading ? "#88879C" : "#8CD136" }]}
           onPress={handleLogin}
@@ -93,7 +94,7 @@ const TraineeLoginScreen = ({ navigation }) => {
         >
           <Text style={styles.buttonText}>{isLoading ? "Logging in..." : "Login"}</Text>
         </TouchableOpacity>
-        {error && <Text style={styles.errorText}>{error}</Text>}
+        
       </View>
     </SafeAreaView>
   );
@@ -184,7 +185,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: "red",
     fontSize: 12,
-    alignSelf: "flex-start",
+    textAlign: "center",
   },
 });
 export default TraineeLoginScreen;

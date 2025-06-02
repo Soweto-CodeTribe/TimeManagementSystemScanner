@@ -24,10 +24,6 @@
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
       "package": "com.mlab.Codetribe"
@@ -48,18 +44,17 @@
           "cameraPermission": "Allow $(TimeManagementSystem) to access your camera"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "./plugins/withHuaweiRepo"
     ],
     "extra": {
       "eas": {
-        "projectId": "bfa6c1dc-7cf4-43bb-9d19-659dea50a8a2"
+        "projectId": "5963fc4b-6d96-437d-a0eb-2894959d54ac"
       }
     },
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "updates": {
-      "url": "https://u.expo.dev/bfa6c1dc-7cf4-43bb-9d19-659dea50a8a2"
-    }
+    "owner": "codetribetime"
   }
 }

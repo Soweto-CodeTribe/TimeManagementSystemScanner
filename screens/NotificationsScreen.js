@@ -588,7 +588,7 @@ const formatTimestamp = (timestamp) => {
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back" size={24} color="#aaa" />
-          <Text>Back</Text>
+          <Text style={styles.backtext}>Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Notifications</Text>
         <TouchableOpacity style={styles.refreshButton} onPress={fetchNotifications}>
@@ -655,7 +655,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 10,
     paddingTop: 45,
     paddingBottom: 10,
     borderBottomWidth: 1,
@@ -663,8 +663,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   backButton: {
-    padding: 4,
+    paddingVertical: 4,
     flexDirection: "row"
+  },
+
+   backtext: {
+    padding: 2,
   },
   refreshButton: {
     padding: 4,

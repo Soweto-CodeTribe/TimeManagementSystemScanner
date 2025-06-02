@@ -343,7 +343,7 @@ const TicketScreen = ({ navigation }) => {
           onPress={() => navigation.goBack()}
         >
           <Ionicons name="chevron-back" size={24} color="#999999" />
-          <Text>Back</Text>
+          <Text style={styles.backtext}>Back</Text>
         </TouchableOpacity>
         <Text style={styles.navBarTitle}>Support Tickets</Text>
       </View>
@@ -380,7 +380,7 @@ const TicketScreen = ({ navigation }) => {
           setIsCreateModalVisible(true);
         }}
       >
-        <Ionicons name="add" size={24} color="white" />
+        <Ionicons name="add" size={30} color="white" />
       </TouchableOpacity>
 
       {/* Create Ticket Modal */}
@@ -704,13 +704,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
     marginTop: 40,
   },
   backButton: {
-    padding: 5,
+    paddingVertical: 5,
     zIndex: 10,
     flexDirection: "row"
+  },
+
+   backtext: {
+    padding: 2,
   },
   navBarTitle: {
     fontSize: 18,
@@ -807,8 +811,8 @@ const styles = StyleSheet.create({
     bottom: 20,
     right: 20,
     backgroundColor: '#8BC34A',
-    width: 60,
-    height: 60,
+    width: 50,
+    height: 50,
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',

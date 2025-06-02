@@ -639,7 +639,7 @@ useEffect(() => {
             <View style={styles.notificationIcon}>
               <Ionicons
                 name="notifications-outline"
-                size={26}
+                size={22}
                 color="#000000"
               />
             </View>
@@ -652,7 +652,7 @@ useEffect(() => {
               <Image source={{ uri: image }} style={styles.profileImage} />
             ) : (
               <View style={styles.notificationIcon}>
-                <Ionicons name="person-outline" size={26} color="#000000" />
+                <Ionicons name="person-outline" size={22} color="#000000" />
               </View>
             )}
           </TouchableOpacity>
@@ -848,7 +848,7 @@ const styles = StyleSheet.create({
   },
   avatarContainer: {
     flexDirection: "row",
-    gap: 10,
+    gap: 0,
   },
   iconButton: {
     padding: 5,
@@ -864,7 +864,7 @@ const styles = StyleSheet.create({
     width: 38,
     objectFit: "contain",
     height: 38,
-    borderRadius: 50,
+    borderRadius: 10,
   },
   chartTitle: {
     fontSize: 14,
@@ -929,7 +929,7 @@ const styles = StyleSheet.create({
   notificationIcon: {
     backgroundColor: "#8CC63F",
     opacity: 0.4,
-    padding: 5,
+    padding: 8,
     borderRadius: 50,
   },
   statCard: {

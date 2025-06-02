@@ -155,7 +155,7 @@ const ProfileScreen = ({ navigation }) => {
             onPress={() => navigation.goBack()}
           >
             <Ionicons name="chevron-back" size={24} color="#999999" />
-            <Text>Back</Text>
+            <Text style={styles.backtext}>Back</Text>
           </TouchableOpacity>
           <Text style={styles.navBarTitle}>Profile</Text>
         </View>
@@ -289,12 +289,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
     backgroundColor: "#F5F5F5",
     marginTop: 40,
   },
   backButton: {
-    padding: 5,
+    padding: 0,
+  },
+  backtext: {
+    padding: 2,
   },
   navBarTitle: {
     fontSize: 18,

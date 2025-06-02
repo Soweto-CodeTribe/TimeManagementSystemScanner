@@ -5,6 +5,7 @@ import { loginUser } from "../Components/Redux/Slices/AuthenticationSlice";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
 const TraineeLoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -12,6 +13,7 @@ const TraineeLoginScreen = ({ navigation }) => {
   const [keepSignedIn, setKeepSignedIn] = useState(false);
   const dispatch = useDispatch();
   const { isLoading, error } = useSelector((state) => state.auth);
+
   useEffect(() => {
     const loadCredentials = async () => {
       try {
@@ -29,6 +31,7 @@ const TraineeLoginScreen = ({ navigation }) => {
     };
     loadCredentials();
   }, []);
+
   const handleLogin = () => {
     if (!email || !password) {
       Alert.alert("Error", "Please enter valid credentials");
@@ -41,133 +44,211 @@ const TraineeLoginScreen = ({ navigation }) => {
       })
       .catch((err) => Alert.alert("Login Failed", err));
   };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={24} color="#333" />
-          <Text style={styles.backText}>Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.heading}>Login As Trainee</Text>
-        <Text style={styles.label}>Email</Text>
-        <View style={styles.inputContainer}>
-          <MaterialCommunityIcons name="email-outline" size={20} color="#88879C" />
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your email"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-          />
-        </View>
-        <Text style={styles.label}>Password</Text>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your password"
-            secureTextEntry={!passwordVisible}
-            value={password}
-            onChangeText={setPassword}
-          />
-          <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)}>
-            <MaterialCommunityIcons name={passwordVisible ? "eye-off-outline" : "eye-outline"} size={20} color="#88879C" />
+        {/* Header Section */}
+        <View style={styles.headerSection}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="chevron-back" size={24} color="#333" />
+            <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>
+          <Text style={styles.heading}>Login As Trainee</Text>
         </View>
-        <View style={styles.optionsContainer}>
-          <TouchableOpacity style={styles.checkboxContainer} onPress={() => setKeepSignedIn(!keepSignedIn)}>
-            <MaterialCommunityIcons
-              name={keepSignedIn ? "checkbox-marked-outline" : "checkbox-blank-outline"}
-              size={20}
-              color="#8AC052"
-            />
-            <Text style={styles.checkboxLabel}>Keep me signed in</Text>
+
+        {/* Form Section */}
+        <View style={styles.formSection}>
+          {/* Email Input */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Email</Text>
+            <View style={styles.inputContainer}>
+              <MaterialCommunityIcons name="email-outline" size={20} color="#88879C" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your email"
+                placeholderTextColor="#88879C"
+                keyboardType="email-address"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+          </View>
+
+          {/* Password Input */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Password</Text>
+            <View style={styles.inputContainer}>
+              <MaterialCommunityIcons name="lock-outline" size={20} color="#88879C" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your password"
+                placeholderTextColor="#88879C"
+                secureTextEntry={!passwordVisible}
+                value={password}
+                onChangeText={setPassword}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <TouchableOpacity 
+                style={styles.eyeIcon} 
+                onPress={() => setPasswordVisible(!passwordVisible)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <MaterialCommunityIcons 
+                  name={passwordVisible ? "eye-off-outline" : "eye-outline"} 
+                  size={20} 
+                  color="#88879C" 
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Options Section */}
+          <View style={styles.optionsContainer}>
+            <TouchableOpacity 
+              style={styles.checkboxContainer} 
+              onPress={() => setKeepSignedIn(!keepSignedIn)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <MaterialCommunityIcons
+                name={keepSignedIn ? "checkbox-marked-outline" : "checkbox-blank-outline"}
+                size={20}
+                color="#8AC052"
+                style={styles.checkboxIcon}
+              />
+              <Text style={styles.checkboxLabel}>Keep me signed in</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => navigation.replace("ForgetPassword")}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Text style={styles.forgotPassword}>Forgot Password?</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Login Button */}
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: isLoading ? "#88879C" : "#8CD136" }]}
+            onPress={handleLogin}
+            disabled={isLoading}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.buttonText}>{isLoading ? "Logging in..." : "Login"}</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.replace("ForgetPassword")}>
-            <Text style={styles.forgotPassword}>Forgot Password?</Text>
-          </TouchableOpacity>
+
+          {/* Error Message */}
+          {error && (
+            <View style={styles.errorContainer}>
+              <MaterialCommunityIcons name="alert-circle-outline" size={16} color="#FF4444" />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
         </View>
-        <TouchableOpacity
-          style={[styles.button, { backgroundColor: isLoading ? "#88879C" : "#8CD136" }]}
-          onPress={handleLogin}
-          disabled={isLoading}
-        >
-          <Text style={styles.buttonText}>{isLoading ? "Logging in..." : "Login"}</Text>
-        </TouchableOpacity>
-        {error && <Text style={styles.errorText}>{error}</Text>}
       </View>
     </SafeAreaView>
   );
 };
+
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#fff",
   },
   container: {
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    gap: 20,
-    marginTop:30
+    flex: 1,
+    paddingHorizontal: 10,
+    paddingTop: 30
+  },
+  headerSection: {
+    paddingTop: 20,
+    marginBottom: 40,
   },
   backButton: {
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-start",
-    marginBottom: 10,
-    paddingTop: 20,
+    marginBottom: 30,
+    paddingVertical: 5,
   },
   backText: {
     fontSize: 16,
     color: "#333",
-    marginLeft: 5,
+    marginLeft: 8,
+    fontWeight: "400",
   },
   heading: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
     color: "#333",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  formSection: {
+    flex: 1,
+    justifyContent: "flex-start",
+    paddingHorizontal: 10,
+  },
+  inputGroup: {
+    marginBottom: 20,
   },
   label: {
-    alignSelf: "flex-start",
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: "600",
-    color: "#88879C",
+    color: "#333",
+    marginBottom: 8,
+    marginLeft: 2,
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
     width: "100%",
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#E5E5E5",
     borderRadius: 12,
     paddingHorizontal: 10,
-    height: 50,
+    height: 52,
     backgroundColor: "#F7FBFD",
+  },
+  inputIcon: {
+    marginRight: 12,
   },
   input: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 16,
     color: "#053742",
+    paddingVertical: 0,
+  },
+  eyeIcon: {
+    padding: 4,
+    marginLeft: 8,
   },
   optionsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: "100%",
     alignItems: "center",
+    marginBottom: 32,
+    marginTop: 8,
   },
   checkboxContainer: {
     flexDirection: "row",
     alignItems: "center",
+    flex: 1,
+  },
+  checkboxIcon: {
+    marginRight: 8,
   },
   checkboxLabel: {
     fontSize: 14,
     color: "#333",
-    marginLeft: 5,
+    fontWeight: "400",
   },
   forgotPassword: {
     fontSize: 14,
     color: "#8AC052",
-    fontWeight: "400",
+    fontWeight: "500",
   },
   button: {
     width: "100%",
@@ -175,16 +256,38 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 10,
+    marginBottom: 20,
+    shadowColor: "#8CD136",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: "400",
+    fontWeight: "600",
     color: "#fff",
   },
+  errorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF5F5",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: "#FF4444",
+  },
   errorText: {
-    color: "red",
-    fontSize: 12,
-    alignSelf: "flex-start",
+    color: "#FF4444",
+    fontSize: 14,
+    marginLeft: 8,
+    flex: 1,
+    fontWeight: "400",
   },
 });
+
 export default TraineeLoginScreen;

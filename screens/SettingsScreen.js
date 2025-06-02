@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
+    paddingHorizontal: 10,
     paddingVertical: 12,
     borderBottomWidth: 1,
     marginTop: 40,
@@ -153,7 +153,6 @@ const styles = StyleSheet.create({
     marginRight: 2,
   },
   backText: {
-    fontSize: 16,
     color: "#000000",
     fontWeight: "400",
   },

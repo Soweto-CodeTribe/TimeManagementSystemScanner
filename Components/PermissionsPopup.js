@@ -18,6 +18,14 @@ import { ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as IntentLauncher from 'expo-intent-launcher';
 
+// HMS Location import for Huawei devices
+let HMSLocation = null;
+try {
+  HMSLocation = require('@hmscore/react-native-hms-location');
+} catch (error) {
+  console.log('HMS Location not available:', error);
+}
+
 const { height, width } = Dimensions.get('window');
 const SHEET_HEIGHT = height * 0.5;
 const SHEET_OVERFLOW = 20;
@@ -33,15 +41,44 @@ const PermissionsPopup = ({ isVisible }) => {
   const [isHuawei, setIsHuawei] = useState(false);
   const [showManualLocationSetup, setShowManualLocationSetup] = useState(false);
   const [showManualCameraSetup, setShowManualCameraSetup] = useState(false);
+  const [hmsAvailable, setHmsAvailable] = useState(false);
 
-  // Utility function to detect Huawei devices
+  // Enhanced Huawei device detection
   const detectHuaweiDevice = () => {
     const brand = Platform.constants?.Brand?.toLowerCase() || '';
     const manufacturer = Platform.constants?.Manufacturer?.toLowerCase() || '';
+    const model = Platform.constants?.Model?.toLowerCase() || '';
+    
     return brand.includes('huawei') || 
-           brand.includes('honor') || 
-           manufacturer.includes('huawei') || 
-           manufacturer.includes('honor');
+           brand.includes('honor') ||
+           manufacturer.includes('huawei') ||
+           manufacturer.includes('honor') ||
+           model.includes('huawei') ||
+           model.includes('honor');
+  };
+
+  // Initialize HMS Location for Huawei devices
+  const initializeHMSLocation = async () => {
+    if (!isHuawei || !HMSLocation) {
+      return false;
+    }
+
+    try {
+      // Check if HMS Location is available
+      const isAvailable = await HMSLocation.HMSLocationKit.LocationKit.isLocationAvailable();
+      console.log('HMS Location available:', isAvailable);
+      
+      if (isAvailable) {
+        // Initialize HMS Location Kit
+        await HMSLocation.HMSLocationKit.LocationKit.init();
+        setHmsAvailable(true);
+        return true;
+      }
+    } catch (error) {
+      console.error('HMS Location initialization error:', error);
+    }
+    
+    return false;
   };
 
   // Function to open app settings
@@ -70,6 +107,114 @@ const PermissionsPopup = ({ isVisible }) => {
     }
   };
 
+  // HMS Location permission request for Huawei devices
+  const requestHMSLocationPermission = async () => {
+    if (!HMSLocation || !hmsAvailable) {
+      console.log('HMS Location not available, falling back to standard method');
+      return false;
+    }
+
+    try {
+      // Check current permission status
+      const hasPermission = await HMSLocation.HMSLocationKit.FusedLocation.hasPermission();
+      console.log('HMS Location permission status:', hasPermission);
+
+      if (hasPermission) {
+        return true;
+      }
+
+      // Request location permission
+      const permissionResult = await HMSLocation.HMSLocationKit.FusedLocation.requestPermission();
+      console.log('HMS Location permission result:', permissionResult);
+
+      return permissionResult === 0; // 0 means permission granted
+    } catch (error) {
+      console.error('HMS Location permission request error:', error);
+      return false;
+    }
+  };
+
+  // Get location using HMS Location for Huawei devices
+  const getHMSLocation = async () => {
+    if (!HMSLocation || !hmsAvailable) {
+      throw new Error('HMS Location not available');
+    }
+
+    try {
+      // Create location request
+      const locationRequest = {
+        priority: HMSLocation.HMSLocationKit.LocationRequest.PRIORITY_HIGH_ACCURACY,
+        interval: 10000,
+        numUpdates: 1,
+        fastestInterval: 5000,
+        expirationTime: 30000,
+      };
+
+      // Get last known location first (faster)
+      try {
+        const lastLocation = await HMSLocation.HMSLocationKit.FusedLocation.getLastLocation();
+        if (lastLocation && lastLocation.latitude && lastLocation.longitude) {
+          console.log('HMS Last known location:', lastLocation);
+          return {
+            coords: {
+              latitude: lastLocation.latitude,
+              longitude: lastLocation.longitude,
+              accuracy: lastLocation.accuracy || 0,
+            }
+          };
+        }
+      } catch (lastLocationError) {
+        console.log('HMS Last location not available:', lastLocationError);
+      }
+
+      // If no last location, request current location
+      return new Promise((resolve, reject) => {
+        const locationCallback = {
+          onLocationResult: (locationResult) => {
+            console.log('HMS Location result:', locationResult);
+            if (locationResult && locationResult.locations && locationResult.locations.length > 0) {
+              const location = locationResult.locations[0];
+              resolve({
+                coords: {
+                  latitude: location.latitude,
+                  longitude: location.longitude,
+                  accuracy: location.accuracy || 0,
+                }
+              });
+            } else {
+              reject(new Error('No location data received'));
+            }
+          },
+          onLocationAvailability: (locationAvailability) => {
+            console.log('HMS Location availability:', locationAvailability);
+            if (!locationAvailability.isLocationAvailable) {
+              reject(new Error('Location services not available'));
+            }
+          }
+        };
+
+        // Request location updates
+        HMSLocation.HMSLocationKit.FusedLocation.requestLocationUpdates(locationRequest, locationCallback)
+          .then(() => {
+            console.log('HMS Location request started');
+            // Set timeout to stop location updates after getting result
+            setTimeout(() => {
+              HMSLocation.HMSLocationKit.FusedLocation.removeLocationUpdates(locationCallback)
+                .catch(error => console.log('Error removing HMS location updates:', error));
+            }, 30000);
+          })
+          .catch(error => {
+            console.error('HMS Location request error:', error);
+            reject(error);
+          });
+      });
+
+    } catch (error) {
+      console.error('HMS Location error:', error);
+      throw error;
+    }
+  };
+
   // Check permissions on mount
   useEffect(() => {
     const checkPermissions = async () => {
@@ -78,7 +223,14 @@ const PermissionsPopup = ({ isVisible }) => {
         const camPerm = await AsyncStorage.getItem('cameraPermissionGranted');
         setLocationPermissions(locPerm === 'true');
         setCameraPermissions(camPerm === 'true');
-        setIsHuawei(detectHuaweiDevice());
+        
+        const huaweiDevice = detectHuaweiDevice();
+        setIsHuawei(huaweiDevice);
+        
+        // Initialize HMS Location for Huawei devices
+        if (huaweiDevice) {
+          await initializeHMSLocation();
+        }
       } catch (e) {
         setLocationPermissions(false);
         setCameraPermissions(false);
@@ -120,26 +272,66 @@ const PermissionsPopup = ({ isVisible }) => {
     opacity: overlayOpacity.value,
   }));
 
-  // Enhanced location permission request with Huawei handling
+  // Enhanced location permission request with separate Huawei and standard Android handling
   const requestLocationPermissionWithFallback = async () => {
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      
-      if (status === 'granted') {
-        return { granted: true };
-      }
-      
-      if (status === 'denied' && isHuawei) {
-        // For Huawei devices, show manual setup instructions
+      if (isHuawei && hmsAvailable) {
+        // Use HMS Location for Huawei devices
+        console.log('Using HMS Location for Huawei device');
+        const hmsPermissionGranted = await requestHMSLocationPermission();
+        
+        if (hmsPermissionGranted) {
+          return { granted: true, method: 'hms' };
+        } else {
+          // HMS permission denied, show manual setup
+          return new Promise((resolve) => {
+            Alert.alert(
+              "Location Permission Required",
+              "Huawei/Honor devices require location permission. Please enable location access in Settings.",
+              [
+                {
+                  text: "Cancel",
+                  onPress: () => resolve({ granted: false, userCancelled: true }),
+                  style: "cancel"
+                },
+                {
+                  text: "Open Settings",
+                  onPress: async () => {
+                    await openAppSettings();
+                    setShowManualLocationSetup(true);
+                    resolve({ granted: false, openedSettings: true });
+                  }
+                }
+              ]
+            );
+          });
+        }
+      } else {
+        // Use standard Expo Location for non-Huawei devices
+        console.log('Using Expo Location for standard Android device');
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        
+        if (status === 'granted') {
+          return { granted: true, method: 'expo' };
+        }
+        
+        // Standard permission denied
         return new Promise((resolve) => {
           Alert.alert(
             "Location Permission Required",
-            "Huawei/Honor devices require manual permission setup. Please enable location access in Settings.",
+            "Location access is required to use the scanner. Please grant permission.",
             [
               {
                 text: "Cancel",
                 onPress: () => resolve({ granted: false, userCancelled: true }),
                 style: "cancel"
+              },
+              {
+                text: "Try Again",
+                onPress: async () => {
+                  const retryResult = await Location.requestForegroundPermissionsAsync();
+                  resolve({ granted: retryResult.status === 'granted', method: 'expo' });
+                }
               },
               {
                 text: "Open Settings",
@@ -153,36 +345,6 @@ const PermissionsPopup = ({ isVisible }) => {
           );
         });
       }
-      
-      // For other devices with denied permission
-      return new Promise((resolve) => {
-        Alert.alert(
-          "Location Permission Required",
-          "Location access is required to use the scanner. Please grant permission.",
-          [
-            {
-              text: "Cancel",
-              onPress: () => resolve({ granted: false, userCancelled: true }),
-              style: "cancel"
-            },
-            {
-              text: "Try Again",
-              onPress: async () => {
-                const retryResult = await Location.requestForegroundPermissionsAsync();
-                resolve({ granted: retryResult.status === 'granted' });
-              }
-            },
-            {
-              text: "Open Settings",
-              onPress: async () => {
-                await openAppSettings();
-                setShowManualLocationSetup(true);
-                resolve({ granted: false, openedSettings: true });
-              }
-            }
-          ]
-        );
-      });
       
     } catch (error) {
       console.error('Permission request error:', error);
@@ -260,6 +422,32 @@ const PermissionsPopup = ({ isVisible }) => {
     }
   };
 
+  // Get current location with Huawei and standard Android support
+  const getCurrentLocation = async (method) => {
+    if (method === 'hms' && isHuawei && hmsAvailable) {
+      // Use HMS Location for Huawei devices
+      console.log('Getting location using HMS Location');
+      return await getHMSLocation();
+    } else {
+      // Use Expo Location for standard devices
+      console.log('Getting location using Expo Location');
+      
+      // First check if location services are enabled
+      const providerStatus = await Location.getProviderStatusAsync();
+      console.log("Provider status:", providerStatus);
+      
+      if (!providerStatus.locationServicesEnabled) {
+        throw new Error('Location services are disabled');
+      }
+      
+      // Get current position with simpler options
+      return await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Low,
+        mayShowUserSettingsDialog: true
+      });
+    }
+  };
+
   // Enhanced location permission function
   const requestLocationPermission = async () => {
     try {
@@ -291,7 +479,7 @@ const PermissionsPopup = ({ isVisible }) => {
         }
       }
 
-      // Permission granted, continue with original logic
+      // Permission granted, continue with location retrieval
       await AsyncStorage.setItem('locationPermissionGranted', 'true');
       setLocationPermissions(true);
       setShowManualLocationSetup(false);
@@ -299,7 +487,7 @@ const PermissionsPopup = ({ isVisible }) => {
       Toast.show({
         type: "success",
         text1: "Location Permission Granted",
-        text2: "Location Granted Successfully",
+        text2: `Location Granted Successfully ${isHuawei ? '(HMS)' : '(Standard)'}`,
         position: "top",
       });
       
@@ -307,25 +495,8 @@ const PermissionsPopup = ({ isVisible }) => {
       setLoading(true);
       
       try {
-        // First check if location services are enabled
-        const providerStatus = await Location.getProviderStatusAsync();
-        console.log("Provider status:", providerStatus);
-        
-        if (!providerStatus.locationServicesEnabled) {
-          setLoading(false);
-          Alert.alert(
-            "Location Services Disabled",
-            "Please enable location services in your device settings to use this feature.",
-            [{ text: "OK" }]
-          );
-          return;
-        }
-        
-        // Try with simpler options first
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Low,
-          mayShowUserSettingsDialog: true
-        });
+        // Get current location using appropriate method
+        const location = await getCurrentLocation(permissionResult.method);
         console.log("Current location:", location);
         
         // Extract longitude and latitude
@@ -340,7 +511,9 @@ const PermissionsPopup = ({ isVisible }) => {
             },
             body: JSON.stringify({
               longitude,
-              latitude
+              latitude,
+              method: permissionResult.method || 'unknown',
+              isHuawei: isHuawei
             }),
           });
           
@@ -415,10 +588,10 @@ const PermissionsPopup = ({ isVisible }) => {
         setLoading(false);
         console.error("Error getting current position:", locationError);
         
-        if (locationError.message.includes("rejected")) {
+        if (locationError.message.includes("rejected") || locationError.message.includes("denied")) {
           Alert.alert(
             "Location Request Rejected",
-            "Your device rejected the location request. This might happen if you're in battery saving mode or have restricted background location access.",
+            `Your device rejected the location request. ${isHuawei ? 'This might happen on Huawei devices due to power management settings.' : 'This might happen if you\'re in battery saving mode.'}`,
             [
               { 
                 text: "Try Again", 
@@ -430,10 +603,16 @@ const PermissionsPopup = ({ isVisible }) => {
               }
             ]
           );
+        } else if (locationError.message.includes("Location services are disabled")) {
+          Alert.alert(
+            "Location Services Disabled",
+            "Please enable location services in your device settings to use this feature.",
+            [{ text: "OK" }]
+          );
         } else {
           Alert.alert(
             "Location Error",
-            "Unable to get your current location. Please try again later.",
+            `Unable to get your current location. ${isHuawei ? 'Huawei devices may require additional setup.' : ''} Please try again later.`,
             [{ text: "OK" }]
           );
         }
@@ -497,24 +676,73 @@ const PermissionsPopup = ({ isVisible }) => {
   // Function to retry permission after manual setup
   const retryLocationPermission = async () => {
     setShowManualLocationSetup(false);
-    const { status } = await Location.getForegroundPermissionsAsync();
-    if (status === 'granted') {
-      await requestLocationPermission();
+    
+    if (isHuawei && hmsAvailable) {
+      // Check HMS Location permission
+      try {
+        const hasPermission = await HMSLocation.HMSLocationKit.FusedLocation.hasPermission();
+        if (hasPermission) {
+          await requestLocationPermission();
+        } else {
+          Alert.alert(
+            "Permission Still Required",
+            "Location permission is still not granted. Please enable it in Settings > Apps > [App Name] > Permissions.",
+            [
+              {
+                text: "Open Settings Again",
+                onPress: openAppSettings
+              },
+              {
+                text: "Cancel",
+                onPress: () => navigation.navigate("GetStartedScreen")
+              }
+            ]
+          );
+        }
+      } catch (error) {
+        console.error('Error checking HMS permission:', error);
+        // Fallback to standard permission check
+        const { status } = await Location.getForegroundPermissionsAsync();
+        if (status === 'granted') {
+          await requestLocationPermission();
+        } else {
+          Alert.alert(
+            "Permission Still Required",
+            "Location permission is still not granted. Please enable it in Settings.",
+            [
+              {
+                text: "Open Settings Again",
+                onPress: openAppSettings
+              },
+              {
+                text: "Cancel",
+                onPress: () => navigation.navigate("GetStartedScreen")
+              }
+            ]
+          );
+        }
+      }
     } else {
-      Alert.alert(
-        "Permission Still Required",
-        "Location permission is still not granted. Please enable it in Settings > Apps > [App Name] > Permissions.",
-        [
-          {
-            text: "Open Settings Again",
-            onPress: openAppSettings
-          },
-          {
-            text: "Cancel",
-            onPress: () => navigation.navigate("GetStartedScreen")
-          }
-        ]
-      );
+      // Check standard location permission
+      const { status } = await Location.getForegroundPermissionsAsync();
+      if (status === 'granted') {
+        await requestLocationPermission();
+      } else {
+        Alert.alert(
+          "Permission Still Required",
+          "Location permission is still not granted. Please enable it in Settings > Apps > [App Name] > Permissions.",
+          [
+            {
+              text: "Open Settings Again",
+              onPress: openAppSettings
+            },
+            {
+              text: "Cancel",
+              onPress: () => navigation.navigate("GetStartedScreen")
+            }
+          ]
+        );
+      }
     }
   };
 
@@ -545,6 +773,9 @@ const PermissionsPopup = ({ isVisible }) => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#8BC34A" />
+        <Text style={styles.loadingText}>
+          {isHuawei ? 'Processing with HMS Location...' : 'Processing location...'}
+        </Text>
       </View>
     );
   }
@@ -582,9 +813,14 @@ const PermissionsPopup = ({ isVisible }) => {
                 </Text>
                 
                 {isHuawei && (
-                  <Text style={styles.huaweiWarning}>
-                    ⚠️ Huawei device detected - manual setup may be required
-                  </Text>
+                  <View style={styles.huaweiInfoContainer}>
+                    <Text style={styles.huaweiWarning}>
+                      🔧 Huawei/Honor device detected
+                    </Text>
+                    <Text style={styles.huaweiInfo}>
+                      {hmsAvailable ? 'Using HMS Location Services' : 'HMS Location not available - using standard method'}
+                    </Text>
+                  </View>
                 )}
                 
                 <View style={styles.buttonsContainer}>
@@ -641,7 +877,7 @@ const PermissionsPopup = ({ isVisible }) => {
 
                 {isHuawei && (
                   <Text style={styles.huaweiWarning}>
-                    ⚠️ Huawei device detected - manual setup may be required
+                    🔧 Huawei/Honor device detected - manual setup may be required
                   </Text>
                 )}
 
@@ -760,12 +996,22 @@ const styles = StyleSheet.create({
     width: width - 40,
     alignItems: 'center',
   },
+  huaweiInfoContainer: {
+    marginTop: 10,
+    marginBottom: 10,
+    alignItems: 'center',
+  },
   huaweiWarning: {
     fontSize: 12,
     textAlign: 'center',
-    marginTop: 10,
-    marginBottom: 10,
     color: '#FF8C00',
+    fontWeight: 'bold',
+  },
+  huaweiInfo: {
+    fontSize: 10,
+    textAlign: 'center',
+    marginTop: 5,
+    color: '#666',
     fontStyle: 'italic',
   },
   acceptButton: {
@@ -793,7 +1039,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 6,
-    // shadowColor: '#8CE01C',
     shadowOffset: {
       width: 0,
       height: 4,
@@ -817,47 +1062,53 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     marginTop: 40,
   },
-toastContainer: {
-  position: 'absolute',
-  top: 50, 
-  left: 0,
-  right: 0,
-  alignItems: 'center',
-  zIndex: 1003, 
-},
-loadingContainer: {
-  flex: 1,
-  justifyContent: "center",
-  alignItems: "center",
-  backgroundColor: "#FFFFFF",
-  zIndex:99999
-},
-manualSetupContainer: {
-  marginTop: 20,
-  padding: 15,
-  backgroundColor: '#F0F9FF',
-  borderRadius: 10,
-  borderWidth: 1,
-  borderColor: '#0EA5E9',
-  width: '100%',
-},
-manualSetupText: {
-  fontSize: 14,
-  textAlign: 'center',
-  color: '#0369A1',
-  marginBottom: 10,
-},
-retryButton: {
-  backgroundColor: '#0EA5E9',
-  paddingVertical: 10,
-  borderRadius: 8,
-  alignItems: 'center',
-},
-retryButtonText: {
-  color: 'white',
-  fontSize: 14,
-  fontWeight: 'bold',
-},
+  toastContainer: {
+    position: 'absolute',
+    top: 50, 
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 1003, 
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    zIndex: 99999
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+  manualSetupContainer: {
+    marginTop: 20,
+    padding: 15,
+    backgroundColor: '#F0F9FF',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#0EA5E9',
+    width: '100%',
+  },
+  manualSetupText: {
+    fontSize: 14,
+    textAlign: 'center',
+    color: '#0369A1',
+    marginBottom: 10,
+  },
+  retryButton: {
+    backgroundColor: '#0EA5E9',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  retryButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
 });
 
 export default PermissionsPopup;

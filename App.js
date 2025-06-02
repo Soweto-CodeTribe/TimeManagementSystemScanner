@@ -82,14 +82,9 @@ function BottomTabNavigator() {
                     backgroundColor: '#8CD136',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.3,
-                    shadowRadius: 3,
-                    elevation: 5,
                   }}
                 >
-                  <Ionicons name="qr-code-outline" size={35} color="#fff" />
+                  <Ionicons name="qr-code-outline" size={32} color="#fff" />
                 </View>
               </TouchableOpacity>
             );
@@ -105,40 +100,69 @@ function BottomTabNavigator() {
   );
 }
 
-// Main App Navigator with token retrieval
+// Main App Navigator with splash screen and token retrieval
 function AppNavigator() {
+  const [showSplash, setShowSplash] = useState(true);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(null);
   const [onBoarded, setOnBoarded] = useState(false);
   const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
 
   useEffect(() => {
-    const checkToken = async () => {
+    const initializeApp = async () => {
       try {
-        const storedToken = await AsyncStorage.getItem("token");
-        const onBoarded = await AsyncStorage.getItem("onBoarded");
-        const location = await AsyncStorage.getItem("locationPermissionGranted");
+        // Show splash screen for minimum 2 seconds
+        const splashTimer = new Promise(resolve => setTimeout(resolve, 6000));
+        
+        // Check stored data
+        const checkStoredData = async () => {
+          const storedToken = await AsyncStorage.getItem("token");
+          const onBoarded = await AsyncStorage.getItem("onBoarded");
+          const location = await AsyncStorage.getItem("locationPermissionGranted");
 
-        setToken(storedToken);
-        setOnBoarded(onBoarded);
-        setLocationPermissionGranted(location);
+          setToken(storedToken);
+          setOnBoarded(onBoarded);
+          setLocationPermissionGranted(location);
+        };
+
+        // Wait for both splash timer and data checking
+        await Promise.all([splashTimer, checkStoredData()]);
+        
       } catch (error) {
-        console.error("Error retrieving token:", error);
+        console.error("Error during app initialization:", error);
       } finally {
+        setShowSplash(false);
         setLoading(false);
       }
     };
-    checkToken();
+
+    initializeApp();
   }, []);
 
+  // Show splash screen
+  if (showSplash) {
+    return <SplashScreen />;
+  }
+
+  // Show loading state (optional, since splash handles initial loading)
   if (loading) return null;
+
+  // Determine initial route based on stored data
+  const getInitialRoute = () => {
+    if (token) {
+      return "MainApp"; // User is logged in
+    } else if (onBoarded && locationPermissionGranted) {
+      return "TraineeLoginScreen"; // User has completed onboarding
+    } else {
+      return "GetStartedScreen"; // New user
+    }
+  };
 
   return (
     <Stack.Navigator 
-      initialRouteName={onBoarded && locationPermissionGranted ? "TraineeLoginScreen" : "GetStartedScreen"}
+      initialRouteName={getInitialRoute()}
       screenOptions={{ headerShown: false }}
     >
-      {/* <Stack.Screen name="SplashScreen" component={SplashScreen} /> */}
       <Stack.Screen name="GetStartedScreen" component={GetStartedScreen} />
       <Stack.Screen name="GetStartedSeamlessly" component={GetStartedSeamlessly} />
       <Stack.Screen name="PermissionsScreen" component={PermissionsScreen} />

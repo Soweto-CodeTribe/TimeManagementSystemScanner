@@ -160,7 +160,7 @@ const HomeScreen = ({ navigation }) => {
 
       return storedToken;
     } catch (error) {
-      console.log("Error fetching data from storage:", error);
+      console.error("Error fetching data from storage:", error);
       return null;
     }
   };

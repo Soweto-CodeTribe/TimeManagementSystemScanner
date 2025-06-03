@@ -342,7 +342,9 @@ const TimelineScreen = () => {
 
   const renderTimelineItem = (icon, title, time, dayData) => (
     <View style={styles.timelineItem}>
-      <View style={styles.timelineDot} />
+      <View style={styles.timelineDot} >
+        <View style={styles.timelineDotItem}/>
+      </View>
       <View style={styles.timelineIconContainer}>
         <Ionicons name={icon} size={20} color="#4CAF50" />
       </View>
@@ -419,6 +421,7 @@ const TimelineScreen = () => {
       ) : (
         <ScrollView 
           style={styles.scrollView}
+          contentContainerStyle={styles.scrollViewContent}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -620,6 +623,9 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollViewContent: {
+    paddingBottom: 100,
+  },
   dayCard: {
     flexDirection: "row",
     marginHorizontal: 16,
@@ -699,13 +705,13 @@ const styles = StyleSheet.create({
     marginRight: 16,
     paddingLeft: 40,
     position: "relative",
-    marginBottom: 105,
+    marginVertical: 10,
   },
   timelineLine: {
     position: "absolute",
     left: 10,
-    top: 10,
-    bottom: 10,
+    top: 0,
+    bottom: 20,
     width: 2,
     backgroundColor: "#4CAF50",
   },
@@ -717,11 +723,20 @@ const styles = StyleSheet.create({
   },
   timelineDot: {
     position: "absolute",
-    left: -8,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    left: -39,
+    width: 20,
+    height: 20,
+    borderRadius: 50,
+    backgroundColor: "#fff",
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  timelineDotItem: {
+    width: 15,
+    height: 15,
+    borderRadius: 50,
     backgroundColor: "#4CAF50",
+
   },
   timelineIconContainer: {
     width: 36,
@@ -766,8 +781,7 @@ const styles = StyleSheet.create({
   statusAndUploadContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    gap: 150,
+    justifyContent: 'space-between',
   },
 });
 

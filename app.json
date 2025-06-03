@@ -52,9 +52,7 @@
         "projectId": "5963fc4b-6d96-437d-a0eb-2894959d54ac"
       }
     },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "owner": "codetribetime"
   }
 }

@@ -147,8 +147,8 @@ const styles = StyleSheet.create({
     height: 40,
   },
   qrFrameContainer: {
-    width: width * 0.7,
-    height: width * 0.7,
+    width: width * 0.6,
+    height: width * 0.6,
     justifyContent: 'center',
     alignItems: 'center',
     marginVertical: height * 0.03,
@@ -161,18 +161,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 8,
   },
   qrCodeImage: {
-    width: '90%',
-    height: '90%',
+    width: '100%',
+    height: '100%',
   },
   scanningLine: {
     position: 'absolute',

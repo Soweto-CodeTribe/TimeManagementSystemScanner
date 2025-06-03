@@ -15,6 +15,7 @@ import {
 import QRCode from "../assets/qrcode.png";
 import CodeTribe from "../assets/codetribetext.png";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
 
@@ -73,7 +74,8 @@ const GetStartedSeamlessly = ({ navigation, onComplete }) => {
             onPress={handleBack}
             activeOpacity={0.7}
           >
-            <Text style={styles.backText}>← Back</Text>
+            <Ionicons name="chevron-back" size={24} color="#999999" />
+            <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
@@ -169,19 +171,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
     paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#F5F5F5',
     backgroundColor: '#FFFFFF',
   },
   backButton: {
-    padding: 8,
+    paddingVertical: 5,
+    zIndex: 10,
+    flexDirection: "row"
   },
   backText: {
-    fontSize: 16,
     color: '#555555',
     fontWeight: '500',
+    padding: 2,
   },
   skipButton: {
     padding: 8,
@@ -222,14 +226,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 8,
   },
   qrCodeImage: {
     width: '90%',
@@ -266,12 +262,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: height * 0.05,
+    
   },
   paginationDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
     marginHorizontal: 6,
+
   },
   paginationActive: {
     backgroundColor: '#8CE01C',
@@ -285,7 +283,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     marginHorizontal: 24,
-    marginBottom: 24,
+    marginBottom: 16,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#8CE01C',

@@ -113,7 +113,7 @@
 //       try {
 //         // Show splash screen for minimum 2 seconds
 //         const splashTimer = new Promise(resolve => setTimeout(resolve, 6000));
-        
+
 //         // Check stored data
 //         const checkStoredData = async () => {
 //           const storedToken = await AsyncStorage.getItem("token");
@@ -127,7 +127,7 @@
 
 //         // Wait for both splash timer and data checking
 //         await Promise.all([splashTimer, checkStoredData()]);
-        
+
 //       } catch (error) {
 //         console.error("Error during app initialization:", error);
 //       } finally {
@@ -204,7 +204,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity, View } from 'react-native';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import store from "./Components/Redux/Store.js";
-import NotificationService from "./Components/NotificationService.js";  
+import NotificationService from "./Components/NotificationService.js";
+import Toast from "react-native-toast-message";
 
 // Import all screens
 import SplashScreen from "./screens/SplashScreen";
@@ -230,7 +231,7 @@ import TicketScreen from "./screens/TicketsScreen.js";
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-// Bottom Tab Navigator for authenticated users
+// Fixed Bottom Tab Navigator with white border around scanner button
 function BottomTabNavigator() {
   return (
     <Tab.Navigator
@@ -240,21 +241,18 @@ function BottomTabNavigator() {
           bottom: 0,
           left: 20,
           right: 20,
-          elevation: 4,
           height: 60,
-          backgroundColor: '#fff',
+          backgroundColor: '#F8F8FF',
           paddingBottom: 5,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
+          borderTopWidth: 0,
+          borderTopColor: 'transparent',
         },
         headerShown: false,
         tabBarIcon: ({ color, size }) => {
           let iconName;
           if (route.name === "HomeScreen") iconName = "home-outline";
           else if (route.name === "ScannerAuth") iconName = "qr-code-outline";
-          else if (route.name === "Timeline") iconName = "time-outline";
+          else if (route.name === "Timeline") iconName = "calendar-outline";
           return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: "#8BC34A",
@@ -271,17 +269,34 @@ function BottomTabNavigator() {
                 }}
                 activeOpacity={0.7}
               >
-                <View
-                  style={{
-                    width: 70,
-                    height: 70,
-                    borderRadius: 35,
-                    backgroundColor: '#8CD136',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}
-                >
-                  <Ionicons name="qr-code-outline" size={32} color="#fff" />
+                {/* White background/border container */}
+                <View style={{
+                  width: 76,
+                  height: 76,
+                  borderRadius: 38,
+                  backgroundColor: '#F8F8FF',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+
+                }}>
+                  {/* Green circle with icon */}
+                  <View
+                    style={{
+                      width: 64,
+                      height: 64,
+                      borderRadius: 32,
+                      backgroundColor: '#8CD136',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      shadowColor: '#8CD136',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 4,
+                      elevation: 3,
+                    }}
+                  >
+                    <Ionicons name="qr-code-outline" size={28} color="#fff" />
+                  </View>
                 </View>
               </TouchableOpacity>
             );
@@ -290,9 +305,24 @@ function BottomTabNavigator() {
         },
       })}
     >
-      <Tab.Screen name="HomeScreen" component={HomeScreen} />
-      <Tab.Screen name="ScannerAuth" component={ScannerAuth} />
-      <Tab.Screen name="Timeline" component={TimelineScreen} />
+      <Tab.Screen
+        name="HomeScreen"
+        component={HomeScreen}
+        options={{ tabBarLabel: 'Home' }}
+      />
+      <Tab.Screen
+        name="ScannerAuth"
+        component={ScannerAuth}
+        options={{
+          tabBarLabel: 'Scan',
+          tabBarLabelStyle: { marginTop: 8 }
+        }}
+      />
+      <Tab.Screen
+        name="Timeline"
+        component={TimelineScreen}
+        options={{ tabBarLabel: 'Timeline' }}
+      />
     </Tab.Navigator>
   );
 }
@@ -311,7 +341,7 @@ function AppNavigator() {
       try {
         // Show splash screen for minimum 2 seconds
         const splashTimer = new Promise(resolve => setTimeout(resolve, 6000));
-        
+
         // Check stored data
         const checkStoredData = async () => {
           const storedToken = await AsyncStorage.getItem("token");
@@ -325,7 +355,7 @@ function AppNavigator() {
 
         // Wait for both splash timer and data checking
         await Promise.all([splashTimer, checkStoredData()]);
-        
+
       } catch (error) {
         console.error("Error during app initialization:", error);
       } finally {
@@ -344,10 +374,10 @@ function AppNavigator() {
         try {
           // Initialize notification service
           await NotificationService.initialize();
-          
+
           // Set up navigation reference for notification handling
           NotificationService.navigationRef = navigationRef;
-          
+
           console.log('Notifications initialized successfully');
         } catch (error) {
           console.error('Failed to initialize notifications:', error);
@@ -383,7 +413,7 @@ function AppNavigator() {
   };
 
   return (
-    <Stack.Navigator 
+    <Stack.Navigator
       ref={navigationRef}
       initialRouteName={getInitialRoute()}
       screenOptions={{ headerShown: false }}
@@ -415,6 +445,10 @@ export default function App() {
         <StatusBar style="auto" />
         <AppNavigator />
       </NavigationContainer>
+
+      {/* TOAST */}
+      <Toast />
+      {/* ENDS */}
     </Provider>
   );
 }

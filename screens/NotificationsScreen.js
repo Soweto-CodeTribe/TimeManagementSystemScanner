@@ -111,14 +111,14 @@
 
 //   return (
 //     <SafeAreaView style={styles.container}>
-      
+
 //       {/* Header */}
 //       <View style={styles.header}>
 //         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
 //           <Ionicons name="chevron-back" size={24} color="#aaa" />
 //         </TouchableOpacity>
 //         <Text style={styles.headerTitle}>Notifications</Text>
-   
+
 //       </View>
 
 //       {/* Notifications list */}
@@ -341,11 +341,11 @@ export default function NotificationScreen() {
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      
+
       // Get trainee ID and token from AsyncStorage
       const traineeId = await AsyncStorage.getItem("traineeID");
       const token = await AsyncStorage.getItem("token");
-      
+
       if (!traineeId || !token) {
         throw new Error("You need to login first");
       }
@@ -387,7 +387,7 @@ export default function NotificationScreen() {
   const deleteNotification = async (notificationId) => {
     try {
       const token = await AsyncStorage.getItem("token");
-      
+
       // Show confirmation dialog
       Alert.alert(
         "Delete Notification",
@@ -411,12 +411,12 @@ export default function NotificationScreen() {
                     },
                   }
                 );
-  
+
                 // Remove the notification from local state
-                setNotifications(prevNotifications => 
+                setNotifications(prevNotifications =>
                   prevNotifications.filter(notification => notification.id !== notificationId)
                 );
-  
+
                 // Optional: Show success message
                 Alert.alert("Success", "Notification deleted successfully");
               } catch (deleteError) {
@@ -425,7 +425,7 @@ export default function NotificationScreen() {
 
                 // Restore the notification if deletion fails
                 Alert.alert(
-                  "Error", 
+                  "Error",
                   deleteError.response?.data?.msg || "Failed to delete notification"
                 );
               }
@@ -433,7 +433,7 @@ export default function NotificationScreen() {
           }
         ]
       );
-      
+
     } catch (error) {
       console.error("Error preparing notification deletion:", error);
       Alert.alert("Error", "Failed to prepare notification deletion");
@@ -442,7 +442,7 @@ export default function NotificationScreen() {
   const markAsRead = async (notificationId) => {
     try {
       const token = await AsyncStorage.getItem("token");
-      
+
       // Call the backend API to mark notification as read
       await axios.put(
         `${API_BASE_URL}/notifications/${notificationId}/read`,
@@ -455,14 +455,14 @@ export default function NotificationScreen() {
       );
 
       // Update the local state
-      setNotifications(prevNotifications => 
-        prevNotifications.map(notification => 
-          notification.id === notificationId 
-            ? { ...notification, isRead: true } 
+      setNotifications(prevNotifications =>
+        prevNotifications.map(notification =>
+          notification.id === notificationId
+            ? { ...notification, isRead: true }
             : notification
         )
       );
-      
+
     } catch (error) {
       console.error("Error marking notification as read:", error);
       Alert.alert("Error", "Failed to mark notification as read");
@@ -471,7 +471,7 @@ export default function NotificationScreen() {
 
   const handleNotificationPress = (item) => {
     setSelectedMessage(item);
-    
+
     // Mark notification as read if it isn't already
     if (!item.isRead) {
       markAsRead(item.id);
@@ -479,30 +479,30 @@ export default function NotificationScreen() {
   };
 
   // Helper function to format timestamp
- // Helper function to format timestamp
-const formatTimestamp = (timestamp) => {
-  if (!timestamp) return "Unknown time";
-  
-  try {
-    // Parse the timestamp - could be a Firestore timestamp or an ISO string
-    let date;
-    if (timestamp.seconds) {
-      // Firestore timestamp
-      date = new Date(timestamp.seconds * 1000);
-    } else if (typeof timestamp === 'string') {
-      // ISO string
-      date = new Date(timestamp);
-    } else {
-      // Fallback to current date if parsing fails
-      date = new Date();
+  // Helper function to format timestamp
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp) return "Unknown time";
+
+    try {
+      // Parse the timestamp - could be a Firestore timestamp or an ISO string
+      let date;
+      if (timestamp.seconds) {
+        // Firestore timestamp
+        date = new Date(timestamp.seconds * 1000);
+      } else if (typeof timestamp === 'string') {
+        // ISO string
+        date = new Date(timestamp);
+      } else {
+        // Fallback to current date if parsing fails
+        date = new Date();
+      }
+
+      return formatRelativeTime(date);
+    } catch (error) {
+      console.error('Error parsing timestamp:', error);
+      return "Unknown time";
     }
-    
-    return formatRelativeTime(date);
-  } catch (error) {
-    console.error('Error parsing timestamp:', error);
-    return "Unknown time";
-  }
-};
+  };
   // Helper function to format relative time (e.g., "2 days ago")
   const formatRelativeTime = (date) => {
     const now = new Date();
@@ -512,7 +512,7 @@ const formatTimestamp = (timestamp) => {
     const diffInHours = Math.floor(diffInMinutes / 60);
     const diffInDays = Math.floor(diffInHours / 24);
     const diffInWeeks = Math.floor(diffInDays / 7);
-    
+
     if (diffInSeconds < 60) return "Just now";
     if (diffInMinutes < 60) return `${diffInMinutes} ${diffInMinutes === 1 ? "minute" : "minutes"} ago`;
     if (diffInHours < 24) return `${diffInHours} ${diffInHours === 1 ? "hour" : "hours"} ago`;
@@ -521,7 +521,7 @@ const formatTimestamp = (timestamp) => {
       return `${diffInDays} days ago`;
     }
     if (diffInWeeks < 4) return `${diffInWeeks} ${diffInWeeks === 1 ? "week" : "weeks"} ago`;
-    
+
     // For older dates, return the actual date
     return date.toLocaleDateString();
   };
@@ -529,7 +529,7 @@ const formatTimestamp = (timestamp) => {
   // Generate avatar text from name
   const getAvatarInitials = (name) => {
     if (!name) return "?";
-    
+
     return name
       .split(" ")
       .map((n) => n[0])
@@ -539,11 +539,11 @@ const formatTimestamp = (timestamp) => {
 
   // Render notification item component
   const renderNotificationItem = ({ item }) => (
-    <Pressable 
+    <Pressable
       style={[
-        styles.notificationCard, 
+        styles.notificationCard,
         !item.isRead && styles.unreadNotification
-      ]} 
+      ]}
       onPress={() => handleNotificationPress(item)}
     >
       <View style={styles.avatarContainer}>
@@ -556,7 +556,7 @@ const formatTimestamp = (timestamp) => {
           <Text style={styles.notificationName}>{item.name || "Unknown"}</Text>
           <View style={styles.headerActions}>
             <Text style={styles.notificationTime}>{item.time}</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.deleteButton}
               onPress={() => deleteNotification(item.id)}
             >
@@ -566,7 +566,7 @@ const formatTimestamp = (timestamp) => {
         </View>
         <Text style={styles.notificationMessage}>{item.message}</Text>
         {item.hasUploadButton && (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.actionButton}
             onPress={() => navigation.navigate("UploadProof", { notificationId: item.id })}
           >
@@ -619,7 +619,7 @@ const formatTimestamp = (timestamp) => {
           showsVerticalScrollIndicator={false}
           refreshing={loading}
           onRefresh={fetchNotifications}
-          style={{padding:5,}}
+          style={{ padding: 5, }}
         />
       ) : (
         <View style={styles.emptyContainer}>
@@ -633,11 +633,11 @@ const formatTimestamp = (timestamp) => {
         message={
           selectedMessage
             ? {
-                id: selectedMessage.id,
-                sender: selectedMessage.name || "Unknown",
-                message: selectedMessage.fullMessage,
-                timestamp: selectedMessage.time,
-              }
+              id: selectedMessage.id,
+              sender: selectedMessage.name || "Unknown",
+              message: selectedMessage.fullMessage,
+              timestamp: selectedMessage.time,
+            }
             : null
         }
         visible={!!selectedMessage}
@@ -655,6 +655,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 10,
     paddingTop: 45,
     paddingBottom: 10,
@@ -663,21 +664,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   backButton: {
-    paddingVertical: 4,
+    paddingVertical: 8,
     flexDirection: "row"
   },
 
-   backtext: {
+  backtext: {
     padding: 2,
   },
   refreshButton: {
-    padding: 4,
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "#8BC34A10",
   },
   headerTitle: {
-    flex: 1,
     fontSize: 18,
-    fontWeight: '500',
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "#999999",
+    textAlign: "center",
   },
   listContent: {
     paddingVertical: 8,
@@ -703,7 +706,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#4CD964', 
+    backgroundColor: '#4CD964',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,

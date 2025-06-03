@@ -930,7 +930,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#8CC63F",
     opacity: 0.4,
     padding: 8,
-    borderRadius: 50,
+    borderRadius: 12,
   },
   statCard: {
     backgroundColor: "#fff",

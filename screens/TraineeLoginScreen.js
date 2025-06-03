@@ -5,6 +5,7 @@ import { loginUser } from "../Components/Redux/Slices/AuthenticationSlice";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Toast from "react-native-toast-message";
 
 const TraineeLoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -33,17 +34,39 @@ const TraineeLoginScreen = ({ navigation }) => {
   }, []);
 
   const handleLogin = () => {
-    if (!email || !password) {
-      Alert.alert("Error", "Please enter valid credentials");
-      return;
-    }
-    dispatch(loginUser({ email, password, keepSignedIn }))
-      .unwrap()
-      .then(() => {
+  if (!email || !password) {
+    Alert.alert("Error", "Please enter valid credentials");
+    return;
+  }
+  
+  dispatch(loginUser({ email, password, keepSignedIn }))
+    .unwrap()
+    .then(() => {
+      // Show success toast
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'Login successful! Welcome back.',
+        position: 'bottom',
+        visibilityTime: 3000,
+      });
+      
+      // Navigate after a brief delay to show the toast
+      setTimeout(() => {
         navigation.navigate("MainApp");
-      })
-      .catch((err) => Alert.alert("Login Failed", err));
-  };
+      }, 1000);
+    })
+    .catch((err) => {
+      // Show error toast
+      Toast.show({
+        type: 'error',
+        text1: 'Login Failed',
+        text2: err?.message || 'Invalid credentials. Please try again.',
+        position: 'bottom',
+        visibilityTime: 4000,
+      });
+    });
+};
 
   return (
     <SafeAreaView style={styles.safeArea}>

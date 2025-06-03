@@ -44,9 +44,9 @@ const TicketScreen = ({ navigation }) => {
       try {
         const ID = await AsyncStorage.getItem('traineeID');
         const Token = await AsyncStorage.getItem('token');
-        
+
         const traineeIdString = ID ? String(ID) : '';
-        
+
         setToken(Token);
         setTraineeId(traineeIdString);
 
@@ -64,9 +64,13 @@ const TicketScreen = ({ navigation }) => {
     fetchUserData();
   }, []);
 
-  const fetchTickets = async (authToken = token, userId = traineeId) => {
+  const fetchTickets = async () => {
+
+    const userId = await AsyncStorage.getItem('traineeID');
+    const authToken = await AsyncStorage.getItem('token');
+
     if (!authToken || !userId) return;
-    
+
     try {
       setLoading(true);
       const response = await axios.get(
@@ -150,7 +154,7 @@ const TicketScreen = ({ navigation }) => {
             },
           }
         );
-        
+
         Alert.alert('Success', 'Ticket created successfully!');
         setIsCreateModalVisible(false);
         resetForm();
@@ -163,7 +167,7 @@ const TicketScreen = ({ navigation }) => {
         setLoading(false);
       }
     } else {
-      Alert.alert('Error', 'Please fix the errors in the form');
+      Alert.alert('Error', 'Description need to be more than 10 characters');
     }
   };
 
@@ -172,7 +176,7 @@ const TicketScreen = ({ navigation }) => {
       Alert.alert('Error', 'Authorization required. Please log in again.');
       return;
     }
-  
+
     Alert.alert(
       'Cancel Ticket',
       'Are you sure you want to cancel this ticket? This action cannot be undone.',
@@ -196,7 +200,7 @@ const TicketScreen = ({ navigation }) => {
                   },
                 }
               );
-              
+
               Alert.alert('Success', 'Ticket has been canceled');
               setIsDetailModalVisible(false);
               fetchTickets();
@@ -250,7 +254,7 @@ const TicketScreen = ({ navigation }) => {
             },
           }
         );
-        
+
         Alert.alert('Success', 'Ticket updated successfully!');
         setIsEditModalVisible(false);
         resetForm();
@@ -275,7 +279,7 @@ const TicketScreen = ({ navigation }) => {
 
     try {
       setLoading(true);
-      
+
       const response = await axios.get(
         `https://timemanagementsystemserver.onrender.com/api/tickets/my-tickets/${ticketId}?traineeId=${traineeId}`,
         {
@@ -284,7 +288,7 @@ const TicketScreen = ({ navigation }) => {
           }
         }
       );
-      
+
       setCurrentTicket(response.data);
       setIsDetailModalVisible(true);
     } catch (error) {
@@ -311,10 +315,10 @@ const TicketScreen = ({ navigation }) => {
         </View>
       </View>
       <View style={styles.statusBadge}>
-        <Text style={[styles.statusText, { 
-          color: item.status === 'closed' ? '#4CAF50' : 
-                 item.status === 'cancelled' ? '#F44336' : 
-                 item.status === 'in-progress' ? '#FFC107' : '#2196F3'
+        <Text style={[styles.statusText, {
+          color: item.status === 'closed' ? '#4CAF50' :
+            item.status === 'cancelled' ? '#F44336' :
+              item.status === 'in-progress' ? '#FFC107' : '#2196F3'
         }]}>
           {item.status}
         </Text>
@@ -329,7 +333,7 @@ const TicketScreen = ({ navigation }) => {
       case 'medium': return '#FFC107';
       case 'high': return '#FF9800';
       case 'critical': return '#F44336';
-      default: return '#2196F3';
+      default: return '#FF0000';
     }
   };
 
@@ -346,6 +350,15 @@ const TicketScreen = ({ navigation }) => {
           <Text style={styles.backtext}>Back</Text>
         </TouchableOpacity>
         <Text style={styles.navBarTitle}>Support Tickets</Text>
+
+        <TouchableOpacity style={styles.refreshButton} onPress={fetchTickets} disabled={loading} activeOpacity={0.7}>
+          <Ionicons
+            name="refresh"
+            size={22}
+            color="#8BC34A"
+            style={loading ? { transform: [{ rotate: "180deg" }] } : {}}
+          />
+        </TouchableOpacity>
       </View>
 
       {loading && (
@@ -402,7 +415,7 @@ const TicketScreen = ({ navigation }) => {
                 <Text style={styles.subtitle}>
                   Create a new support ticket to get help from our team
                 </Text>
-                
+
                 <ScrollView contentContainerStyle={styles.formContainer}>
                   <View style={styles.formGroup}>
                     <Text style={styles.label}>Title</Text>
@@ -498,7 +511,7 @@ const TicketScreen = ({ navigation }) => {
                 <Text style={styles.subtitle}>
                   Update your ticket information
                 </Text>
-                
+
                 <ScrollView contentContainerStyle={styles.formContainer}>
                   <View style={styles.formGroup}>
                     <Text style={styles.label}>Title</Text>
@@ -587,15 +600,13 @@ const TicketScreen = ({ navigation }) => {
             <TouchableWithoutFeedback>
               <View style={styles.bottomSheet}>
                 <View style={styles.indicator} />
-                <Text style={styles.title}>Ticket Details</Text>
-                
+
                 {currentTicket && (
                   <ScrollView contentContainerStyle={styles.detailsContainer}>
                     <View style={styles.profileInfo}>
                       <Text style={styles.profileName}>{currentTicket.title}</Text>
                       <View style={styles.categoryContainer}>
-                        <Ionicons name="document-text-outline" size={16} color="#8BC34A" />
-                        <Text style={styles.categoryText}>{currentTicket.category}</Text>
+                        {/* <Text style={styles.categoryText}>{currentTicket.category}</Text> */}
                       </View>
                     </View>
 
@@ -606,8 +617,8 @@ const TicketScreen = ({ navigation }) => {
                         </View>
                         <View>
                           <Text style={styles.detailLabel}>Priority</Text>
-                          <Text style={[styles.detailValue, { 
-                            color: getPriorityColor(currentTicket.priority) 
+                          <Text style={[styles.detailValue, {
+                            color: getPriorityColor(currentTicket.priority),fontSize: 12
                           }]}>
                             {currentTicket.priority}
                           </Text>
@@ -622,11 +633,11 @@ const TicketScreen = ({ navigation }) => {
                         </View>
                         <View>
                           <Text style={styles.detailLabel}>Status</Text>
-                          <Text style={[styles.detailValue, { 
-                            color: currentTicket.status === 'closed' ? '#4CAF50' : 
-                                  currentTicket.status === 'cancelled' ? '#F44336' : 
-                                  currentTicket.status === 'in-progress' ? '#FFC107' : '#2196F3'
-                          }]}>
+                          <Text style={[styles.detailValue, {
+                            color: currentTicket.status === 'closed' ? '#4CAF50' :
+                              currentTicket.status === 'cancelled' ? '#F44336' :
+                                currentTicket.status === 'in-progress' ? '#FFC107' : '#8BC34A'
+                          , fontSize: 12}]}>
                             {currentTicket.status}
                           </Text>
                         </View>
@@ -640,7 +651,7 @@ const TicketScreen = ({ navigation }) => {
                         </View>
                         <View>
                           <Text style={styles.detailLabel}>Created At</Text>
-                          <Text style={styles.detailValue}>
+                          <Text style={[styles.detailValue, {fontSize: 12}]}>
                             {new Date(currentTicket.createdAt).toLocaleString()}
                           </Text>
                         </View>
@@ -655,7 +666,7 @@ const TicketScreen = ({ navigation }) => {
                           </View>
                           <View>
                             <Text style={styles.detailLabel}>Last Updated</Text>
-                            <Text style={styles.detailValue}>
+                            <Text style={[styles.detailValue, {fontSize: 12}]}>
                               {new Date(currentTicket.updatedAt).toLocaleString()}
                             </Text>
                           </View>
@@ -666,6 +677,10 @@ const TicketScreen = ({ navigation }) => {
                     <View style={styles.descriptionContainer}>
                       <Text style={styles.label}>Description</Text>
                       <Text style={styles.descriptionText}>{currentTicket.description}</Text>
+                    </View>
+                    <View style={styles.descriptionContainer}>
+                      <Text style={styles.label}>Closing Notes</Text>
+                      <Text style={styles.descriptionText}>{currentTicket.closingNotes || 'Facilitator has not responded yet.'}</Text>
                     </View>
 
                     {currentTicket.status === 'open' && (
@@ -713,7 +728,7 @@ const styles = StyleSheet.create({
     flexDirection: "row"
   },
 
-   backtext: {
+  backtext: {
     padding: 2,
   },
   navBarTitle: {
@@ -726,6 +741,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     textAlign: "center",
+  },
+
+  refreshButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: "#8BC34A10",
   },
   menuContainer: {
     paddingHorizontal: 20,
@@ -753,7 +774,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
@@ -761,6 +782,7 @@ const styles = StyleSheet.create({
   menuItemText: {
     fontSize: 16,
     color: "#666666",
+    textTransform: 'capitalize'
   },
   ticketContent: {
     flex: 1,
@@ -769,6 +791,7 @@ const styles = StyleSheet.create({
   ticketSubtext: {
     fontSize: 12,
     color: "#999999",
+    textTransform: 'capitalize'
   },
   statusBadge: {
     marginRight: 10,
@@ -813,7 +836,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#8BC34A',
     width: 50,
     height: 50,
-    borderRadius: 30,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: "#000",
@@ -822,7 +845,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  
+
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -906,10 +929,9 @@ const styles = StyleSheet.create({
   submitButton: {
     backgroundColor: '#8BC34A',
     borderRadius: 8,
-    paddingVertical: 8,
+    paddingVertical: 16,
     alignItems: 'center',
     marginTop: 10, // Increased margin
-    // marginBottom: 2, // Added margin bottom
   },
   submitButtonText: {
     color: 'white',
@@ -928,19 +950,20 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 15, // Increased padding
     marginTop: 8,
-    lineHeight: 22, // Added line height for better readability
+    lineHeight: 22,
+    textTransform: 'capitalize'
   },
   profileInfo: {
     alignItems: 'center',
-    marginBottom: 25, // Increased margin
+    paddingVertical: 25,
     width: '100%',
   },
   profileName: {
     fontSize: 22, // Larger
     fontWeight: 'bold',
     color: '#333333',
-    marginBottom: 10, // Increased margin
     textAlign: 'center',
+    textTransform: 'uppercase'
   },
   categoryContainer: {
     flexDirection: 'row',
@@ -976,6 +999,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333333',
     marginTop: 3, // Added margin
+    textTransform: 'capitalize'
   },
   buttonGroup: {
     flexDirection: 'row',

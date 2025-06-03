@@ -152,7 +152,7 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet }) => {
     return null;
   };
 
-  console.log("todays data", FindTodayData());
+  // console.log("todays data", FindTodayData());
 
   useEffect(() => {
     if (weekData) {
@@ -168,10 +168,10 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet }) => {
       }
     }
   }, [weekData, formattedDate]);
-  console.log("This is my start time to lunch", lunchStartTime);
-  console.log("This is my start End of he lunch time", lunchEndtime);
-  console.log("This is my start End of the day time", checkout);
-  console.log("This is the check in time", checkInOffice);
+  // console.log("This is my start time to lunch", lunchStartTime);
+  // console.log("This is my start End of he lunch time", lunchEndtime);
+  // console.log("This is my start End of the day time", checkout);
+  // console.log("This is the check in time", checkInOffice);
 
   useEffect(() => {
     if (isVisible) {
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 40,
     padding: 20,
     paddingBottom: SHEET_OVERFLOW + 20,
-    height: SHEET_HEIGHT + SHEET_OVERFLOW,
+    height: SHEET_HEIGHT + SHEET_OVERFLOW + 30,
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: {

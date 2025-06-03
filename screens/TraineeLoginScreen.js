@@ -86,11 +86,11 @@ const TraineeLoginScreen = ({ navigation }) => {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Email</Text>
             <View style={styles.inputContainer}>
-              <MaterialCommunityIcons name="email-outline" size={20} color="#88879C" style={styles.inputIcon} />
+              <MaterialCommunityIcons name="email-outline" size={20} color="#000" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Enter your email"
-                placeholderTextColor="#88879C"
+                placeholderTextColor="#000"
                 keyboardType="email-address"
                 value={email}
                 onChangeText={setEmail}
@@ -104,11 +104,11 @@ const TraineeLoginScreen = ({ navigation }) => {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Password</Text>
             <View style={styles.inputContainer}>
-              <MaterialCommunityIcons name="lock-outline" size={20} color="#88879C" style={styles.inputIcon} />
+              <MaterialCommunityIcons name="lock-outline" size={20} color="#000" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Enter your password"
-                placeholderTextColor="#88879C"
+                placeholderTextColor="#000"
                 secureTextEntry={!passwordVisible}
                 value={password}
                 onChangeText={setPassword}
@@ -123,7 +123,7 @@ const TraineeLoginScreen = ({ navigation }) => {
                 <MaterialCommunityIcons 
                   name={passwordVisible ? "eye-off-outline" : "eye-outline"} 
                   size={20} 
-                  color="#88879C" 
+                  color="#000" 
                 />
               </TouchableOpacity>
             </View>
@@ -139,7 +139,7 @@ const TraineeLoginScreen = ({ navigation }) => {
               <MaterialCommunityIcons
                 name={keepSignedIn ? "checkbox-marked-outline" : "checkbox-blank-outline"}
                 size={20}
-                color="#8AC052"
+                color="#000"
                 style={styles.checkboxIcon}
               />
               <Text style={styles.checkboxLabel}>Keep me signed in</Text>
@@ -197,9 +197,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
   },
   backText: {
-    fontSize: 16,
     color: "#333",
-    marginLeft: 8,
     fontWeight: "400",
   },
   heading: {
@@ -241,7 +239,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    color: "#053742",
+    color: "#000",
     paddingVertical: 0,
   },
   eyeIcon: {
@@ -270,7 +268,7 @@ const styles = StyleSheet.create({
   },
   forgotPassword: {
     fontSize: 14,
-    color: "#8AC052",
+    color: "#000",
     fontWeight: "500",
   },
   button: {

@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 20,
     paddingBottom: 20,
     height: SHEET_HEIGHT,
     width: width,
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   dragHandle: {
-    width: 40,
+    width: 120,
     height: 5,
     backgroundColor: '#E0E0E0',
     borderRadius: 2.5,
@@ -342,21 +342,24 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   headerContainer: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
     marginBottom: 15,
+    height: "13%"
   },
   documentsModalHeader: {
     color: '#053742',
-    fontSize: 18,
+    fontSize: 14,
     flex: 1,
+    textTransform: 'uppercase'
   },
   toggleButton: {
     padding: 8,
     backgroundColor: '#E8F5FF',
     borderRadius: 8,
+    width: '100%'
   },
   toggleButtonText: {
     color: '#053742',
@@ -439,13 +442,6 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     marginBottom: 10,
   },
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 15,
-  },
   uploadItem: {
     flexDirection: 'row', 
     backgroundColor: '#F8F9FA',
@@ -466,11 +462,7 @@ const styles = StyleSheet.create({
     flex: 1, 
     justifyContent: 'center',
   },
-  documentsModalHeader: {
-    color: '#053742',
-    fontSize: 18,
-    flex: 1,
-  },
+
   toggleButton: {
     padding: 8,
     backgroundColor: '#E8F5FF',
@@ -495,7 +487,7 @@ const styles = StyleSheet.create({
   },
   pickerWrapper: {
     borderWidth: 1,
-    borderColor: '#053742',
+    borderColor: 'rgba(0, 0, 0, .2)',
     borderRadius: 10,
     marginBottom: 15,
     height: Platform.OS === 'ios' ? 150 : 46,
@@ -510,7 +502,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 44,
     borderWidth: 1,
-    borderColor: '#053742',
+    borderColor: 'rgba(0, 0, 0, .2)',
     borderRadius: 10,
     justifyContent: 'center',
     paddingHorizontal: 10,
@@ -522,7 +514,7 @@ const styles = StyleSheet.create({
   },
   acceptButton: {
     width: '100%',
-    height: 44,
+    height: 50,
     backgroundColor: "#8CD136",
     borderRadius: 10,
     justifyContent: 'center',
@@ -532,7 +524,7 @@ const styles = StyleSheet.create({
   },
   declineButton: {
     width: '100%',
-    height: 44,
+    height: 50,
     backgroundColor: "white",
     borderRadius: 10,
     justifyContent: 'center',

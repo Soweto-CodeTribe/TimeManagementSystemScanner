@@ -412,6 +412,9 @@ function AppNavigator() {
     }
   };
 
+
+
+
   return (
     <Stack.Navigator
       ref={navigationRef}
@@ -439,9 +442,12 @@ function AppNavigator() {
 }
 
 export default function App() {
+
+  const navigationRef = useRef();
+  
   return (
     <Provider store={store}>
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}>
         <StatusBar style="auto" />
         <AppNavigator />
       </NavigationContainer>

@@ -222,7 +222,7 @@
 // export default SettingsScreen;
 
 // screens/SettingsScreen.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -238,12 +238,12 @@ import {
   Animated,
   Dimensions,
   Linking,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import NotificationService from '../Components/NotificationService';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import NotificationService from "../Components/NotificationService";
 
-const { height: screenHeight } = Dimensions.get('window');
+const { height: screenHeight } = Dimensions.get("window");
 
 const SettingsScreen = ({ navigation }) => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -258,10 +258,10 @@ const SettingsScreen = ({ navigation }) => {
 
   const loadNotificationSettings = async () => {
     try {
-      const enabled = await AsyncStorage.getItem('notificationsEnabled');
-      setNotificationsEnabled(enabled !== 'false'); // Default to true
+      const enabled = await AsyncStorage.getItem("notificationsEnabled");
+      setNotificationsEnabled(enabled !== "false"); // Default to true
     } catch (error) {
-      console.error('Error loading notification settings:', error);
+      console.error("Error loading notification settings:", error);
     } finally {
       setLoading(false);
     }
@@ -274,47 +274,49 @@ const SettingsScreen = ({ navigation }) => {
 
       // Show confirmation
       Alert.alert(
-        'Notifications Updated',
+        "Notifications Updated",
         value
-          ? 'You will now receive daily check-in reminders at 8:00 AM and 12:00 PM'
-          : 'Push notifications have been disabled. You won\'t receive any reminders.',
-        [{ text: 'OK' }]
+          ? "You will now receive daily check-in reminders at 8:00 AM and 12:00 PM"
+          : "Push notifications have been disabled. You won't receive any reminders.",
+        [{ text: "OK" }]
       );
     } catch (error) {
-      console.error('Error toggling notifications:', error);
+      console.error("Error toggling notifications:", error);
       // Revert on error
       setNotificationsEnabled(!value);
-      Alert.alert('Error', 'Failed to update notification settings');
+      Alert.alert("Error", "Failed to update notification settings");
     }
   };
 
   const testNotification = async () => {
     try {
       await NotificationService.sendImmediateNotification(
-        'Test Notification 🔔',
-        'This is a test notification to verify everything is working!',
-        { type: 'test' }
+        "Test Notification 🔔",
+        "This is a test notification to verify everything is working!",
+        { type: "test" }
       );
-      Alert.alert('Test Sent', 'Check your notifications!');
+      Alert.alert("Test Sent", "Check your notifications!");
     } catch (error) {
-      Alert.alert('Error', 'Failed to send test notification');
+      Alert.alert("Error", "Failed to send test notification");
     }
   };
 
   const showScheduledNotifications = async () => {
     try {
-      const notifications = await NotificationService.getScheduledNotifications();
+      const notifications =
+        await NotificationService.getScheduledNotifications();
       const count = notifications.length;
       Alert.alert(
-        'Scheduled Notifications',
-        `You have ${count} scheduled notifications.\n\n${count > 0
-          ? 'Morning reminder: 8:00 AM daily\nLunch reminder: 12:00 PM daily'
-          : 'No notifications scheduled'
+        "Scheduled Notifications",
+        `You have ${count} scheduled notifications.\n\n${
+          count > 0
+            ? "Morning reminder: 8:00 AM daily\nLunch reminder: 12:00 PM daily"
+            : "No notifications scheduled"
         }`,
-        [{ text: 'OK' }]
+        [{ text: "OK" }]
       );
     } catch (error) {
-      Alert.alert('Error', 'Failed to get notification info');
+      Alert.alert("Error", "Failed to get notification info");
     }
   };
 
@@ -345,30 +347,34 @@ const SettingsScreen = ({ navigation }) => {
       if (supported) {
         await Linking.openURL(url);
       } else {
-        Alert.alert('Error', 'Cannot open this link');
+        Alert.alert("Error", "Cannot open this link");
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to open link');
+      Alert.alert("Error", "Failed to open link");
     }
   };
 
   // FAQ Items
   const faqItems = [
     {
-      question: 'How do I enable notifications?',
-      answer: 'Go to Settings > Notifications and toggle the Daily Reminders switch.',
+      question: "How do I enable notifications?",
+      answer:
+        "Go to Settings > Notifications and toggle the Daily Reminders switch.",
     },
     {
-      question: 'When will I receive reminders?',
-      answer: 'You\'ll receive reminders at 8:00 AM and 12:00 PM daily when notifications are enabled.',
+      question: "When will I receive reminders?",
+      answer:
+        "You'll receive reminders at 8:00 AM and 12:00 PM daily when notifications are enabled.",
     },
     {
-      question: 'How do I reset my data?',
-      answer: 'Currently, data reset is not available. Contact support if you need assistance.',
+      question: "How do I reset my data?",
+      answer:
+        "Currently, data reset is not available. Contact support if you need assistance.",
     },
     {
-      question: 'Is my data secure?',
-      answer: 'Yes, all your data is stored locally on your device and is not shared with third parties.',
+      question: "Is my data secure?",
+      answer:
+        "Yes, all your data is stored locally on your device and is not shared with third parties.",
     },
   ];
 
@@ -399,7 +405,7 @@ const SettingsScreen = ({ navigation }) => {
               onPress={() => hideModal(setHelpModalVisible)}
               style={styles.closeButton}
             >
-              <View style={styles.closeLine}/>
+              <View style={styles.closeLine} />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Help & FAQ</Text>
           </View>
@@ -444,7 +450,7 @@ const SettingsScreen = ({ navigation }) => {
               onPress={() => hideModal(setContactModalVisible)}
               style={styles.closeButton}
             >
-              <View style={styles.closeLine}/>
+              <View style={styles.closeLine} />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Contact Support</Text>
           </View>
@@ -456,7 +462,7 @@ const SettingsScreen = ({ navigation }) => {
 
             <TouchableOpacity
               style={styles.contactOption}
-              onPress={() => openURL('mailto:support@yourapp.com')}
+              onPress={() => openURL("mailto:support@yourapp.com")}
             >
               <Ionicons name="mail-outline" size={24} color="#8BC34A" />
               <View style={styles.contactInfo}>
@@ -468,7 +474,7 @@ const SettingsScreen = ({ navigation }) => {
 
             <TouchableOpacity
               style={styles.contactOption}
-              onPress={() => openURL('tel:+1234567890')}
+              onPress={() => openURL("tel:+1234567890")}
             >
               <Ionicons name="call-outline" size={24} color="#8BC34A" />
               <View style={styles.contactInfo}>
@@ -480,7 +486,7 @@ const SettingsScreen = ({ navigation }) => {
 
             <TouchableOpacity
               style={styles.contactOption}
-              onPress={() => openURL('https://elevenbit.com')}
+              onPress={() => openURL("https://elevenbit.com")}
             >
               <Ionicons name="globe-outline" size={24} color="#8BC34A" />
               <View style={styles.contactInfo}>
@@ -492,8 +498,12 @@ const SettingsScreen = ({ navigation }) => {
 
             <View style={styles.supportHours}>
               <Text style={styles.supportHoursTitle}>Support Hours</Text>
-              <Text style={styles.supportHoursText}>Monday - Friday: 9 AM - 6 PM EST</Text>
-              <Text style={styles.supportHoursText}>Saturday - Sunday: 10 AM - 2 PM EST</Text>
+              <Text style={styles.supportHoursText}>
+                Monday - Friday: 9 AM - 6 PM EST
+              </Text>
+              <Text style={styles.supportHoursText}>
+                Saturday - Sunday: 10 AM - 2 PM EST
+              </Text>
             </View>
           </View>
         </Animated.View>
@@ -542,8 +552,8 @@ const SettingsScreen = ({ navigation }) => {
             <Switch
               value={notificationsEnabled}
               onValueChange={toggleNotifications}
-              trackColor={{ false: '#767577', true: '#8BC34A' }}
-              thumbColor={notificationsEnabled ? '#4CAF50' : '#f4f3f4'}
+              trackColor={{ false: "#767577", true: "#8BC34A" }}
+              thumbColor={notificationsEnabled ? "#4CAF50" : "#f4f3f4"}
             />
           </View>
 
@@ -561,8 +571,38 @@ const SettingsScreen = ({ navigation }) => {
             style={styles.infoButton}
             onPress={showScheduledNotifications}
           >
-            <Ionicons name="information-circle-outline" size={20} color="#666" />
-            <Text style={styles.infoButtonText}>View Scheduled Notifications</Text>
+            <Ionicons
+              name="information-circle-outline"
+              size={20}
+              color="#666"
+            />
+            <Text style={styles.infoButtonText}>
+              View Scheduled Notifications
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Permissions</Text>
+
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={async () => {
+              await AsyncStorage.removeItem("locationPermissionGranted");
+              await AsyncStorage.removeItem("cameraPermissionGranted");
+              await AsyncStorage.removeItem("inLocationAndVerified");
+              Alert.alert(
+                "Permissions Reset",
+                "Permission prompts will be shown again next time they are needed."
+              );
+            }}
+          >
+            <View style={styles.settingInfo}>
+              <Text style={styles.settingLabel}>Reset Permissions</Text>
+              <Text style={styles.settingDescription}>
+                Reach out to our support team
+              </Text>
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -608,32 +648,32 @@ const SettingsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+    backgroundColor: "#f5f5f5",
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   scrollView: {
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: "#e0e0e0",
     minHeight: 60,
-    width: '100%'
+    width: "100%",
   },
   backButton: {
     paddingVertical: 5,
     zIndex: 10,
-    flexDirection: "row"
+    flexDirection: "row",
   },
   backtext: {
     padding: 2,
@@ -645,105 +685,104 @@ const styles = StyleSheet.create({
     marginLeft: 70,
   },
   section: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     marginTop: 20,
     paddingVertical: 10,
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     paddingHorizontal: 20,
     paddingVertical: 10,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: "#f8f8f8",
   },
   settingItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: "#f0f0f0",
   },
   settingInfo: {
     flex: 1,
   },
   settingLabel: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: "500",
+    color: "#333",
     marginBottom: 4,
   },
   settingDescription: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
   },
   testButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: "#f0f0f0",
   },
   testButtonText: {
     fontSize: 16,
-    color: '#8BC34A',
+    color: "#8BC34A",
     marginLeft: 10,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   infoButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 15,
   },
   infoButtonText: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
     marginLeft: 10,
   },
   // Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
   },
   modalBackdrop: {
     flex: 1,
   },
   modalContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: screenHeight * .9,
-    minHeight: screenHeight * .72,
+    maxHeight: screenHeight * 0.9,
+    minHeight: screenHeight * 0.72,
   },
   modalHeader: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-    gap: 20
+    borderBottomColor: "#f0f0f0",
+    gap: 20,
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
   },
   closeButton: {
     padding: 5,
-
   },
   closeLine: {
     height: 5,
     width: 120,
-    backgroundColor: '#333',
-    borderRadius: 5
+    backgroundColor: "#333",
+    borderRadius: 5,
   },
   modalContent: {
     flex: 1,
@@ -754,32 +793,32 @@ const styles = StyleSheet.create({
   faqItem: {
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: "#f0f0f0",
   },
   faqQuestion: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 8,
   },
   faqAnswer: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     lineHeight: 20,
   },
   // Contact Styles
   contactDescription: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   contactOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: "#f0f0f0",
   },
   contactInfo: {
     flex: 1,
@@ -787,29 +826,29 @@ const styles = StyleSheet.create({
   },
   contactLabel: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: "500",
+    color: "#333",
     marginBottom: 4,
   },
   contactValue: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
   },
   supportHours: {
     marginTop: 30,
     padding: 15,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: "#f8f8f8",
     borderRadius: 10,
   },
   supportHoursTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 8,
   },
   supportHoursText: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginBottom: 4,
   },
 });

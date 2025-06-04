@@ -30,7 +30,9 @@ const { height, width } = Dimensions.get("window");
 const SHEET_HEIGHT = height * 0.3;
 const SHEET_OVERFLOW = 20;
 
-const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet }) => {
+const CheckinCheckoutbottomsheet = (props) => {
+  const { navigation: propNavigation, isVisible, closeBottomSheet } = props;
+  const navigation = propNavigation || useNavigation();
   // Variables
   const translateY = useSharedValue(SHEET_HEIGHT);
   const overlayOpacity = useSharedValue(0);
@@ -88,8 +90,6 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet }) => {
     };
     fetchUserData();
   }, []);
-  console.log(weekData);
-  console.log("NAME FROM ASYNC", username, "LOCATION FROM ASYNC", userlocation);
 
   //  https://timemanagementsystemserver.onrender.com/api/session/weekly-stats?traineeId=${traineeId}
 
@@ -225,6 +225,7 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet }) => {
 
   const closeSheetAndNavigate = () => {
     closeSheet();
+    navigation.navigate("Timeline");
   };
   // Modify your action handlers to refresh data after completion
 
@@ -270,6 +271,7 @@ const CheckinCheckoutbottomsheet = ({ isVisible, closeBottomSheet }) => {
       .then(() => {
         // Refresh data after action completes
         handleTimeLine();
+        closeSheetAndNavigate();
       });
   };
   // Add another

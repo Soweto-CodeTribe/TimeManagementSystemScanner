@@ -412,17 +412,17 @@ export const loginUser = createAsyncThunk(
       let withInLocation = await AsyncStorage.getItem("inLocationAndVerified");
 
       // Automatically check-in after successful login if traineeID and name are available
-      if (withInLocation === "true") {
-        if (traineeID && name) {
-          try {
-            await dispatch(checkIn({ traineeId: traineeID, name }));
-            console.log("Automatic check-in successful");
-          } catch (checkInError) {
-            console.error("Automatic check-in failed:", checkInError);
-            // Continue with login even if check-in fails
-          }
-        }
-      }
+      // if (withInLocation === "true") {
+      //   if (traineeID && name) {
+      //     try {
+      //       await dispatch(checkIn({ traineeId: traineeID, name }));
+      //       console.log("Automatic check-in successful");
+      //     } catch (checkInError) {
+      //       console.error("Automatic check-in failed:", checkInError);
+      //       // Continue with login even if check-in fails
+      //     }
+      //   }
+      // }
 
       return { ...data, traineeID, name };
     } catch (error) {

@@ -112,7 +112,7 @@ const HomeScreen = ({ navigation }) => {
               dispatch(logout()); // Dispatch logout action
               setTimeout(() => {
                 setActivity(false);
-                navigation.navigate("PermissionsScreen");
+                navigation.navigate("TrainingLoginScreen");
               }, 1000); // Reduced timeout
             }, 100);
           }

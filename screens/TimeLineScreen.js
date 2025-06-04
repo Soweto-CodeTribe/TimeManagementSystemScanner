@@ -14,12 +14,15 @@ import axios from "axios";
 import { useSelector } from "react-redux";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DocumentsUpload from "../Components/DocumentsUpload";
+import { useFocusEffect } from "@react-navigation/native";
 
 const TimelineScreen = () => {
   const [expandedDay, setExpandedDay] = useState(null);
   const [showCalendar, setShowCalendar] = useState(false);
   const currentDate = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(currentDate.toLocaleString("en-US", { month: "long" }));
+  const [selectedMonth, setSelectedMonth] = useState(
+    currentDate.toLocaleString("en-US", { month: "long" })
+  );
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
   const [selectedDate, setSelectedDate] = useState(currentDate.getDate());
   const [weekDates, setWeekDates] = useState([]);
@@ -47,7 +50,7 @@ const TimelineScreen = () => {
     "November",
     "December",
   ];
-  
+
   const weekDayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
   // Function to get the Monday of the current week
@@ -55,7 +58,7 @@ const TimelineScreen = () => {
     const now = new Date();
     const day = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
     const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
-    
+
     const monday = new Date(now.setDate(diff));
     return monday;
   };
@@ -67,7 +70,7 @@ const TimelineScreen = () => {
     setSelectedMonth(months[monday.getMonth()]);
     setSelectedYear(monday.getFullYear());
     setCurrentWeekStart(monday);
-    
+
     // Format for display
     const monthNum = monday.getMonth() + 1;
     const formattedMonth = monthNum.toString().padStart(2, "0");
@@ -92,9 +95,9 @@ const TimelineScreen = () => {
       const formattedMonth = monthIndex.toString().padStart(2, "0");
       const formattedDay = selectedDate.toString().padStart(2, "0");
       const formattedDate = `${selectedYear}-${formattedMonth}-${formattedDay}`;
-      
+
       console.log("Fetching data for date:", formattedDate);
-      
+
       // Pass the selected date to the API
       const response = await axios.get(
         `https://timemanagementsystemserver.onrender.com/api/session/weekly-stats?traineeId=${TraineeID}&weekStart=${formattedDate}`,
@@ -107,13 +110,16 @@ const TimelineScreen = () => {
 
       const data = response.data;
       const weeklyDataResponse = data.dailyBreakdown;
-      
-      console.log("Weekly data fetched:", JSON.stringify(weeklyDataResponse, null, 2));
+
+      console.log(
+        "Weekly data fetched:",
+        JSON.stringify(weeklyDataResponse, null, 2)
+      );
       setWeeklyData(weeklyDataResponse);
-      
+
       // Update last refresh time
       setLastRefreshTime(new Date());
-      
+
       // Return the data for use in calculateWeekDates
       return weeklyDataResponse;
     } catch (error) {
@@ -143,8 +149,8 @@ const TimelineScreen = () => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const ID = await AsyncStorage.getItem('traineeID');
-        const Token = await AsyncStorage.getItem('token');
+        const ID = await AsyncStorage.getItem("traineeID");
+        const Token = await AsyncStorage.getItem("token");
 
         setToken(Token);
         setTraineeID(ID);
@@ -156,6 +162,13 @@ const TimelineScreen = () => {
     fetchUserData();
   }, []);
 
+  // Add this block after token and TraineeID are set:
+  useEffect(() => {
+    if (token && TraineeID) {
+      onRefresh();
+    }
+  }, [token, TraineeID]);
+
   // Initialize the week days when component mounts or when selectedDate changes
   useEffect(() => {
     if (token && TraineeID) {
@@ -163,7 +176,7 @@ const TimelineScreen = () => {
         const data = await fetchWeeklyData();
         calculateWeekDates(data);
       };
-      
+
       loadData();
     }
   }, [selectedDate, selectedMonth, selectedYear, token, TraineeID]);
@@ -173,66 +186,68 @@ const TimelineScreen = () => {
     const monthIndex = months.indexOf(selectedMonth);
     const selectedDateObj = new Date(selectedYear, monthIndex, selectedDate);
     const dayOfWeek = selectedDateObj.getDay(); // 0 = Sunday, 1 = Monday, etc.
-  
+
     // Calculate the Monday date of this week
     const mondayOffset = dayOfWeek === 0 ? -6 : -(dayOfWeek - 1);
     const mondayDate = new Date(selectedDateObj);
     mondayDate.setDate(selectedDateObj.getDate() + mondayOffset);
-  
+
     // Generate dates for Monday through Friday
     const weekDateArray = [];
     const displayDaysArray = [];
-  
+
     for (let i = 0; i < 5; i++) {
       // Monday to Friday (5 days)
       const currentDate = new Date(mondayDate);
       currentDate.setDate(mondayDate.getDate() + i);
-  
+
       const day = currentDate.getDate();
       const month = currentDate.getMonth();
       const year = currentDate.getFullYear();
-  
+
       // Format the date string to match API response format (YYYY-MM-DD)
       const monthNum = month + 1;
       const formattedMonth = monthNum.toString().padStart(2, "0");
       const formattedDay = day.toString().padStart(2, "0");
       const formattedDate = `${year}-${formattedMonth}-${formattedDay}`;
-  
+
       // Check if the date is in the future
       const isFutureDate = currentDate > new Date();
-  
+
       // Find data for this day in the weekly data
-      const dayData = weeklyDataArray.find(data => data.date === formattedDate);
-  
+      const dayData = weeklyDataArray.find(
+        (data) => data.date === formattedDate
+      );
+
       weekDateArray.push({
         date: day,
         month: months[month],
         year: year,
         dayName: weekDayNames[i],
       });
-  
+
       // Create time ranges based on actual data or default
       let timeRanges = [];
       if (dayData && !isFutureDate) {
         if (dayData.checkInTime && dayData.checkOutTime) {
-          timeRanges.push({ 
-            start: formatTime(dayData.checkInTime), 
-            end: formatTime(dayData.checkOutTime)
+          timeRanges.push({
+            start: formatTime(dayData.checkInTime),
+            end: formatTime(dayData.checkOutTime),
           });
         }
         if (dayData.lunchStartTime && dayData.lunchEndTime) {
-          timeRanges.push({ 
-            start: formatTime(dayData.lunchStartTime), 
-            end: formatTime(dayData.lunchEndTime)
+          timeRanges.push({
+            start: formatTime(dayData.lunchStartTime),
+            end: formatTime(dayData.lunchEndTime),
           });
         }
       }
-  
+
       // If no time ranges were added, add default
       if (timeRanges.length === 0) {
         timeRanges = [{ start: "N/A", end: "N/A" }];
       }
-  
+
       // Create display day object with appropriate styling
       displayDaysArray.push({
         date: day,
@@ -248,11 +263,11 @@ const TimelineScreen = () => {
         isFutureDate: isFutureDate, // Add a flag for future dates
       });
     }
-  
+
     setWeekDates(weekDateArray);
     setDisplayDays(displayDaysArray);
   };
-  
+
   // Helper function to check if a date is today
   const isDateToday = (year, month, day) => {
     const today = new Date();
@@ -262,17 +277,20 @@ const TimelineScreen = () => {
       today.getFullYear() === year
     );
   };
-  
+
   // Helper function to format time from API
   const formatTime = (timeString) => {
     if (!timeString) return "N/A";
     // If timeString is already in a good format, return it
     if (timeString.includes(":")) return timeString;
-    
+
     // Otherwise, try to format it
     try {
       const timeDate = new Date(timeString);
-      return timeDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return timeDate.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     } catch (error) {
       return timeString; // Return original if parsing fails
     }
@@ -331,7 +349,7 @@ const TimelineScreen = () => {
     setSelectedDate(monday.getDate());
     setSelectedMonth(months[monday.getMonth()]);
     setSelectedYear(monday.getFullYear());
-    
+
     // Immediately load fresh data after jumping to current week
     // We need to wait for the state to update before fetching
     setTimeout(async () => {
@@ -342,8 +360,8 @@ const TimelineScreen = () => {
 
   const renderTimelineItem = (icon, title, time, dayData) => (
     <View style={styles.timelineItem}>
-      <View style={styles.timelineDot} >
-        <View style={styles.timelineDotItem}/>
+      <View style={styles.timelineDot}>
+        <View style={styles.timelineDotItem} />
       </View>
       <View style={styles.timelineIconContainer}>
         <Ionicons name={icon} size={20} color="#4CAF50" />
@@ -358,11 +376,11 @@ const TimelineScreen = () => {
   // Format the last refresh time
   const formatLastRefreshTime = () => {
     if (!lastRefreshTime) return "";
-    
-    return lastRefreshTime.toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      second: '2-digit' 
+
+    return lastRefreshTime.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
     });
   };
 
@@ -372,11 +390,17 @@ const TimelineScreen = () => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Timeline</Text>
         <View style={styles.headerButtonsGroup}>
-          <TouchableOpacity style={styles.todayButton} onPress={jumpToCurrentWeek}>
+          <TouchableOpacity
+            style={styles.todayButton}
+            onPress={jumpToCurrentWeek}
+          >
             <Ionicons name="today" size={20} color="#4CAF50" />
             <Text style={styles.filterText}>Today</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.filterButton} onPress={toggleCalendar}>
+          <TouchableOpacity
+            style={styles.filterButton}
+            onPress={toggleCalendar}
+          >
             <Ionicons name="calendar" size={20} color="#4CAF50" />
             <Text style={styles.filterText}>Filter</Text>
           </TouchableOpacity>
@@ -419,7 +443,7 @@ const TimelineScreen = () => {
           <Text style={styles.loadingText}>Loading timeline data...</Text>
         </View>
       ) : (
-        <ScrollView 
+        <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollViewContent}
           refreshControl={
@@ -435,34 +459,35 @@ const TimelineScreen = () => {
         >
           {displayDays.map((day, index) => (
             <View key={index}>
-              <View style={[
-                styles.dayCard,
-                day.isToday ? styles.todayCard : null
-              ]}>
+              <View
+                style={[styles.dayCard, day.isToday ? styles.todayCard : null]}
+              >
                 <View
                   style={[
                     styles.dateContainer,
                     { backgroundColor: day.backgroundColor },
-                    day.isToday ? styles.todayDateContainer : null
+                    day.isToday ? styles.todayDateContainer : null,
                   ]}
                 >
                   <Text style={[styles.dateNumber, { color: day.textColor }]}>
                     {day.date}
                   </Text>
-                  {day.isToday && (
-                    <Text style={styles.todayLabel}>TODAY</Text>
-                  )}
+                  {day.isToday && <Text style={styles.todayLabel}>TODAY</Text>}
                 </View>
                 <View style={styles.dayInfoContainer}>
                   <View style={styles.dayHeaderContainer}>
-                    <Text style={[
-                      styles.dayName,
-                      day.isToday ? styles.todayText : null
-                    ]}>
+                    <Text
+                      style={[
+                        styles.dayName,
+                        day.isToday ? styles.todayText : null,
+                      ]}
+                    >
                       {day.dayName}
                     </Text>
                     <View style={styles.headerButtonsContainer}>
-                      <TouchableOpacity onPress={() => toggleExpand(day.dayName)}>
+                      <TouchableOpacity
+                        onPress={() => toggleExpand(day.dayName)}
+                      >
                         <Ionicons
                           name={
                             expandedDay === day.dayName
@@ -479,73 +504,90 @@ const TimelineScreen = () => {
                     <View key={timeIndex} style={styles.timeRangeContainer}>
                       <Ionicons name="time-outline" size={16} color="#999" />
                       <Text style={styles.timeRange}>
-                        {timeRange.start === "N/A" ? 
-                          "No data available" : 
-                          `${timeRange.start} - ${timeRange.end}`}
+                        {timeRange.start === "N/A"
+                          ? "No data available"
+                          : `${timeRange.start} - ${timeRange.end}`}
                       </Text>
                     </View>
                   ))}
                   <View style={styles.statusAndUploadContainer}>
                     {day.dayData?.status && (
                       <View style={styles.statusContainer}>
-                        <Text style={[
-                          styles.statusText, 
-                          { color: day.dayData.status === "Present" ? "#4CAF50" : "#F44336" }
-                        ]}>
+                        <Text
+                          style={[
+                            styles.statusText,
+                            {
+                              color:
+                                day.dayData.status === "Present"
+                                  ? "#4CAF50"
+                                  : "#F44336",
+                            },
+                          ]}
+                        >
                           {day.dayData.status}
                         </Text>
                       </View>
                     )}
                     {day.dayData?.status === "Absent" && (
-                      <TouchableOpacity 
+                      <TouchableOpacity
                         onPress={() => setDocumentsheet(true)}
                         style={styles.uploadButton}
                       >
-                        <Ionicons name="cloud-upload-outline" size={24} color="#FF7043" />
+                        <Ionicons
+                          name="cloud-upload-outline"
+                          size={24}
+                          color="#FF7043"
+                        />
                         <View style={styles.radiatingEffect} />
                       </TouchableOpacity>
                     )}
                   </View>
                 </View>
               </View>
-                {/* Expanded Timeline Under the Day */}
-                {expandedDay === day.dayName && (
-                  <View style={styles.timelineContainer}>
-                    <View style={styles.timelineLine} />
-                    {renderTimelineItem(
-                      "enter-outline",
-                      "Check-in",
-                      day.dayData?.checkInTime ? formatTime(day.dayData.checkInTime) : "Data not available"
-                    )}
-                    {renderTimelineItem(
-                      "restaurant-outline",
-                      "Lunch-in",
-                      day.dayData?.lunchStartTime ? formatTime(day.dayData.lunchStartTime) : "Data not available"
-                    )}
-                    {renderTimelineItem(
-                      "fast-food-outline",
-                      "Lunch-out",
-                      day.dayData?.lunchEndTime ? formatTime(day.dayData.lunchEndTime) : "Data not available"
-                    )}
-                    {renderTimelineItem(
-                      "exit-outline",
-                      "Check-out",
-                      day.dayData?.checkOutTime ? formatTime(day.dayData.checkOutTime) : "Data not available"
-                    )}
-                  </View>
-                )}
-              </View>
-            ))}
-          </ScrollView>
-        )}
-        {
-          openDocumentsheet && (
-            <DocumentsUpload
-              openDocumentsheet={openDocumentsheet}
-              onClose={() => setDocumentsheet(false)}
-            />
-          )
-        }
+              {/* Expanded Timeline Under the Day */}
+              {expandedDay === day.dayName && (
+                <View style={styles.timelineContainer}>
+                  <View style={styles.timelineLine} />
+                  {renderTimelineItem(
+                    "enter-outline",
+                    "Check-in",
+                    day.dayData?.checkInTime
+                      ? formatTime(day.dayData.checkInTime)
+                      : "Data not available"
+                  )}
+                  {renderTimelineItem(
+                    "restaurant-outline",
+                    "Lunch-in",
+                    day.dayData?.lunchStartTime
+                      ? formatTime(day.dayData.lunchStartTime)
+                      : "Data not available"
+                  )}
+                  {renderTimelineItem(
+                    "fast-food-outline",
+                    "Lunch-out",
+                    day.dayData?.lunchEndTime
+                      ? formatTime(day.dayData.lunchEndTime)
+                      : "Data not available"
+                  )}
+                  {renderTimelineItem(
+                    "exit-outline",
+                    "Check-out",
+                    day.dayData?.checkOutTime
+                      ? formatTime(day.dayData.checkOutTime)
+                      : "Data not available"
+                  )}
+                </View>
+              )}
+            </View>
+          ))}
+        </ScrollView>
+      )}
+      {openDocumentsheet && (
+        <DocumentsUpload
+          openDocumentsheet={openDocumentsheet}
+          onClose={() => setDocumentsheet(false)}
+        />
+      )}
     </View>
   );
 };
@@ -728,15 +770,14 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 50,
     backgroundColor: "#fff",
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   timelineDotItem: {
     width: 15,
     height: 15,
     borderRadius: 50,
     backgroundColor: "#4CAF50",
-
   },
   timelineIconContainer: {
     width: 36,
@@ -760,28 +801,28 @@ const styles = StyleSheet.create({
     color: "#999",
   },
   headerButtonsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
   },
   uploadButton: {
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: "relative",
+    justifyContent: "center",
+    alignItems: "center",
   },
   radiatingEffect: {
-    position: 'absolute',
+    position: "absolute",
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255, 112, 67, 0.3)',
+    backgroundColor: "rgba(255, 112, 67, 0.3)",
     zIndex: -1,
-    transform: [{scale: 1}],
+    transform: [{ scale: 1 }],
   },
   statusAndUploadContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
 });
 

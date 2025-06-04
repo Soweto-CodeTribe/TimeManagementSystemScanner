@@ -159,7 +159,7 @@
 //   };
 
 //   return (
-//     <Stack.Navigator 
+//     <Stack.Navigator
 //       initialRouteName={getInitialRoute()}
 //       screenOptions={{ headerShown: false }}
 //     >
@@ -201,7 +201,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Provider, useSelector } from "react-redux";
 import { Ionicons } from "@expo/vector-icons";
-import { TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import store from "./Components/Redux/Store.js";
 import NotificationService from "./Components/NotificationService.js";
@@ -237,15 +237,15 @@ function BottomTabNavigator() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarStyle: {
-          position: 'absolute',
+          position: "absolute",
           bottom: 0,
           left: 20,
           right: 20,
           height: 60,
-          backgroundColor: '#F8F8FF',
+          backgroundColor: "#F8F8FF",
           paddingBottom: 5,
           borderTopWidth: 0,
-          borderTopColor: 'transparent',
+          borderTopColor: "transparent",
         },
         headerShown: false,
         tabBarIcon: ({ color, size }) => {
@@ -258,37 +258,38 @@ function BottomTabNavigator() {
         tabBarActiveTintColor: "#8BC34A",
         tabBarInactiveTintColor: "gray",
         tabBarButton: (props) => {
-          if (route.name === 'ScannerAuth') {
+          if (route.name === "ScannerAuth") {
             return (
               <TouchableOpacity
                 {...props}
                 style={{
                   top: -10,
-                  justifyContent: 'center',
-                  alignItems: 'center',
+                  justifyContent: "center",
+                  alignItems: "center",
                 }}
                 activeOpacity={0.7}
               >
                 {/* White background/border container */}
-                <View style={{
-                  width: 76,
-                  height: 76,
-                  borderRadius: 38,
-                  backgroundColor: '#F8F8FF',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-
-                }}>
+                <View
+                  style={{
+                    width: 76,
+                    height: 76,
+                    borderRadius: 38,
+                    backgroundColor: "#F8F8FF",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
                   {/* Green circle with icon */}
                   <View
                     style={{
                       width: 64,
                       height: 64,
                       borderRadius: 32,
-                      backgroundColor: '#8CD136',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      shadowColor: '#8CD136',
+                      backgroundColor: "#8CD136",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      shadowColor: "#8CD136",
                       shadowOffset: { width: 0, height: 2 },
                       shadowOpacity: 0.3,
                       shadowRadius: 4,
@@ -308,20 +309,20 @@ function BottomTabNavigator() {
       <Tab.Screen
         name="HomeScreen"
         component={HomeScreen}
-        options={{ tabBarLabel: 'Home' }}
+        options={{ tabBarLabel: "Home" }}
       />
       <Tab.Screen
         name="ScannerAuth"
         component={ScannerAuth}
         options={{
-          tabBarLabel: 'Scan',
-          tabBarLabelStyle: { marginTop: 8 }
+          tabBarLabel: "Scan",
+          tabBarLabelStyle: { marginTop: 8 },
         }}
       />
       <Tab.Screen
         name="Timeline"
         component={TimelineScreen}
-        options={{ tabBarLabel: 'Timeline' }}
+        options={{ tabBarLabel: "Timeline" }}
       />
     </Tab.Navigator>
   );
@@ -333,20 +334,23 @@ function AppNavigator() {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(null);
   const [onBoarded, setOnBoarded] = useState(false);
-  const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
+  const [locationPermissionGranted, setLocationPermissionGranted] =
+    useState(false);
   const navigationRef = useRef();
 
   useEffect(() => {
     const initializeApp = async () => {
       try {
         // Show splash screen for minimum 2 seconds
-        const splashTimer = new Promise(resolve => setTimeout(resolve, 6000));
+        const splashTimer = new Promise((resolve) => setTimeout(resolve, 6000));
 
         // Check stored data
         const checkStoredData = async () => {
           const storedToken = await AsyncStorage.getItem("token");
           const onBoarded = await AsyncStorage.getItem("onBoarded");
-          const location = await AsyncStorage.getItem("locationPermissionGranted");
+          const location = await AsyncStorage.getItem(
+            "locationPermissionGranted"
+          );
 
           setToken(storedToken);
           setOnBoarded(onBoarded);
@@ -355,7 +359,6 @@ function AppNavigator() {
 
         // Wait for both splash timer and data checking
         await Promise.all([splashTimer, checkStoredData()]);
-
       } catch (error) {
         console.error("Error during app initialization:", error);
       } finally {
@@ -378,9 +381,9 @@ function AppNavigator() {
           // Set up navigation reference for notification handling
           NotificationService.navigationRef = navigationRef;
 
-          console.log('Notifications initialized successfully');
+          console.log("Notifications initialized successfully");
         } catch (error) {
-          console.error('Failed to initialize notifications:', error);
+          console.error("Failed to initialize notifications:", error);
         }
       }
     };
@@ -412,9 +415,6 @@ function AppNavigator() {
     }
   };
 
-
-
-
   return (
     <Stack.Navigator
       ref={navigationRef}
@@ -422,10 +422,16 @@ function AppNavigator() {
       screenOptions={{ headerShown: false }}
     >
       <Stack.Screen name="GetStartedScreen" component={GetStartedScreen} />
-      <Stack.Screen name="GetStartedSeamlessly" component={GetStartedSeamlessly} />
+      <Stack.Screen
+        name="GetStartedSeamlessly"
+        component={GetStartedSeamlessly}
+      />
       <Stack.Screen name="PermissionsScreen" component={PermissionsScreen} />
       <Stack.Screen name="GetStartedVerified" component={GetStartedVerified} />
-      <Stack.Screen name="GetStartedAttendance" component={GetStartedAttendance} />
+      <Stack.Screen
+        name="GetStartedAttendance"
+        component={GetStartedAttendance}
+      />
       <Stack.Screen name="ScannerScreen" component={ScannerScreen} />
       <Stack.Screen name="TraineeLoginScreen" component={TraineeLoginScreen} />
       <Stack.Screen name="GuestRegister" component={GuestRegisterScreen} />
@@ -437,14 +443,14 @@ function AppNavigator() {
       <Stack.Screen name="NotificationScreen" component={NotificationScreen} />
       <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
       <Stack.Screen name="TicketScreen" component={TicketScreen} />
+      <Stack.Screen name="Timeline" component={TimelineScreen} />
     </Stack.Navigator>
   );
 }
 
 export default function App() {
-
   const navigationRef = useRef();
-  
+
   return (
     <Provider store={store}>
       <NavigationContainer ref={navigationRef}>

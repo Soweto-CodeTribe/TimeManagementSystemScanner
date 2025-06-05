@@ -140,12 +140,13 @@ const PermissionsPopup = ({ isVisible }) => {
     try {
       // Create location request
       const locationRequest = {
-        priority: HMSLocation.HMSLocationKit.LocationRequest.PRIORITY_HIGH_ACCURACY,
-        interval: 10000,
-        numUpdates: 1,
-        fastestInterval: 5000,
-        expirationTime: 30000,
-      };
+  priority: HMSLocation.HMSLocationKit.LocationRequest.PRIORITY_HIGH_ACCURACY,
+  interval: 5000, // Reduced interval for faster updates
+  numUpdates: 1,
+  fastestInterval: 2000, // Faster updates
+  expirationTime: 30000, // Increased timeout
+  smallestDisplacement: 0, // Get updates for any movement
+};
 
       // Get last known location first (faster)
       try {
@@ -237,6 +238,98 @@ const PermissionsPopup = ({ isVisible }) => {
     };
     checkPermissions();
   }, []);
+
+  // Add this new useEffect after the existing permission checking useEffect
+useEffect(() => {
+  const validateExistingPermissions = async () => {
+    // Only run if we've checked permissions and both are granted
+    if (!checkedPermissions || !locationPermissions || !cameraPermissions) {
+      return;
+    }
+
+    console.log('Validating location for returning user...');
+    setLoading(true);
+
+    try {
+      // Determine the method to use (expo or hms for Huawei)
+      let locationMethod = 'expo';
+      if (isHuawei && hmsAvailable) {
+        // Check if HMS has permission
+        try {
+          const hasHMSPermission = await HMSLocation.HMSLocationKit.FusedLocation.hasPermission();
+          if (hasHMSPermission) {
+            locationMethod = 'hms';
+          }
+        } catch (error) {
+          console.log('HMS permission check failed, using expo');
+        }
+      }
+
+      // Get current location
+      const location = await getCurrentLocation(locationMethod);
+      const { longitude, latitude } = location.coords;
+
+      // Validate with API
+      const response = await fetch('https://timemanagementsystemserver.onrender.com/api/validate-location', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          longitude,
+          latitude,
+          method: locationMethod,
+          isHuawei: isHuawei,
+          accuracy: location.coords.accuracy || 0
+        }),
+      });
+
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        
+        if (response.ok && data.allowed === true) {
+          await AsyncStorage.setItem("inLocationAndVerified", "true");
+          // Navigate to the appropriate screen (probably TraineeLoginScreen)
+          navigation.navigate("ScannerScreen");
+        } else {
+          // Location not allowed
+          Alert.alert(
+            "Location Not Allowed",
+            data.message || "Your location is not supported at this time.",
+            [{ 
+              text: "OK",
+              onPress: () => navigation.navigate("TraineeLoginScreen")
+            }]
+          );
+        }
+      } else {
+        throw new Error('Invalid server response');
+      }
+
+    } catch (error) {
+      console.error('Location validation failed for returning user:', error);
+      Alert.alert(
+        "Location Validation Failed",
+        "Unable to validate your location. Please try again.",
+        [
+          { 
+            text: "Try Again", 
+            onPress: () => validateExistingPermissions()
+          },
+          { 
+            text: "Cancel", 
+            onPress: () => navigation.navigate("GetStartedScreen")
+          }
+        ]
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  validateExistingPermissions();
+}, [checkedPermissions, locationPermissions, cameraPermissions, isHuawei, hmsAvailable]);
 
   useEffect(() => {
     if (isVisible && checkedPermissions) {
@@ -413,10 +506,11 @@ const PermissionsPopup = ({ isVisible }) => {
         
         // Get current position
         const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-          mayShowUserSettingsDialog: true,
-          timeout: 15000,
-        });
+  accuracy: Location.Accuracy.BestForNavigation, // Changed from Balanced to BestForNavigation
+  mayShowUserSettingsDialog: true,
+  timeout: 30000, // Increased timeout for high accuracy
+  maximumAge: 10000, // Don't use cached location older than 10 seconds
+});
         
         console.log('Expo location success:', location);
         return location;
@@ -834,8 +928,13 @@ const PermissionsPopup = ({ isVisible }) => {
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#8BC34A" />
         <Text style={styles.loadingText}>
-          {isHuawei ? 'Processing with Enhanced Location Services...' : 'Processing location...'}
-        </Text>
+  {!checkedPermissions 
+    ? 'Checking permissions...'
+    : locationPermissions && cameraPermissions 
+      ? (isHuawei ? 'Validating location with Enhanced Location Services...' : 'Validating your location...')
+      : (isHuawei ? 'Processing with Enhanced Location Services...' : 'Processing location...')
+  }
+</Text>
       </View>
     );
   }

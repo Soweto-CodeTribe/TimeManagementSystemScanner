@@ -409,7 +409,7 @@ function AppNavigator() {
     if (token) {
       return "MainApp"; // User is logged in
     } else if (onBoarded && locationPermissionGranted) {
-      return "TraineeLoginScreen"; // User has completed onboarding
+      return "PermissionsScreen"; // User has completed onboarding
     } else {
       return "GetStartedScreen"; // New user
     }

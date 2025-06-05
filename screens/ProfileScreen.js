@@ -127,7 +127,7 @@ const ProfileScreen = ({ navigation }) => {
             dispatch(logout()); // Dispatch logout action
             setTimeout(() => {
               setActivity(false);
-              navigation.navigate("TraineeLoginScreen");
+              navigation.navigate("PermissionsScreen");
             }, 3000);
           }, 100); // Small delay to ensure state update completes
         },

@@ -146,7 +146,7 @@ const ProfileBottomSheet = ({ openProfileSheet, setOpenProfileSheet }) => {
               </View>
             </View>
             
-            <View style={styles.field}>
+            {/* <View style={styles.field}>
               <View style={styles.iconContainer}>
                 <FontAwesome name="id-card" size={20} color="#6B7280" />
               </View>
@@ -154,7 +154,7 @@ const ProfileBottomSheet = ({ openProfileSheet, setOpenProfileSheet }) => {
               <View style={styles.actionIcon}>
                 <Feather name="lock" size={20} color="#6B7280" />
               </View>
-            </View>
+            </View> */}
             
             <View style={styles.field}>
               <View style={styles.iconContainer}>

@@ -291,7 +291,7 @@ useEffect(() => {
         if (response.ok && data.allowed === true) {
           await AsyncStorage.setItem("inLocationAndVerified", "true");
           // Navigate to the appropriate screen (probably TraineeLoginScreen)
-          navigation.navigate("ScannerScreen");
+          navigation.navigate("TraineeLoginScreen");
         } else {
           // Location not allowed
           Alert.alert(

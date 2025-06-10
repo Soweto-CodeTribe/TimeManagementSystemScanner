@@ -21,7 +21,7 @@ import DocumentPreviewModal from './DocumentPreviewModal';
 import { uploadToCodetribe, uploadToFirebase } from './UploadUtils.js';
 
 const { height, width } = Dimensions.get('window');
-const SHEET_HEIGHT = height * 0.7;
+const SHEET_HEIGHT = height * 0.75;
 
 const DocumentsUpload = ({ openDocumentsheet, onClose }) => {
   // State management

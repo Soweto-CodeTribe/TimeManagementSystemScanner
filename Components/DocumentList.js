@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
   uploadsContainer: {
     width: '100%',
     flex: 1,
-    marginBottom: 10,
+    marginBottom: 70,
   },
   uploadItem: {
     backgroundColor: '#F8F9FA',

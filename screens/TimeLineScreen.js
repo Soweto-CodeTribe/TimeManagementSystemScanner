@@ -411,11 +411,10 @@ const TimelineScreen = () => {
       <View style={styles.dateIndicator}>
         <Text style={styles.monthLabel}>
           {weekDates.length > 0
-            ? `${weekDates[0].month} ${weekDates[0].date} - ${
-                weekDates[0].month === weekDates[4].month
-                  ? weekDates[4].date
-                  : `${weekDates[4].month} ${weekDates[4].date}`
-              }, ${weekDates[0].year}`
+            ? `${weekDates[0].month} ${weekDates[0].date} - ${weekDates[0].month === weekDates[4].month
+              ? weekDates[4].date
+              : `${weekDates[4].month} ${weekDates[4].date}`
+            }, ${weekDates[0].year}`
             : selectedMonth}
         </Text>
         {lastRefreshTime && (
@@ -460,7 +459,7 @@ const TimelineScreen = () => {
           {displayDays.map((day, index) => (
             <View key={index}>
               <View
-                style={[styles.dayCard, day.isToday ? styles.todayCard : null]}
+                style={[styles.dayCard, day.isToday ? styles.todayCard : { marginHorizontal: 16, }]}
               >
                 <View
                   style={[
@@ -494,7 +493,7 @@ const TimelineScreen = () => {
                               ? "chevron-down"
                               : "chevron-forward"
                           }
-                          size={24}
+                          size={28}
                           color="#999"
                         />
                       </TouchableOpacity>
@@ -505,7 +504,7 @@ const TimelineScreen = () => {
                       <Ionicons name="time-outline" size={16} color="#999" />
                       <Text style={styles.timeRange}>
                         {timeRange.start === "N/A"
-                          ? "No data available"
+                          ? "Not yet checked-in"
                           : `${timeRange.start} - ${timeRange.end}`}
                       </Text>
                     </View>
@@ -534,9 +533,9 @@ const TimelineScreen = () => {
                         style={styles.uploadButton}
                       >
                         <Ionicons
-                          name="cloud-upload-outline"
+                          name="duplicate"
                           size={24}
-                          color="#FF7043"
+                          color="#rgba(0,0, 0, .7)"
                         />
                         <View style={styles.radiatingEffect} />
                       </TouchableOpacity>
@@ -553,28 +552,28 @@ const TimelineScreen = () => {
                     "Check-in",
                     day.dayData?.checkInTime
                       ? formatTime(day.dayData.checkInTime)
-                      : "Data not available"
+                      : "Not yet checked-in"
                   )}
                   {renderTimelineItem(
                     "restaurant-outline",
                     "Lunch-in",
                     day.dayData?.lunchStartTime
                       ? formatTime(day.dayData.lunchStartTime)
-                      : "Data not available"
+                      : "Not yet checked-in to lunch"
                   )}
                   {renderTimelineItem(
                     "fast-food-outline",
                     "Lunch-out",
                     day.dayData?.lunchEndTime
                       ? formatTime(day.dayData.lunchEndTime)
-                      : "Data not available"
+                      : "Not yet checked-out from lunch"
                   )}
                   {renderTimelineItem(
                     "exit-outline",
                     "Check-out",
                     day.dayData?.checkOutTime
                       ? formatTime(day.dayData.checkOutTime)
-                      : "Data not available"
+                      : "Not yet checked-out"
                   )}
                 </View>
               )}
@@ -582,12 +581,16 @@ const TimelineScreen = () => {
           ))}
         </ScrollView>
       )}
-      {openDocumentsheet && (
-        <DocumentsUpload
-          openDocumentsheet={openDocumentsheet}
-          onClose={() => setDocumentsheet(false)}
-        />
-      )}
+
+      <>
+        {openDocumentsheet && (
+          <DocumentsUpload
+            openDocumentsheet={openDocumentsheet}
+            onClose={() => setDocumentsheet(false)}
+          />
+        )}
+      </>
+
     </View>
   );
 };
@@ -622,7 +625,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(76, 175, 80, 0.1)",
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: 10,
   },
   todayButton: {
     flexDirection: "row",
@@ -630,7 +633,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(76, 175, 80, 0.1)",
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: 10,
   },
   filterText: {
     marginLeft: 4,
@@ -670,26 +673,22 @@ const styles = StyleSheet.create({
   },
   dayCard: {
     flexDirection: "row",
-    marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 12,
     backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    borderTopWidth: 2,
+    borderColor: "rgba(0, 0, 0, .075)",
+    paddingVertical: 8
   },
   todayCard: {
-    borderWidth: 1,
-    borderColor: "#4CAF50",
+    backgroundColor: "rgba(76, 175, 80, 0.3)",
+    borderTopWidth: 0,
+    paddingHorizontal: 16
   },
   dateContainer: {
     width: 60,
     height: 60,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 12,
+    borderRadius: 16,
     margin: 8,
   },
   todayDateContainer: {
@@ -733,7 +732,8 @@ const styles = StyleSheet.create({
   timeRange: {
     marginLeft: 6,
     color: "#666",
-    fontSize: 14,
+    fontSize: 11,
+     textTransform: 'uppercase'
   },
   statusContainer: {
     marginTop: 4,
@@ -741,6 +741,7 @@ const styles = StyleSheet.create({
   statusText: {
     fontWeight: "500",
     fontSize: 14,
+    textTransform: 'uppercase'
   },
   timelineContainer: {
     marginLeft: 45,
@@ -768,7 +769,7 @@ const styles = StyleSheet.create({
     left: -39,
     width: 20,
     height: 20,
-    borderRadius: 50,
+    borderRadius: 0,
     backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
@@ -776,13 +777,13 @@ const styles = StyleSheet.create({
   timelineDotItem: {
     width: 15,
     height: 15,
-    borderRadius: 50,
+    borderRadius: 5,
     backgroundColor: "#4CAF50",
   },
   timelineIconContainer: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 10,
     backgroundColor: "rgba(76, 175, 80, 0.1)",
     justifyContent: "center",
     alignItems: "center",
@@ -803,7 +804,14 @@ const styles = StyleSheet.create({
   headerButtonsContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    justifyContent: "center",
+    position: 'absolute',
+    top: 5,
+    right: -6,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+
   },
   uploadButton: {
     position: "relative",
@@ -814,8 +822,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255, 112, 67, 0.3)",
+    borderRadius: 10,
+    backgroundColor: "rgba(76, 175, 80, 0.5)",
     zIndex: -1,
     transform: [{ scale: 1 }],
   },

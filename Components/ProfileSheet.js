@@ -166,8 +166,6 @@ const ProfileBottomSheet = ({ openProfileSheet, setOpenProfileSheet }) => {
               </View>
             </View>
             
-            {/* Bottom indicator */}
-            <View style={styles.bottomIndicator} />
           </Animated.View>
         </TouchableWithoutFeedback>
       </View>
@@ -194,13 +192,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dragIndicator: {
-    width: 40,
-    height: 5,
+    width: 120,
+    height: 4,
     backgroundColor: '#E5E7EB',
     borderRadius: 3,
     marginBottom: 25,
     alignSelf: 'center',
-    cursor: 'pointer',
   },
   title: {
     fontSize: 24,
@@ -240,14 +237,6 @@ const styles = StyleSheet.create({
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  bottomIndicator: {
-    width: 120,
-    height: 5,
-    backgroundColor: '#000',
-    borderRadius: 3,
-    marginTop: 20,
-    opacity: 0.2,
   },
 });
 

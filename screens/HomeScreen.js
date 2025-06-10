@@ -220,6 +220,7 @@ const HomeScreen = ({ navigation }) => {
 
       if (response.data) {
         setProgramInfo(response.data);
+        console.log(response.data)
 
         // Get all months for the program duration
         const allMonths = getAllProgramMonths(

@@ -128,43 +128,46 @@ export default function ScannerAuth({ navigation }) {
 
   useFocusEffect(
     useCallback(() => {
+  const isInLocation = async () => {
+    try {
+      let withInLocation = await AsyncStorage.getItem(
+        "inLocationAndVerified"
+      );
 
-      const isInLocation = async () => {
-        try {
-          let withInLocation = await AsyncStorage.getItem(
-            "inLocationAndVerified"
-          );
-
-          if (withInLocation !== "true") {
-            Alert.alert(
-              "Location Verification", // Title
-              "You cannot access the scanner because you are not in the designated location.", // Message
-              [
-                {
-                  text: "OK",
-                  onPress: () => navigation.navigate("HomeScreen"),
-                  style: "default",
-                },
-              ],
-              {
-                cancelable: false,
-                dialogTitle: "Access Denied",
-                dialogMessage: "Location Check Failed",
-              }
-            );
+      if (withInLocation !== "true") {
+        Alert.alert(
+          "Location Verification", // Title
+          "You cannot access the scanner because you are not in the designated location.", // Message
+          [
+            {
+              text: "OK",
+              onPress: () => navigation.navigate("HomeScreen"),
+              style: "default",
+            },
+            {
+              text: "Revalidate",
+              onPress: () => navigation.navigate("PermissionsScreen"),
+              style: "default",
+            },
+          ],
+          {
+            cancelable: false,
+            dialogTitle: "Access Denied",
+            dialogMessage: "Location Check Failed",
           }
-        } catch (error) {
-          console.error(
-            "Error retrieving location verification status:",
-            error
-          );
-          Alert.alert("Error retrieving location verification status:", error);
-        }
-      };
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Error retrieving location verification status:",
+        error
+      );
+      Alert.alert("Error retrieving location verification status:", error);
+    }
+  };
 
-
-      isInLocation();
-    }, [navigation])
+  isInLocation();
+}, [navigation])
   );
 
   return (

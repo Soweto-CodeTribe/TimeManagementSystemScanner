@@ -200,7 +200,7 @@ const HomeScreen = ({ navigation }) => {
   // Fetch program information
   const fetchProgramInfo = async (authToken) => {
     try {
-      const traineeId = (await AsyncStorage.getItem("traineeId")) || "18";
+      const traineeId = (await AsyncStorage.getItem("traineeID"));
       if (!authToken) {
         console.error("Token is missing.");
         if (!tokenExpiredRef.current) {

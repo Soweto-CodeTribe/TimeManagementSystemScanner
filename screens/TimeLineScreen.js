@@ -278,21 +278,44 @@ const TimelineScreen = () => {
     );
   };
 
-  // Helper function to format time from API
+  // Fixed Helper function to format time from API
   const formatTime = (timeString) => {
-    if (!timeString) return "N/A";
-    // If timeString is already in a good format, return it
-    if (timeString.includes(":")) return timeString;
+    // Handle null, undefined, or empty values
+    if (!timeString || timeString === null || timeString === undefined || timeString === '') {
+      return "N/A";
+    }
 
-    // Otherwise, try to format it
+    // Convert to string if it's not already
+    const timeStr = String(timeString).trim();
+    
+    // If it's already empty after trimming
+    if (!timeStr) {
+      return "N/A";
+    }
+
+    // If timeString is already in HH:MM format, return it
+    if (/^\d{1,2}:\d{2}(?::\d{2})?(?:\s?[AP]M)?$/i.test(timeStr)) {
+      return timeStr;
+    }
+
+    // Try to parse as a date string
     try {
-      const timeDate = new Date(timeString);
+      const timeDate = new Date(timeStr);
+      
+      // Check if the date is valid
+      if (isNaN(timeDate.getTime())) {
+        console.log(`Invalid date string: ${timeStr}`);
+        return "N/A";
+      }
+      
       return timeDate.toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
+        hour12: false // Use 24-hour format to avoid AM/PM confusion
       });
     } catch (error) {
-      return timeString; // Return original if parsing fails
+      console.log(`Error parsing time string: ${timeStr}`, error);
+      return "N/A";
     }
   };
 
@@ -358,20 +381,59 @@ const TimelineScreen = () => {
     }, 100);
   };
 
-  const renderTimelineItem = (icon, title, time, dayData) => (
-    <View style={styles.timelineItem}>
-      <View style={styles.timelineDot}>
-        <View style={styles.timelineDotItem} />
+  // Helper function to get user-friendly messages for timeline items
+  const getTimelineMessage = (timeValue, defaultMessage) => {
+    const formattedTime = formatTime(timeValue);
+    return formattedTime === "N/A" ? defaultMessage : formattedTime;
+  };
+
+  const renderTimelineItem = (icon, title, time, dayData, timeKey) => {
+    let displayTime = "N/A";
+    let message = "Data not available";
+
+    // Determine the appropriate message based on the time key
+    if (timeKey && dayData) {
+      const timeValue = dayData[timeKey];
+      if (timeValue) {
+        displayTime = formatTime(timeValue);
+      } else {
+        // Provide specific messages for each timeline item
+        switch (timeKey) {
+          case 'checkInTime':
+            message = "Not logged yet";
+            break;
+          case 'lunchStartTime':
+            message = "Lunch not started";
+            break;
+          case 'lunchEndTime':
+            message = "Not logged yet";
+            break;
+          case 'checkOutTime':
+            message = "Not logged out";
+            break;
+          default:
+            message = "No data";
+        }
+      }
+    }
+
+    return (
+      <View style={styles.timelineItem}>
+        <View style={styles.timelineDot}>
+          <View style={styles.timelineDotItem} />
+        </View>
+        <View style={styles.timelineIconContainer}>
+          <Ionicons name={icon} size={20} color="#4CAF50" />
+        </View>
+        <View style={styles.timelineContent}>
+          <Text style={styles.timelineTitle}>{title}</Text>
+          <Text style={styles.timelineTime}>
+            {displayTime !== "N/A" ? displayTime : message}
+          </Text>
+        </View>
       </View>
-      <View style={styles.timelineIconContainer}>
-        <Ionicons name={icon} size={20} color="#4CAF50" />
-      </View>
-      <View style={styles.timelineContent}>
-        <Text style={styles.timelineTitle}>{title}</Text>
-        <Text style={styles.timelineTime}>{time || "Data not available"}</Text>
-      </View>
-    </View>
-  );
+    );
+  };
 
   // Format the last refresh time
   const formatLastRefreshTime = () => {
@@ -504,7 +566,7 @@ const TimelineScreen = () => {
                       <Ionicons name="time-outline" size={16} color="#999" />
                       <Text style={styles.timeRange}>
                         {timeRange.start === "N/A"
-                          ? "Not yet checked-in"
+                          ? "Not logged yet"
                           : `${timeRange.start} - ${timeRange.end}`}
                       </Text>
                     </View>
@@ -550,30 +612,30 @@ const TimelineScreen = () => {
                   {renderTimelineItem(
                     "enter-outline",
                     "Check-in",
-                    day.dayData?.checkInTime
-                      ? formatTime(day.dayData.checkInTime)
-                      : "Not yet checked-in"
+                    day.dayData?.checkInTime,
+                    day.dayData,
+                    "checkInTime"
                   )}
                   {renderTimelineItem(
                     "restaurant-outline",
                     "Lunch-in",
-                    day.dayData?.lunchStartTime
-                      ? formatTime(day.dayData.lunchStartTime)
-                      : "Not yet checked-in to lunch"
+                    day.dayData?.lunchStartTime,
+                    day.dayData,
+                    "lunchStartTime"
                   )}
                   {renderTimelineItem(
                     "fast-food-outline",
                     "Lunch-out",
-                    day.dayData?.lunchEndTime
-                      ? formatTime(day.dayData.lunchEndTime)
-                      : "Not yet checked-out from lunch"
+                    day.dayData?.lunchEndTime,
+                    day.dayData,
+                    "lunchEndTime"
                   )}
                   {renderTimelineItem(
                     "exit-outline",
                     "Check-out",
-                    day.dayData?.checkOutTime
-                      ? formatTime(day.dayData.checkOutTime)
-                      : "Not yet checked-out"
+                    day.dayData?.checkOutTime,
+                    day.dayData,
+                    "checkOutTime"
                   )}
                 </View>
               )}
@@ -593,9 +655,7 @@ const TimelineScreen = () => {
 
     </View>
   );
-};
-
-// Styling
+};// Styling
 
 const styles = StyleSheet.create({
   container: {

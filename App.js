@@ -334,8 +334,7 @@ function AppNavigator() {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(null);
   const [onBoarded, setOnBoarded] = useState(false);
-  const [locationPermissionGranted, setLocationPermissionGranted] =
-    useState(false);
+  const [locationPermissionGranted, setLocationPermissionGranted] = useState(false);
   const navigationRef = useRef();
 
   useEffect(() => {
@@ -460,6 +459,7 @@ export default function App() {
 
       {/* TOAST */}
       <Toast />
+      
       {/* ENDS */}
     </Provider>
   );

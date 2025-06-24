@@ -37,19 +37,114 @@ export default function ScannerScreen({ navigation }) {
   const [isLocationValid, setIsLocationValid] = useState(false);
   const [isCheckingLocation, setIsCheckingLocation] = useState(true);
   const [permissionDenied, setPermissionDenied] = useState(false);
-  const [isHuawei, setIsHuawei] = useState(false);
+  const [isLocation, setIsLocation] = useState(false);
 
   // Utility function to detect Huawei devices
-  const detectHuaweiDevice = () => {
-    const brand = Platform.constants?.Brand?.toLowerCase() || "";
-    const manufacturer = Platform.constants?.Manufacturer?.toLowerCase() || "";
-    return (
-      brand.includes("huawei") ||
-      brand.includes("honor") ||
-      manufacturer.includes("huawei") ||
-      manufacturer.includes("honor")
-    );
-  };
+  // const detectHuaweiDevice = () => {
+  //   const brand = Platform.constants?.Brand?.toLowerCase() || "";
+  //   const manufacturer = Platform.constants?.Manufacturer?.toLowerCase() || "";
+  //   return (
+  //     brand.includes("huawei") ||
+  //     brand.includes("honor") ||
+  //     manufacturer.includes("huawei") ||
+  //     manufacturer.includes("honor")
+  //   );
+  // };
+  /////////////////////////////////////////////////
+
+  // Function to detect location permission issues
+const detectLocationDevice = async () => {
+  try {
+    // Use expo-location to check permission status instead of device detection
+    const { status } = await Location.getForegroundPermissionsAsync();
+    const { canAskAgain } = await Location.getForegroundPermissionsAsync();
+    
+    // If permission is denied and can't ask again, likely needs manual setup
+    return status === 'denied' && !canAskAgain;
+  } catch (error) {
+    console.error("Error checking location permission status:", error);
+    return false;
+  }
+};
+
+// Replace the existing requestLocationPermissionWithFallback function with this:
+const requestLocationPermissionWithFallback = async () => {
+  try {
+    // First check current permission status
+    const currentPermission = await Location.getForegroundPermissionsAsync();
+    
+    if (currentPermission.status === "granted") {
+      return { granted: true };
+    }
+
+    // Request permission
+    const { status, canAskAgain } = await Location.requestForegroundPermissionsAsync();
+
+    if (status === "granted") {
+      return { granted: true };
+    }
+
+    // Check if this requires manual setup (permission denied and can't ask again)
+    const needsManualSetup = await detectLocationDevice();
+    setIsLocation(needsManualSetup);
+
+    if (status === "denied" && !canAskAgain) {
+      // Permission permanently denied - needs manual setup
+      return new Promise((resolve) => {
+        Alert.alert(
+          "Location Permission Required",
+          "Location permission has been permanently denied. Please enable it manually in device settings.",
+          [
+            {
+              text: "Cancel",
+              onPress: () => resolve({ granted: false, userCancelled: true }),
+              style: "cancel",
+            },
+            {
+              text: "Open Settings",
+              onPress: async () => {
+                await openAppSettings();
+                resolve({ granted: false, openedSettings: true });
+              },
+            },
+          ]
+        );
+      });
+    }
+
+    // Permission denied but can ask again
+    return new Promise((resolve) => {
+      Alert.alert(
+        "Location Permission Required",
+        "Location access is required to use the scanner. Please grant permission in the next dialog or go to settings.",
+        [
+          {
+            text: "Cancel",
+            onPress: () => resolve({ granted: false, userCancelled: true }),
+            style: "cancel",
+          },
+          {
+            text: "Try Again",
+            onPress: async () => {
+              const retryResult = await Location.requestForegroundPermissionsAsync();
+              resolve({ granted: retryResult.status === "granted" });
+            },
+          },
+          {
+            text: "Open Settings",
+            onPress: async () => {
+              await openAppSettings();
+              resolve({ granted: false, openedSettings: true });
+            },
+          },
+        ]
+      );
+    });
+  } catch (error) {
+    console.error("Permission request error:", error);
+    return { granted: false, error: error.message };
+  }
+};
 
   // Function to open app settings
   const openAppSettings = async () => {
@@ -97,77 +192,78 @@ export default function ScannerScreen({ navigation }) {
   };
 
   // Enhanced permission request with Huawei handling
-  const requestLocationPermissionWithFallback = async () => {
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
+  // const requestLocationPermissionWithFallback = async () => {
+  //   try {
+  //     const { status } = await Location.requestForegroundPermissionsAsync();
 
-      if (status === "granted") {
-        return { granted: true };
-      }
+  //     if (status === "granted") {
+  //       return { granted: true };
+  //     }
 
-      // Check if this is a Huawei device
-      const isHuaweiDev = detectHuaweiDevice();
-      setIsHuawei(isHuaweiDev);
+  //     // Check if this is a Huawei device
+  //     const isHuaweiDev = detectHuaweiDevice();
+  //     setIsHuawei(isHuaweiDev);
 
-      if (status === "denied" && isHuaweiDev) {
-        // For Huawei devices, the permission dialog might not show
-        // Show custom dialog explaining the issue
-        return new Promise((resolve) => {
-          Alert.alert(
-            "Location Permission Required",
-            "This device requires manual permission setup. Please enable location access in settings to continue.",
-            [
-              {
-                text: "Cancel",
-                onPress: () => resolve({ granted: false, userCancelled: true }),
-                style: "cancel",
-              },
-              {
-                text: "Open Settings",
-                onPress: async () => {
-                  await openAppSettings();
-                  resolve({ granted: false, openedSettings: true });
-                },
-              },
-            ]
-          );
-        });
-      }
+  //     if (status === "denied" && isHuaweiDev) {
+  //       // For Huawei devices, the permission dialog might not show
+  //       // Show custom dialog explaining the issue
+  //       return new Promise((resolve) => {
+  //         Alert.alert(
+  //           "Location Permission Required",
+  //           "This device requires manual permission setup. Please enable location access in settings to continue.",
+  //           [
+  //             {
+  //               text: "Cancel",
+  //               onPress: () => resolve({ granted: false, userCancelled: true }),
+  //               style: "cancel",
+  //             },
+  //             {
+  //               text: "Open Settings",
+  //               onPress: async () => {
+  //                 await openAppSettings();
+  //                 resolve({ granted: false, openedSettings: true });
+  //               },
+  //             },
+  //           ]
+  //         );
+  //       });
+  //     }
 
-      // For other devices with denied permission
-      return new Promise((resolve) => {
-        Alert.alert(
-          "Location Permission Required",
-          "Location access is required to use the scanner. Please grant permission in the next dialog or go to settings.",
-          [
-            {
-              text: "Cancel",
-              onPress: () => resolve({ granted: false, userCancelled: true }),
-              style: "cancel",
-            },
-            {
-              text: "Try Again",
-              onPress: async () => {
-                const retryResult =
-                  await Location.requestForegroundPermissionsAsync();
-                resolve({ granted: retryResult.status === "granted" });
-              },
-            },
-            {
-              text: "Open Settings",
-              onPress: async () => {
-                await openAppSettings();
-                resolve({ granted: false, openedSettings: true });
-              },
-            },
-          ]
-        );
-      });
-    } catch (error) {
-      console.error("Permission request error:", error);
-      return { granted: false, error: error.message };
-    }
-  };
+  //     // For other devices with denied permission
+  //     return new Promise((resolve) => {
+  //       Alert.alert(
+  //         "Location Permission Required",
+  //         "Location access is required to use the scanner. Please grant permission in the next dialog or go to settings.",
+  //         [
+  //           {
+  //             text: "Cancel",
+  //             onPress: () => resolve({ granted: false, userCancelled: true }),
+  //             style: "cancel",
+  //           },
+  //           {
+  //             text: "Try Again",
+  //             onPress: async () => {
+  //               const retryResult =
+  //                 await Location.requestForegroundPermissionsAsync();
+  //               resolve({ granted: retryResult.status === "granted" });
+  //             },
+  //           },
+  //           {
+  //             text: "Open Settings",
+  //             onPress: async () => {
+  //               await openAppSettings();
+  //               resolve({ granted: false, openedSettings: true });
+  //             },
+  //           },
+  //         ]
+  //       );
+  //     });
+  //   } catch (error) {
+  //     console.error("Permission request error:", error);
+  //     return { granted: false, error: error.message };
+  //   }
+  // };
+  /// Not used..
 
   useFocusEffect(
     useCallback(() => {
@@ -358,9 +454,9 @@ export default function ScannerScreen({ navigation }) {
       <View style={[styles.container, styles.centerContent]}>
         <Toast />
         <Text style={styles.loadingText}>Validating location...</Text>
-        {isHuawei && (
+        {isLocation && (
           <Text style={styles.huaweiText}>
-            Huawei device detected - manual setup may be required
+            Location device detected - manual setup may be required
           </Text>
         )}
       </View>
@@ -375,8 +471,8 @@ export default function ScannerScreen({ navigation }) {
         <AntDesign name="exclamationcircleo" size={64} color="#FF6B6B" />
         <Text style={styles.errorTitle}>Location Permission Required</Text>
         <Text style={styles.errorDescription}>
-          {isHuawei
-            ? "Huawei/Honor devices require manual permission setup. Please enable location access in Settings > Apps > [App Name] > Permissions"
+          {isLocation
+            ? "Your device requires manual permission setup. Please enable location access in Settings > Apps > [App Name] > Permissions"
             : "Please enable location permission to use the scanner"}
         </Text>
 

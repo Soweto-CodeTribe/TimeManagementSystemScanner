@@ -12,16 +12,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
-  Keyboard
+  Keyboard,
+  ActivityIndicator
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../Components/Redux/Slices/AuthenticationSlice";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import Ionicons from "react-native-vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Toast from "react-native-toast-message";
-
-const { width, height } = Dimensions.get('window');
 
 const TraineeLoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -203,14 +201,6 @@ const TraineeLoginScreen = ({ navigation }) => {
           Animated.timing(slideAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
         ]);
         errorShake.start();
-
-        Toast.show({
-          type: 'error',
-          text1: 'Login Failed',
-          text2: err?.message || 'Invalid credentials. Please try again.',
-          position: 'bottom',
-          visibilityTime: 4000,
-        });
       });
   };
 
@@ -253,7 +243,7 @@ const TraineeLoginScreen = ({ navigation }) => {
             >
             
               <View style={styles.titleContainer}>
-                <Text style={styles.heading}>Right On Time</Text>
+                <Text style={styles.heading}>Be On Time, Every Time</Text>
                 <Text style={styles.subHeading}>Sign in to your trainee account</Text>
               </View>
             </Animated.View>
@@ -403,13 +393,7 @@ const TraineeLoginScreen = ({ navigation }) => {
                 >
                   <View style={styles.buttonContent}>
                     {isLoading && (
-                      <Animated.View style={styles.loadingIndicator}>
-                        <MaterialCommunityIcons 
-                          name="loading" 
-                          size={20} 
-                          color="#fff" 
-                        />
-                      </Animated.View>
+                      <ActivityIndicator size={'small'} color="#fff"/>
                     )}
                     <Text style={styles.buttonText}>
                       {isLoading ? "Signing In..." : "Sign In"}
@@ -591,6 +575,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: 8,
   },
   loadingIndicator: {
     marginRight: 8,

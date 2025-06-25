@@ -893,14 +893,14 @@ const styles = StyleSheet.create({
   toggleContainer: {
     flexDirection: "row",
     backgroundColor: "#F5F5F5",
-    borderRadius: 12,
+    borderRadius: 18,
     padding: 4,
     width: 200,
   },
   toggleButton: {
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 12,
+    borderRadius: 16,
     flex: 1,
     alignItems: "center",
   },
@@ -933,7 +933,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     backgroundColor: "#fff",
-    borderRadius: 12,
+    borderRadius: 24,
     padding: 15,
     marginHorizontal: 20,
     borderWidth: 4,
@@ -953,12 +953,12 @@ const styles = StyleSheet.create({
   progressContainer: {
     height: 16,
     backgroundColor: "#F5F5F5",
-    borderRadius: 4,
+    borderRadius: 6,
     marginVertical: 8,
   },
   progressBar: {
     height: 16,
-    borderRadius: 4,
+    borderRadius: 6,
   },
   percentageText: {
     fontSize: 14,
@@ -967,7 +967,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
   },
   currentMonthCard: {
-    borderWidth: 2,
+    borderWidth: 5,
     borderColor: '#8CC63F',
     backgroundColor: '#F9FFF4',
   },

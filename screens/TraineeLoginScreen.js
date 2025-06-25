@@ -253,7 +253,7 @@ const TraineeLoginScreen = ({ navigation }) => {
             >
             
               <View style={styles.titleContainer}>
-                <Text style={styles.heading}>Welcome Back</Text>
+                <Text style={styles.heading}>Right On Time</Text>
                 <Text style={styles.subHeading}>Sign in to your trainee account</Text>
               </View>
             </Animated.View>

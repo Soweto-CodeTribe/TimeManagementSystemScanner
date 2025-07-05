@@ -180,17 +180,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 16,
     marginTop: 24,
+    borderWidth: 2,
+    borderColor: "#111", 
+    backgroundColor: '#FAFBFC'
   },
   buttonDisabled: {
     backgroundColor: '#E0E0E0',
+    borderWidth: 2,
+    borderColor: "#111" 
   },
   buttonText: {
-    color: '#FFF',
+    color: '#000',
     fontSize: 16,
     fontWeight: '600',
   },
   buttonTextDisabled: {
-    color: '#999',
+    color: '#000',
   },
   errorText: {
     color: 'red',

@@ -307,37 +307,72 @@ export default function ScannerScreen({ navigation }) {
     }, [navigation])
   );
 
-  async function handleBarcodeScanned({ data }) {
-    if (scanned || !isLocationValid) return;
+  // async function handleBarcodeScanned({ data }) {
+  //   if (scanned || !isLocationValid) return;
 
-    try {
-      const resultAction = await dispatch(verifyQRCode(data));
+  //   try {
+  //     const resultAction = await dispatch(verifyQRCode(data));
 
-      if (verifyQRCode.fulfilled.match(resultAction)) {
-        const locationResult = await dispatch(captureLocation());
+  //     if (verifyQRCode.fulfilled.match(resultAction)) {
+  //       const locationResult = await dispatch(captureLocation());
 
-        if (captureLocation.fulfilled.match(locationResult)) {
-          Toast.show({
-            type: "success",
-            text1: "Scanned Successfully",
-            text2: "You can now log in to check in",
-            position: "top",
-            zIndex: 99999,
-          });
-        } else if (captureLocation.rejected.match(locationResult)) {
-          Alert.alert(
-            "Location Error",
-            locationResult.payload || "Could not get location."
-          );
-        }
-      } else if (verifyQRCode.rejected.match(resultAction)) {
-        Alert.alert("Invalid QR Code", "This QR code is expired or incorrect.");
+  //       if (captureLocation.fulfilled.match(locationResult)) {
+  //         Toast.show({
+  //           type: "success",
+  //           text1: "Scanned Successfully",
+  //           text2: "You can now log in to check in",
+  //           position: "top",
+  //           zIndex: 99999,
+  //         });
+  //       } else if (captureLocation.rejected.match(locationResult)) {
+  //         Alert.alert(
+  //           "Location Error",
+  //           locationResult.payload || "Could not get location."
+  //         );
+  //       }
+  //     } else if (verifyQRCode.rejected.match(resultAction)) {
+  //       Alert.alert("Invalid QR Code", "This QR code is expired or incorrect.");
+  //     }
+  //   } catch (err) {
+  //     console.error("Scan Error:", err);
+  //     Alert.alert("Error", "An unexpected error occurred");
+  //   }
+  // }
+
+async function handleBarcodeScanned({ data }) {
+  if (scanned || !isLocationValid) return;
+
+  try {
+    const resultAction = await dispatch(verifyQRCode(data));
+
+    if (verifyQRCode.fulfilled.match(resultAction)) {
+      const locationResult = await dispatch(captureLocation());
+
+      if (captureLocation.fulfilled.match(locationResult)) {
+        Toast.show({
+          type: "success",
+          text1: "Scanned Successfully",
+          text2: "You can now log in to check in",
+          position: "top",
+          zIndex: 99999,
+        });
+      } else if (captureLocation.rejected.match(locationResult)) {
+        Alert.alert(
+          "Location Error",
+          locationResult.payload || "Could not get location."
+        );
       }
-    } catch (err) {
-      console.error("Scan Error:", err);
-      Alert.alert("Error", "An unexpected error occurred");
+    } else if (verifyQRCode.rejected.match(resultAction)) {
+      Alert.alert("Invalid QR Code", "This QR code is expired or incorrect.");
+      dispatch(resetScan()); // 🔧 Reset scanning state so user can try again
     }
+  } catch (err) {
+    console.error("Scan Error:", err);
+    Alert.alert("Error", "An unexpected error occurred");
   }
+}
+
+
 
   const closeBottomSheet = () => {
     dispatch(setBottomSheetVisible(false));

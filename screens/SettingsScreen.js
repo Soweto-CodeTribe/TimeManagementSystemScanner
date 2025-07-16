@@ -335,13 +335,13 @@ const showScheduledNotifications = async () => {
           </View>
 
           {/* Test Notification Button */}
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.testButton}
             onPress={testNotification}
           >
             <Ionicons name="notifications-outline" size={20} color="#8BC34A" />
             <Text style={styles.testButtonText}>Send Test Notification</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           {/* Show Scheduled Notifications */}
           <TouchableOpacity

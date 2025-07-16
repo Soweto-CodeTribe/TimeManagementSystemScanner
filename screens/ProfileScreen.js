@@ -9,6 +9,8 @@ import {
   StatusBar,
   Pressable,
   Alert,
+  Dimensions,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect } from "react";
@@ -22,6 +24,9 @@ import { logout } from "../Components/Redux/Slices/AuthenticationSlice";
 import DocumentsUpload from "../Components/DocumentsUpload";
 import TermsAndConditions from "../Components/TermsAndConditions";
 import axios from "axios";
+import { LinearGradient } from 'expo-linear-gradient';
+
+const { width } = Dimensions.get('window');
 
 const ProfileScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -38,7 +43,7 @@ const ProfileScreen = ({ navigation }) => {
   const defaultImage =
     "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-Z6HPIGZArOlwZgZRYD64JxoekuRd7t.png";
 
-  // Fetch user Data from Async Storage on componenet Mount such as name and picked image for persistancy
+  // Fetch user Data from Async Storage on component Mount
   useEffect(() => {
     const loadProfileData = async () => {
       try {
@@ -46,23 +51,14 @@ const ProfileScreen = ({ navigation }) => {
         const storedName = await AsyncStorage.getItem("name");
         const storedlocation = await AsyncStorage.getItem("Location");
 
-        if (storedImage) {
-          setImage(storedImage);
-        }
-
-        if (storedName) {
-          setName(storedName);
-        }
-
-        if (storedlocation) {
-          setlocation(storedlocation);
-        }
+        if (storedImage) setImage(storedImage);
+        if (storedName) setName(storedName);
+        if (storedlocation) setlocation(storedlocation);
       } catch (error) {
         console.error("Error loading profile data:", error);
       }
     };
 
-    // Run the function on component mount
     loadProfileData();
   }, []);
 
@@ -72,9 +68,7 @@ const ProfileScreen = ({ navigation }) => {
     try {
       axios.post(
         "https://timemanagementsystemserver.onrender.com/api/auth/logout",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
     } catch (error) {
       console.error("Logout Error:", error.response?.data || error);
@@ -82,9 +76,7 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
-  // Function to pick an image from the Gallery
   const pickImage = async () => {
-    // Request permission to access the gallery
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -92,7 +84,6 @@ const ProfileScreen = ({ navigation }) => {
       quality: 1,
     });
 
-    // If the user cancels the image picker, return null
     if (!result.canceled) {
       const selectedImage = result.assets[0].uri;
       setImage(selectedImage);
@@ -100,136 +91,176 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
-  //  Loader layout if the state is true
-  if (isLoading) {
+  if (isLoading || activity) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#8BC34A" />
+        <ActivityIndicator size="large" color="#6366F1" />
+        <Text style={styles.loadingText}>
+          {activity ? "Logging out..." : "Loading..."}
+        </Text>
       </View>
     );
   }
 
   const HandleLogout = () => {
-    Alert.alert("Are you sure you want to logout ?", "See you next time", [
-      {
-        text: "No",
-        onPress: () => console.log("Cancel Pressed"),
-        style: "cancel",
-      },
-      {
-        text: "Yes",
-        onPress: async () => {
-          // Set activity to true and wait for state update to complete
-          setActivity(true);
-          await logUserOut();
-          // Use setTimeout to ensure the state update has time to propagate
-          setTimeout(() => {
-            dispatch(logout()); // Dispatch logout action
+    Alert.alert(
+      "Sign Out",
+      "Are you sure you want to sign out?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Sign Out",
+          style: "destructive",
+          onPress: async () => {
+            setActivity(true);
+            await logUserOut();
             setTimeout(() => {
-              setActivity(false);
-              navigation.navigate("PermissionsScreen");
-            }, 3000);
-          }, 100); // Small delay to ensure state update completes
+              dispatch(logout());
+              setTimeout(() => {
+                setActivity(false);
+                navigation.navigate("PermissionsScreen");
+              }, 3000);
+            }, 100);
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
-  if (activity) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#8BC34A" />
-      </View>
-    );
-  }
-
-  // Layout of the Profile Screen
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      <View style={styles.container}>
-        <View style={styles.navBar}>
+      {/* Header with Gradient */}
+
+      <View style={styles.navBar}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="chevron-back" size={24} color="#000" />
+          <Text style={styles.backtext}>Back</Text>
+        </TouchableOpacity>
+        <Text style={styles.navBarTitle}>Profile</Text>
+        <View style={styles.placeholder} />
+      </View>
+
+      {/* Profile Header */}
+      <View style={styles.profileHeader}>
+        <View style={styles.profileImageContainer}>
+          <Image
+            source={{ uri: image || defaultImage }}
+            style={styles.profileImage}
+          />
           <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
+            style={styles.imagePickerButton}
+            onPress={pickImage}
           >
-            <Ionicons name="chevron-back" size={24} color="#999999" />
-            <Text style={styles.backtext}>Back</Text>
+            <Ionicons name="camera" size={16} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.navBarTitle}>Profile</Text>
         </View>
 
-        <ScrollView>
-          <View style={styles.profileHeader}>
-            <Image
-              source={{ uri: image || defaultImage }}
-              style={styles.profileImage}
-            />
-            <TouchableOpacity
-              style={styles.imagePickerButton}
-              onPress={pickImage}
-            >
-              <Ionicons name="camera-outline" size={24} color="#fff" />
-            </TouchableOpacity>
-            <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>{name || "User"}</Text>
-              <View style={styles.locationContainer}>
-                <Ionicons name="location" size={16} color="#8BC34A" />
-                <Text style={styles.locationText}>{location}</Text>
-              </View>
-            </View>
+        <View style={styles.profileInfo}>
+          <Text style={styles.profileName}>{name || "User"}</Text>
+          <View style={styles.locationContainer}>
+            <Ionicons name="location" size={14} color="red" />
+            <Text style={styles.locationText}>{location || "Add location"}</Text>
           </View>
+        </View>
+      </View>
 
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Edit Profile Card */}
+        <View style={styles.card}>
           <TouchableOpacity
             style={styles.editProfileButton}
             onPress={() => setOpenProfileSheet(true)}
           >
-            <Text style={styles.editProfileText}>Edit Profile</Text>
+            <LinearGradient
+              colors={['#8BC34A', '#8BC34A']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.editButtonGradient}
+            >
+              <Text style={styles.editProfileText}>View Profile</Text>
+            </LinearGradient>
           </TouchableOpacity>
+        </View>
 
-          <View style={styles.menuContainer}>
+        {/* Menu Items */}
+        <View style={styles.menuSection}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          <View style={styles.menuCard}>
             <MenuItem
-              icon="document-text-outline"
+              icon="document-text"
               title="Documents"
-              iconColor="#8BC34A"
+              subtitle="Manage your files"
+              iconColor="#3B82F6"
+              backgroundColor="#EFF6FF"
               onPress={() => setDocumentsheet(true)}
             />
+            <MenuDivider />
             <MenuItem
-              icon="settings-outline"
+              icon="settings"
               title="Settings"
-              iconColor="#8BC34A"
+              subtitle="App preferences"
+              iconColor="#8B5CF6"
+              backgroundColor="#F3E8FF"
               onPress={() => navigation.navigate("SettingsScreen")}
             />
+            <MenuDivider />
             <MenuItem
-              icon="ticket-outline"
-              title="Tickets"
-              iconColor="#8BC34A"
+              icon="ticket"
+              title="Support Tickets"
+              subtitle="Get help & support"
+              iconColor="#F59E0B"
+              backgroundColor="#FEF3C7"
               onPress={() => navigation.navigate("TicketScreen")}
             />
+          </View>
+        </View>
+
+        <View style={styles.menuSection}>
+          <Text style={styles.sectionTitle}>Feedback & Legal</Text>
+          <View style={styles.menuCard}>
             <MenuItem
-              icon="alert-circle-outline"
+              icon="chatbubble-ellipses"
               title="Send Feedback"
-              iconColor="#8BC34A"
+              subtitle="Help us improve"
+              iconColor="#10B981"
+              backgroundColor="#D1FAE5"
               onPress={() => setOpenFeedbackSheet(true)}
             />
+            <MenuDivider />
             <MenuItem
-              icon="document-outline"
-              title="Terms and Conditions"
+              icon="document-text"
+              title="Terms & Conditions"
+              subtitle="Legal information"
               iconColor="#8BC34A"
+              backgroundColor="rgba(76, 175, 80, 0.3)"
               onPress={() => setTermssheeet(true)}
             />
-            <MenuItem
-              icon="log-out-outline"
-              title="Sign out"
-              iconColor="#FF5252"
-              onPress={() => HandleLogout()}
-            />
           </View>
-          {/* <FeedbackBottomSheet/> */}
-        </ScrollView>
-      </View>
+        </View>
 
+        {/* Logout Button */}
+        <View style={styles.logoutSection}>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={HandleLogout}
+          >
+            <Ionicons name="log-out" size={20} color="#EF4444" />
+            <Text style={styles.logoutText}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.bottomSpacing} />
+      </ScrollView>
+
+      {/* Bottom Sheets */}
       {openProfileSheet && (
         <ProfileButtomSheet
           setOpenProfileSheet={setOpenProfileSheet}
@@ -259,154 +290,229 @@ const ProfileScreen = ({ navigation }) => {
 };
 
 // Menu Item Component
-const MenuItem = ({ icon, title, iconColor, onPress }) => {
+const MenuItem = ({ icon, title, subtitle, iconColor, backgroundColor, onPress }) => {
   return (
     <TouchableOpacity style={styles.menuItem} onPress={onPress}>
       <View style={styles.menuItemLeft}>
-        <View
-          style={[styles.iconContainer, { backgroundColor: `${iconColor}20` }]}
-        >
+        <View style={[styles.iconContainer, { backgroundColor }]}>
           <Ionicons name={icon} size={20} color={iconColor} />
         </View>
-        <Text style={styles.menuItemText}>{title}</Text>
+        <View style={styles.menuItemTextContainer}>
+          <Text style={styles.menuItemTitle}>{title}</Text>
+          <Text style={styles.menuItemSubtitle}>{subtitle}</Text>
+        </View>
       </View>
-      <Ionicons name="chevron-forward" size={20} color="#CCCCCC" />
+      <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
     </TouchableOpacity>
   );
 };
 
-// Styles for the Profile SCREEN
+const MenuDivider = () => <View style={styles.menuDivider} />;
+
+// Styles
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F8FAFC",
   },
-  container: {
-    flex: 1,
-    backgroundColor: "#F5F5F5",
+  headerGradient: {
+    paddingBottom: 30,
   },
   navBar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 10,
-    backgroundColor: "#F5F5F5",
-    marginTop: 40,
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'ios' ? 0 : 40,
+    paddingBottom: 15,
   },
   backButton: {
-    padding: 0,
+    paddingVertical: 5,
+    zIndex: 10,
+    flexDirection: "row",
   },
   backtext: {
     padding: 2,
   },
   navBarTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#999999",
-    textAlign: "center",
-    flex: 1,
-    position: "absolute",
-    left: 0,
-    right: 0,
-    textAlign: "center",
+    fontWeight: "700",
+    color: "#1a1a1a",
+  },
+  placeholder: {
+    width: 40,
   },
   profileHeader: {
     flexDirection: "row",
     alignItems: "center",
-    paddingTop: 20,
-    paddingBottom: 15,
     paddingHorizontal: 20,
+    paddingBottom: 10,
+  },
+  profileImageContainer: {
     position: "relative",
+    marginRight: 20,
   },
   profileImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginRight: 15,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 4,
+    borderColor: "rgba(255, 255, 255, 0.3)",
   },
   imagePickerButton: {
     position: "absolute",
-    bottom: 10,
-    left: 60,
+    bottom: 0,
+    right: 0,
     backgroundColor: "#8BC34A",
-    borderRadius: 20,
-    padding: 5,
+    borderRadius: 18,
+    width: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 3,
+    borderColor: "#FFFFFF",
   },
   profileInfo: {
-    flexDirection: "column",
-    justifyContent: "center",
+    flex: 1,
   },
   profileName: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#333333",
-    marginBottom: 5,
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#1a1a1a",
+    marginBottom: 8,
   },
   locationContainer: {
     flexDirection: "row",
     alignItems: "center",
   },
   locationText: {
-    fontSize: 14,
-    color: "#8BC34A",
-    marginLeft: 4,
+    fontSize: 15,
+    color: "#444",
+    marginLeft: 6,
+    fontWeight: "500",
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop: 20,
+  },
+  card: {
+    marginHorizontal: 20,
+    marginBottom: 24,
   },
   editProfileButton: {
-    backgroundColor: "#8CD136",
-    borderRadius: 8,
-    paddingVertical: 15,
-    marginHorizontal: 20,
-    marginBottom: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  editButtonGradient: {
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 24,
   },
   editProfileText: {
-    color: "white",
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
+    marginLeft: 8,
   },
-  menuContainer: {
-    paddingHorizontal: 20,
+  menuSection: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: 12,
+    marginHorizontal: 20,
+  },
+  menuCard: {
+    backgroundColor: "#FFFFFF",
+    marginHorizontal: 20,
+    borderRadius: 16,
+    borderWidth: 4,
+    borderColor: "rgba(0, 0, 0, .055)",
   },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "white",
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
   },
   menuItemLeft: {
     flexDirection: "row",
     alignItems: "center",
+    flex: 1,
   },
   iconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: 16,
   },
-  menuItemText: {
+  menuItemTextContainer: {
+    flex: 1,
+  },
+  menuItemTitle: {
     fontSize: 16,
-    color: "#666666",
+    fontWeight: "600",
+    color: "#111827",
+    marginBottom: 2,
+  },
+  menuItemSubtitle: {
+    fontSize: 13,
+    color: "#6B7280",
+    fontWeight: "400",
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: "#F3F4F6",
+    marginLeft: 80,
+  },
+  logoutSection: {
+    marginHorizontal: 20,
+    marginTop: 8,
+  },
+  logoutButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    paddingVertical: 16,
+    borderRadius: 16,
+    borderWidth: 4,
+    borderColor: "rgba(0, 0, 0, .055)",
+  },
+  logoutText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#EF4444",
+    marginLeft: 8,
+  },
+  bottomSpacing: {
+    height: 40,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F8FAFC",
   },
-  backButton: {
-    padding: 10,
-    zIndex: 10,
-    flexDirection: "row",
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#6B7280",
+    fontWeight: "500",
   },
 });
 

@@ -21,7 +21,7 @@ import DocumentPreviewModal from './DocumentPreviewModal';
 import { uploadToCodetribe, uploadToFirebase } from './UploadUtils.js';
 
 const { height, width } = Dimensions.get('window');
-const SHEET_HEIGHT = height * 0.7;
+const SHEET_HEIGHT = height * 0.75;
 
 const DocumentsUpload = ({ openDocumentsheet, onClose }) => {
   // State management
@@ -316,8 +316,8 @@ const styles = StyleSheet.create({
   },
   bottomSheet: {
     backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
     paddingHorizontal: 20,
     paddingTop: 20,
     paddingBottom: 20,
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
   },
   dragHandle: {
     width: 120,
-    height: 5,
+    height: 4,
     backgroundColor: '#E0E0E0',
     borderRadius: 2.5,
     alignSelf: 'center',

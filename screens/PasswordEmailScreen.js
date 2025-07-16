@@ -22,14 +22,14 @@ const PasswordEmailScreen = ({ navigation }) => {
           <Text style={styles.subtitle}>
             We have sent a password recover instructions to your email
           </Text>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => navigation.navigate('TraineeLoginScreen')} 
-        >
-          <Text style={styles.buttonText}>
-            Finish
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate('TraineeLoginScreen')}
+          >
+            <Text style={styles.buttonText}>
+              Finish
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -84,13 +84,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   button: {
-    width: '100%',
-    height: 48,
-    backgroundColor: '#4CAF50',
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: '40', 
+
+    backgroundColor: '#8CD136',
+    width: "100%",
+    height: 56,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 16,
+    marginTop: '40',
   },
   buttonText: {
     color: '#FFF',

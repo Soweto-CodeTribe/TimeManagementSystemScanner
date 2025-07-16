@@ -278,21 +278,44 @@ const TimelineScreen = () => {
     );
   };
 
-  // Helper function to format time from API
+  // Fixed Helper function to format time from API
   const formatTime = (timeString) => {
-    if (!timeString) return "N/A";
-    // If timeString is already in a good format, return it
-    if (timeString.includes(":")) return timeString;
+    // Handle null, undefined, or empty values
+    if (!timeString || timeString === null || timeString === undefined || timeString === '') {
+      return "N/A";
+    }
 
-    // Otherwise, try to format it
+    // Convert to string if it's not already
+    const timeStr = String(timeString).trim();
+    
+    // If it's already empty after trimming
+    if (!timeStr) {
+      return "N/A";
+    }
+
+    // If timeString is already in HH:MM format, return it
+    if (/^\d{1,2}:\d{2}(?::\d{2})?(?:\s?[AP]M)?$/i.test(timeStr)) {
+      return timeStr;
+    }
+
+    // Try to parse as a date string
     try {
-      const timeDate = new Date(timeString);
+      const timeDate = new Date(timeStr);
+      
+      // Check if the date is valid
+      if (isNaN(timeDate.getTime())) {
+        console.log(`Invalid date string: ${timeStr}`);
+        return "N/A";
+      }
+      
       return timeDate.toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
+        hour12: false // Use 24-hour format to avoid AM/PM confusion
       });
     } catch (error) {
-      return timeString; // Return original if parsing fails
+      console.log(`Error parsing time string: ${timeStr}`, error);
+      return "N/A";
     }
   };
 
@@ -358,20 +381,59 @@ const TimelineScreen = () => {
     }, 100);
   };
 
-  const renderTimelineItem = (icon, title, time, dayData) => (
-    <View style={styles.timelineItem}>
-      <View style={styles.timelineDot}>
-        <View style={styles.timelineDotItem} />
+  // Helper function to get user-friendly messages for timeline items
+  const getTimelineMessage = (timeValue, defaultMessage) => {
+    const formattedTime = formatTime(timeValue);
+    return formattedTime === "N/A" ? defaultMessage : formattedTime;
+  };
+
+  const renderTimelineItem = (icon, title, time, dayData, timeKey) => {
+    let displayTime = "N/A";
+    let message = "Data not available";
+
+    // Determine the appropriate message based on the time key
+    if (timeKey && dayData) {
+      const timeValue = dayData[timeKey];
+      if (timeValue) {
+        displayTime = formatTime(timeValue);
+      } else {
+        // Provide specific messages for each timeline item
+        switch (timeKey) {
+          case 'checkInTime':
+            message = "Not logged yet";
+            break;
+          case 'lunchStartTime':
+            message = "Lunch not started";
+            break;
+          case 'lunchEndTime':
+            message = "Not logged yet";
+            break;
+          case 'checkOutTime':
+            message = "Not logged out";
+            break;
+          default:
+            message = "No data";
+        }
+      }
+    }
+
+    return (
+      <View style={styles.timelineItem}>
+        <View style={styles.timelineDot}>
+          <View style={styles.timelineDotItem} />
+        </View>
+        <View style={styles.timelineIconContainer}>
+          <Ionicons name={icon} size={20} color="#4CAF50" />
+        </View>
+        <View style={styles.timelineContent}>
+          <Text style={styles.timelineTitle}>{title}</Text>
+          <Text style={styles.timelineTime}>
+            {displayTime !== "N/A" ? displayTime : message}
+          </Text>
+        </View>
       </View>
-      <View style={styles.timelineIconContainer}>
-        <Ionicons name={icon} size={20} color="#4CAF50" />
-      </View>
-      <View style={styles.timelineContent}>
-        <Text style={styles.timelineTitle}>{title}</Text>
-        <Text style={styles.timelineTime}>{time || "Data not available"}</Text>
-      </View>
-    </View>
-  );
+    );
+  };
 
   // Format the last refresh time
   const formatLastRefreshTime = () => {
@@ -411,11 +473,10 @@ const TimelineScreen = () => {
       <View style={styles.dateIndicator}>
         <Text style={styles.monthLabel}>
           {weekDates.length > 0
-            ? `${weekDates[0].month} ${weekDates[0].date} - ${
-                weekDates[0].month === weekDates[4].month
-                  ? weekDates[4].date
-                  : `${weekDates[4].month} ${weekDates[4].date}`
-              }, ${weekDates[0].year}`
+            ? `${weekDates[0].month} ${weekDates[0].date} - ${weekDates[0].month === weekDates[4].month
+              ? weekDates[4].date
+              : `${weekDates[4].month} ${weekDates[4].date}`
+            }, ${weekDates[0].year}`
             : selectedMonth}
         </Text>
         {lastRefreshTime && (
@@ -460,7 +521,7 @@ const TimelineScreen = () => {
           {displayDays.map((day, index) => (
             <View key={index}>
               <View
-                style={[styles.dayCard, day.isToday ? styles.todayCard : null]}
+                style={[styles.dayCard, day.isToday ? styles.todayCard : { marginHorizontal: 16, }]}
               >
                 <View
                   style={[
@@ -494,7 +555,7 @@ const TimelineScreen = () => {
                               ? "chevron-down"
                               : "chevron-forward"
                           }
-                          size={24}
+                          size={28}
                           color="#999"
                         />
                       </TouchableOpacity>
@@ -505,7 +566,7 @@ const TimelineScreen = () => {
                       <Ionicons name="time-outline" size={16} color="#999" />
                       <Text style={styles.timeRange}>
                         {timeRange.start === "N/A"
-                          ? "No data available"
+                          ? "Not logged yet"
                           : `${timeRange.start} - ${timeRange.end}`}
                       </Text>
                     </View>
@@ -534,9 +595,9 @@ const TimelineScreen = () => {
                         style={styles.uploadButton}
                       >
                         <Ionicons
-                          name="cloud-upload-outline"
+                          name="duplicate"
                           size={24}
-                          color="#FF7043"
+                          color="#rgba(0,0, 0, .7)"
                         />
                         <View style={styles.radiatingEffect} />
                       </TouchableOpacity>
@@ -551,30 +612,30 @@ const TimelineScreen = () => {
                   {renderTimelineItem(
                     "enter-outline",
                     "Check-in",
-                    day.dayData?.checkInTime
-                      ? formatTime(day.dayData.checkInTime)
-                      : "Data not available"
+                    day.dayData?.checkInTime,
+                    day.dayData,
+                    "checkInTime"
                   )}
                   {renderTimelineItem(
                     "restaurant-outline",
                     "Lunch-in",
-                    day.dayData?.lunchStartTime
-                      ? formatTime(day.dayData.lunchStartTime)
-                      : "Data not available"
+                    day.dayData?.lunchStartTime,
+                    day.dayData,
+                    "lunchStartTime"
                   )}
                   {renderTimelineItem(
                     "fast-food-outline",
                     "Lunch-out",
-                    day.dayData?.lunchEndTime
-                      ? formatTime(day.dayData.lunchEndTime)
-                      : "Data not available"
+                    day.dayData?.lunchEndTime,
+                    day.dayData,
+                    "lunchEndTime"
                   )}
                   {renderTimelineItem(
                     "exit-outline",
                     "Check-out",
-                    day.dayData?.checkOutTime
-                      ? formatTime(day.dayData.checkOutTime)
-                      : "Data not available"
+                    day.dayData?.checkOutTime,
+                    day.dayData,
+                    "checkOutTime"
                   )}
                 </View>
               )}
@@ -582,17 +643,19 @@ const TimelineScreen = () => {
           ))}
         </ScrollView>
       )}
-      {openDocumentsheet && (
-        <DocumentsUpload
-          openDocumentsheet={openDocumentsheet}
-          onClose={() => setDocumentsheet(false)}
-        />
-      )}
+
+      <>
+        {openDocumentsheet && (
+          <DocumentsUpload
+            openDocumentsheet={openDocumentsheet}
+            onClose={() => setDocumentsheet(false)}
+          />
+        )}
+      </>
+
     </View>
   );
-};
-
-// Styling
+};// Styling
 
 const styles = StyleSheet.create({
   container: {
@@ -622,7 +685,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(76, 175, 80, 0.1)",
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: 10,
   },
   todayButton: {
     flexDirection: "row",
@@ -630,7 +693,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(76, 175, 80, 0.1)",
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: 10,
   },
   filterText: {
     marginLeft: 4,
@@ -670,26 +733,22 @@ const styles = StyleSheet.create({
   },
   dayCard: {
     flexDirection: "row",
-    marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 12,
     backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    borderTopWidth: 2,
+    borderColor: "rgba(0, 0, 0, .075)",
+    paddingVertical: 8
   },
   todayCard: {
-    borderWidth: 1,
-    borderColor: "#4CAF50",
+    backgroundColor: "rgba(76, 175, 80, 0.3)",
+    borderTopWidth: 0,
+    paddingHorizontal: 16
   },
   dateContainer: {
     width: 60,
     height: 60,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 12,
+    borderRadius: 16,
     margin: 8,
   },
   todayDateContainer: {
@@ -733,7 +792,8 @@ const styles = StyleSheet.create({
   timeRange: {
     marginLeft: 6,
     color: "#666",
-    fontSize: 14,
+    fontSize: 11,
+     textTransform: 'uppercase'
   },
   statusContainer: {
     marginTop: 4,
@@ -741,6 +801,7 @@ const styles = StyleSheet.create({
   statusText: {
     fontWeight: "500",
     fontSize: 14,
+    textTransform: 'uppercase'
   },
   timelineContainer: {
     marginLeft: 45,
@@ -768,7 +829,7 @@ const styles = StyleSheet.create({
     left: -39,
     width: 20,
     height: 20,
-    borderRadius: 50,
+    borderRadius: 0,
     backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
@@ -776,13 +837,13 @@ const styles = StyleSheet.create({
   timelineDotItem: {
     width: 15,
     height: 15,
-    borderRadius: 50,
+    borderRadius: 5,
     backgroundColor: "#4CAF50",
   },
   timelineIconContainer: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 10,
     backgroundColor: "rgba(76, 175, 80, 0.1)",
     justifyContent: "center",
     alignItems: "center",
@@ -803,7 +864,14 @@ const styles = StyleSheet.create({
   headerButtonsContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    justifyContent: "center",
+    position: 'absolute',
+    top: 5,
+    right: -6,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+
   },
   uploadButton: {
     position: "relative",
@@ -814,8 +882,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: 36,
     height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255, 112, 67, 0.3)",
+    borderRadius: 10,
+    backgroundColor: "rgba(76, 175, 80, 0.5)",
     zIndex: -1,
     transform: [{ scale: 1 }],
   },

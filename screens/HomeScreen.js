@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { useState, useEffect, useCallback, useMemo, useRef} from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   View,
   Text,
@@ -35,7 +35,24 @@ const AttendanceProgressBar = ({ percentage, showLabel = false }) => {
   const barColor = getBarColor(percentage);
 
   return (
-    <View style={styles.progressContainer}>
+    <View style={[styles.progressContainer, { position: 'relative' }]}>
+
+      <View style={
+        {
+          // backgroundColor: 'red',
+          position: 'absolute',
+          height: 30,
+          width: 30,
+          top: -60,
+          right: 0,
+        }
+      }>
+        <Ionicons
+          name="calendar-outline"
+          size={28}
+          color="rgba(76, 175, 80, 0.7)"
+        />
+      </View>
       <View
         style={[
           styles.progressBar,
@@ -51,11 +68,13 @@ const AttendanceProgressBar = ({ percentage, showLabel = false }) => {
             {percentage > 80
               ? "If A Monthly/Yearly Attendance is Over 80%, The Progress Bar Must Be Blue"
               : percentage >= 60
-              ? "If A Monthly/Yearly Attendance is Between 60% And 80%, The Progress Bar Must Be Orange"
-              : "If A Monthly/Yearly Attendance is Under 60%, The Progress Bar Must Be Red"}
+                ? "If A Monthly/Yearly Attendance is Between 60% And 80%, The Progress Bar Must Be Orange"
+                : "If A Monthly/Yearly Attendance is Under 60%, The Progress Bar Must Be Red"}
           </Text>
         </View>
       )}
+
+
     </View>
   );
 };
@@ -75,7 +94,7 @@ const HomeScreen = ({ navigation }) => {
   const [dataInitialized, setDataInitialized] = useState(false);
   const [image, setImage] = useState(null);
   const [activity, setActivity] = useState(false);
-  
+
   // Add state to track if logout is already in progress
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const tokenExpiredRef = useRef(false);
@@ -86,9 +105,9 @@ const HomeScreen = ({ navigation }) => {
     if (tokenExpiredRef.current || isLoggingOut) {
       return;
     }
-    
+
     tokenExpiredRef.current = true;
-    
+
     Alert.alert(
       "Session Expired",
       "Your session has expired. Please sign in again.",
@@ -97,16 +116,16 @@ const HomeScreen = ({ navigation }) => {
           text: "OK",
           onPress: async () => {
             if (isLoggingOut) return; // Double check
-            
+
             setIsLoggingOut(true);
             setActivity(true);
-            
+
             try {
               await logUserOut();
             } catch (error) {
               console.error("Error during logout:", error);
             }
-            
+
             // Use setTimeout to ensure state update completes
             setTimeout(() => {
               dispatch(logout()); // Dispatch logout action
@@ -121,7 +140,7 @@ const HomeScreen = ({ navigation }) => {
       { cancelable: false } // Prevent dismissing by tapping outside
     );
   }, [isLoggingOut, dispatch, navigation]);
-  
+
   // Add logout function similar to ProfileScreen
   const logUserOut = async () => {
     const token = await AsyncStorage.getItem("token");
@@ -142,7 +161,7 @@ const HomeScreen = ({ navigation }) => {
   // Helper function to check if error is 401 and handle token expiration
   const handleApiError = useCallback((error, context = "") => {
     console.error(`Error in ${context}:`, error.response?.data || error.message);
-    
+
     // Only handle token expiration if we haven't already started the process
     if (error.response && error.response.status === 401 && !tokenExpiredRef.current) {
       handleExpiredToken();
@@ -181,7 +200,7 @@ const HomeScreen = ({ navigation }) => {
   // Fetch program information
   const fetchProgramInfo = async (authToken) => {
     try {
-      const traineeId = (await AsyncStorage.getItem("traineeId")) || "18";
+      const traineeId = (await AsyncStorage.getItem("traineeID"));
       if (!authToken) {
         console.error("Token is missing.");
         if (!tokenExpiredRef.current) {
@@ -201,6 +220,7 @@ const HomeScreen = ({ navigation }) => {
 
       if (response.data) {
         setProgramInfo(response.data);
+        console.log(response.data)
 
         // Get all months for the program duration
         const allMonths = getAllProgramMonths(
@@ -280,7 +300,7 @@ const HomeScreen = ({ navigation }) => {
 
       if (monthlyResponse.data) {
         const stats = monthlyResponse.data.monthlyStats;
-        
+
         // Convert the percentage string to a number
         const percentageStr = stats.attendanceRate;
         const percentage = parseFloat(percentageStr.replace('%', ''));
@@ -318,7 +338,7 @@ const HomeScreen = ({ navigation }) => {
       }
     } catch (error) {
       handleApiError(error, "fetchMonthlyStatsForMonth");
-      
+
       // For months with no data, add an empty record (only if not a 401 error)
       if (!error.response || error.response.status !== 401) {
         const monthNames = [
@@ -361,42 +381,42 @@ const HomeScreen = ({ navigation }) => {
   };
 
   // First, add a function to identify the current month
-const isCurrentMonth = (monthName, year) => {
-  const today = new Date();
-  const currentMonthName = months[today.getMonth()];
-  const currentYear = today.getFullYear();
-  return monthName === currentMonthName && year === currentYear;
-};
+  const isCurrentMonth = (monthName, year) => {
+    const today = new Date();
+    const currentMonthName = months[today.getMonth()];
+    const currentYear = today.getFullYear();
+    return monthName === currentMonthName && year === currentYear;
+  };
 
-// Create a ref for the ScrollView
-const scrollViewRef = useRef(null);
+  // Create a ref for the ScrollView
+  const scrollViewRef = useRef(null);
 
-// Create a ref for the current month card position
-const currentMonthRef = useRef(null);
+  // Create a ref for the current month card position
+  const currentMonthRef = useRef(null);
 
-// Function to scroll to current month
-const scrollToCurrentMonth = () => {
-  if (currentMonthRef.current && scrollViewRef.current) {
-    // Add a slight delay to ensure layout is complete
-    setTimeout(() => {
-      currentMonthRef.current.measureLayout(
-        scrollViewRef.current,
-        (x, y) => {
-          scrollViewRef.current.scrollTo({ y: y - 150, animated: true });
-        },
-        () => console.log("Failed to measure")
-      );
-    }, 100);
-  }
-};
+  // Function to scroll to current month
+  const scrollToCurrentMonth = () => {
+    if (currentMonthRef.current && scrollViewRef.current) {
+      // Add a slight delay to ensure layout is complete
+      setTimeout(() => {
+        currentMonthRef.current.measureLayout(
+          scrollViewRef.current,
+          (x, y) => {
+            scrollViewRef.current.scrollTo({ y: y - 150, animated: true });
+          },
+          () => console.log("Failed to measure")
+        );
+      }, 100);
+    }
+  };
 
 
-// Scroll to current month when activeStats changes to "monthly"
-useEffect(() => {
-  if (activeStats === "monthly" && sortedMonthlyStats && sortedMonthlyStats.length > 0) {
-    scrollToCurrentMonth();
-  }
-}, [activeStats, sortedMonthlyStats]);
+  // Scroll to current month when activeStats changes to "monthly"
+  useEffect(() => {
+    if (activeStats === "monthly" && sortedMonthlyStats && sortedMonthlyStats.length > 0) {
+      scrollToCurrentMonth();
+    }
+  }, [activeStats, sortedMonthlyStats]);
   // Update yearly stats when monthly stats are fetched
   const updateYearlyStats = (year, monthStats) => {
     setYearlyStats((prevYearlyStats) => {
@@ -540,45 +560,32 @@ useEffect(() => {
 
   // Prepare data for the weekly attendance chart
   const weeklyChartData = useMemo(() => {
-    // Default empty data
-    const emptyData = {
-      labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
-      datasets: [
-        {
-          data: [0, 0, 0, 0, 0],
-          color: () => "#8CC63F", // Solid green color
-          strokeWidth: 0, // No stroke
-        },
-      ],
-    };
+  const emptyData = {
+    labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+    datasets: [{ data: [0, 0, 0, 0, 0] }],
+  };
 
-    if (!dailyData || dailyData.length === 0) return emptyData;
+  if (!dailyData?.length) return emptyData;
 
-    // Map days to their attendance data
-    const dayLabels = [];
-    const attendanceData = [];
+  const dayMap = new Map();
+  dailyData.forEach((day) => {
+    const dayAbbr = day?.dayOfWeek?.slice(0, 3);
+    const hoursWorked = day?.attended ? Math.max(0, Number(day.hoursWorked) || 0) : 0;
+    if (dayAbbr) {
+      dayMap.set(dayAbbr, hoursWorked);
+    }
+  });
 
-    dailyData.forEach((day) => {
-      // Extract day abbreviation
-      const dayAbbr = day.dayOfWeek ? day.dayOfWeek.substring(0, 3) : "";
-      dayLabels.push(dayAbbr);
+  // Ensure consistent weekday structure
+  const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+  const attendanceData = weekdays.map(day => dayMap.get(day) || 0);
 
-      // Calculate hours worked or use 0 if absent
-      const hoursWorked = day.attended ? parseFloat(day.hoursWorked || "0") : 0;
-      attendanceData.push(hoursWorked);
-    });
+  return {
+    labels: weekdays,
+    datasets: [{ data: attendanceData }],
+  };
+}, [dailyData]);
 
-    return {
-      labels: dayLabels,
-      datasets: [
-        {
-          data: attendanceData,
-          color: () => "#8CC63F",
-          strokeWidth: 0,
-        },
-      ],
-    };
-  }, [dailyData]);
 
   // Current date
   const today = new Date();
@@ -605,9 +612,8 @@ useEffect(() => {
     "Friday",
     "Saturday",
   ];
-  const currentDate = `${days[today.getDay()]}, ${
-    months[today.getMonth()]
-  } ${today.getDate()}, ${today.getFullYear()}`;
+  const currentDate = `${days[today.getDay()]}, ${months[today.getMonth()]
+    } ${today.getDate()}, ${today.getFullYear()}`;
 
   // Show loading indicator when logging out
   if (activity) {
@@ -663,15 +669,8 @@ useEffect(() => {
       <View style={styles.chartContainer}>
         <Text style={styles.chartTitle}>Weekly Attendance</Text>
         <BarChart
-          data={{
-            labels: weeklyChartData.labels,
-            datasets: [
-              {
-                data: weeklyChartData.datasets[0].data,
-              },
-            ],
-          }}
-          width={Dimensions.get("window").width - 40}
+          data={weeklyChartData}
+          width={Dimensions.get("window").width - 20}
           height={250}
           yAxisSuffix=" Hrs"
           chartConfig={{
@@ -680,8 +679,8 @@ useEffect(() => {
             decimalPlaces: 1,
             color: () => "#8CC63F",
             fillShadowGradient: "#8CC63F",
-            fillShadowGradientOpacity: 3,
-            barPercentage: 0.75,
+            fillShadowGradientOpacity: .3,
+            barPercentage: 0.95,
             labelColor: () => "#808285",
             propsForBackgroundLines: {
               strokeDasharray: "",
@@ -744,15 +743,15 @@ useEffect(() => {
           onClose={() => setIsDayMissed(false)}
         />
       )}
-        <ScrollView ref={scrollViewRef}>
+      <ScrollView ref={scrollViewRef}>
         {/* Stats Cards based on active view */}
         <View style={styles.statsCards}>
           {activeStats === "monthly" &&
-            sortedMonthlyStats.map((stat, index) => {
+            sortedMonthlyStats.slice().reverse().map((stat, index) => {
               const isCurrentMonthStat = isCurrentMonth(stat.month, stat.year);
               return (
-                <View 
-                  key={index} 
+                <View
+                  key={index}
                   ref={isCurrentMonthStat ? currentMonthRef : null}
                   style={[
                     styles.statCard,
@@ -785,7 +784,7 @@ useEffect(() => {
             })}
 
           {activeStats === "yearly" &&
-            sortedYearlyStats.map((stat, index) => (
+            sortedYearlyStats.slice().reverse().map((stat, index) => (
               <View key={index} style={styles.statCard}>
                 <Text style={styles.monthTitle}>Year {stat.year}</Text>
                 {stat.total === 0 ? (
@@ -894,7 +893,7 @@ const styles = StyleSheet.create({
   toggleContainer: {
     flexDirection: "row",
     backgroundColor: "#F5F5F5",
-    borderRadius: 20,
+    borderRadius: 18,
     padding: 4,
     width: 200,
   },
@@ -934,14 +933,11 @@ const styles = StyleSheet.create({
   },
   statCard: {
     backgroundColor: "#fff",
-    borderRadius: 12,
+    borderRadius: 24,
     padding: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
     marginHorizontal: 20,
+    borderWidth: 4,
+    borderColor: "rgba(0, 0, 0, .075)",
   },
   monthTitle: {
     fontSize: 16,
@@ -955,14 +951,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   progressContainer: {
-    height: 8,
+    height: 16,
     backgroundColor: "#F5F5F5",
-    borderRadius: 4,
+    borderRadius: 6,
     marginVertical: 8,
   },
   progressBar: {
-    height: 8,
-    borderRadius: 4,
+    height: 16,
+    borderRadius: 6,
   },
   percentageText: {
     fontSize: 14,
@@ -971,7 +967,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
   },
   currentMonthCard: {
-    borderWidth: 2,
+    borderWidth: 5,
     borderColor: '#8CC63F',
     backgroundColor: '#F9FFF4',
   },

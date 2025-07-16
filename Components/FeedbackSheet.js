@@ -110,18 +110,19 @@ const styles = StyleSheet.create({
   },
   bottomSheet: {
     backgroundColor: 'white',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
     padding: 20,
     paddingTop: 10,
     alignItems: 'center',
   },
   indicator: {
-    width: 40,
+    width: 120,
     height: 4,
     backgroundColor: '#E0E0E0',
     borderRadius: 2,
-    marginBottom: 20,
+    marginTop: 10,
+    marginBottom: 15,
   },
   title: {
     fontSize: 22,

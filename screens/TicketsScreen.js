@@ -861,12 +861,12 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   indicator: {
-    width: 40,
+    width: 120,
     height: 4,
     backgroundColor: '#E0E0E0',
     borderRadius: 2,
-    marginBottom: 20,
-    alignSelf: 'center', // Center the indicator
+    marginTop: 10,
+    alignSelf: 'center', 
   },
   title: {
     fontSize: 22,

@@ -97,8 +97,10 @@ class NotificationService {
       // Handle navigation based on notification type
       if (data?.type === 'checkin_reminder') {
         // Navigate to scanner or home screen
-        // You'll need to pass navigation reference here
         this.handleCheckinReminderTap(data);
+      } else if (data?.type === 'checkout_reminder') {
+        // Navigate to checkout screen
+        this.handleCheckoutReminderTap(data);
       }
     });
   }
@@ -110,7 +112,14 @@ class NotificationService {
     console.log('User tapped check-in reminder:', data);
   }
 
-  // Schedule daily recurring reminders
+  // Handle when user taps on check-out reminder
+  handleCheckoutReminderTap(data) {
+    // This would need navigation reference passed from App.js
+    // For now, just log the action
+    console.log('User tapped check-out reminder:', data);
+  }
+
+  // Schedule daily recurring reminders - UPDATED WITH NEW TIMES
   async scheduleDailyReminders() {
     try {
       // Check if notifications are enabled in settings
@@ -123,7 +132,7 @@ class NotificationService {
       // Cancel existing scheduled notifications
       await Notifications.cancelAllScheduledNotificationsAsync();
 
-      // Schedule morning check-in reminder (8:00 AM daily)
+      // Schedule morning check-in reminder (7:50 AM daily)
       await Notifications.scheduleNotificationAsync({
         content: {
           title: "Good Morning! 🌅",
@@ -135,13 +144,13 @@ class NotificationService {
           sound: true,
         },
         trigger: {
-          hour: 8,
-          minute: 0,
+          hour: 7,
+          minute: 50,
           repeats: true,
         },
       });
 
-      // Schedule lunch check-in reminder (12:00 PM daily)
+      // Schedule lunch check-in reminder (12:30 PM daily)
       await Notifications.scheduleNotificationAsync({
         content: {
           title: "Lunch Break Time! 🍽️",
@@ -154,12 +163,30 @@ class NotificationService {
         },
         trigger: {
           hour: 12,
-          minute: 0,
+          minute: 30,
           repeats: true,
         },
       });
 
-      console.log('Daily reminders scheduled successfully');
+      // Schedule check-out reminder (3:50 PM daily)
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Time to Check Out! 🏃‍♂️",
+          body: "Don't forget to check out before leaving. Have a great evening!",
+          data: { 
+            type: 'checkout_reminder', 
+            period: 'checkout' 
+          },
+          sound: true,
+        },
+        trigger: {
+          hour: 15,
+          minute: 50,
+          repeats: true,
+        },
+      });
+
+      // console.log('Daily reminders scheduled successfully for 7:50 AM, 12:30 PM, and 3:50 PM');
     } catch (error) {
       console.error('Error scheduling notifications:', error);
     }
@@ -255,6 +282,32 @@ class NotificationService {
       });
     } catch (error) {
       console.error('Error scheduling custom reminder:', error);
+    }
+  }
+
+  // Helper method to schedule a single daily notification
+  async scheduleDailyNotification({ hour, minute, title, body, identifier, data = {} }) {
+    try {
+      const notificationsEnabled = await this.areNotificationsEnabled();
+      if (!notificationsEnabled) return;
+
+      await Notifications.scheduleNotificationAsync({
+        identifier,
+        content: {
+          title,
+          body,
+          data: { ...data, type: 'checkin_reminder' },
+          sound: true,
+        },
+        trigger: {
+          hour,
+          minute,
+          repeats: true,
+        },
+      });
+    } catch (error) {
+      console.error(`Error scheduling ${identifier}:`, error);
+      throw error;
     }
   }
 }

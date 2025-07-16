@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
   checkOutButton: {
     width: "100%",
     height: 44,
-    backgroundColor: "#8CD136",
+    backgroundColor: "#FE0000",
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",

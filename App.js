@@ -242,7 +242,7 @@ function BottomTabNavigator() {
           left: 20,
           right: 20,
           height: 60,
-          backgroundColor: "#F8F8FF",
+          backgroundColor: "#FFFFFF",
           paddingBottom: 5,
           borderTopWidth: 0,
           borderTopColor: "transparent",
@@ -275,7 +275,7 @@ function BottomTabNavigator() {
                     width: 76,
                     height: 76,
                     borderRadius: 38,
-                    backgroundColor: "#F8F8FF",
+                    backgroundColor: "#FFFFFF",
                     justifyContent: "center",
                     alignItems: "center",
                   }}

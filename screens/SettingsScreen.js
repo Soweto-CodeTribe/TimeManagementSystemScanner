@@ -257,68 +257,67 @@ const SettingsScreen = ({ navigation }) => {
   }, []);
 
   const loadNotificationSettings = async () => {
-    try {
-      const enabled = await AsyncStorage.getItem("notificationsEnabled");
-      setNotificationsEnabled(enabled !== "false"); // Default to true
-    } catch (error) {
-      console.error("Error loading notification settings:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    const enabled = await AsyncStorage.getItem("notificationsEnabled");
+    setNotificationsEnabled(enabled !== "false"); // Default to true
+  } catch (error) {
+    console.error("Error loading notification settings:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const toggleNotifications = async (value) => {
-    try {
-      setNotificationsEnabled(value);
-      await NotificationService.setNotificationsEnabled(value);
+const toggleNotifications = async (value) => {
+  try {
+    setNotificationsEnabled(value);
+    await NotificationService.setNotificationsEnabled(value);
 
-      // Show confirmation
-      Alert.alert(
-        "Notifications Updated",
-        value
-          ? "You will now receive daily check-in reminders at 8:00 AM and 12:00 PM"
-          : "Push notifications have been disabled. You won't receive any reminders.",
-        [{ text: "OK" }]
-      );
-    } catch (error) {
-      console.error("Error toggling notifications:", error);
-      // Revert on error
-      setNotificationsEnabled(!value);
-      Alert.alert("Error", "Failed to update notification settings");
-    }
-  };
+    // Show confirmation with updated times
+    Alert.alert(
+      "Notifications Updated",
+      value
+        ? "You will now receive daily reminders:\n• Check-in: 7:50 AM\n• Lunch: 12:30 PM\n• Check-out: 3:50 PM"
+        : "Push notifications have been disabled. You won't receive any reminders.",
+      [{ text: "OK" }]
+    );
+  } catch (error) {
+    console.error("Error toggling notifications:", error);
+    // Revert on error
+    setNotificationsEnabled(!value);
+    Alert.alert("Error", "Failed to update notification settings");
+  }
+};
 
-  const testNotification = async () => {
-    try {
-      await NotificationService.sendImmediateNotification(
-        "Test Notification 🔔",
-        "This is a test notification to verify everything is working!",
-        { type: "test" }
-      );
-      Alert.alert("Test Sent", "Check your notifications!");
-    } catch (error) {
-      Alert.alert("Error", "Failed to send test notification");
-    }
-  };
+const testNotification = async () => {
+  try {
+    await NotificationService.sendImmediateNotification(
+      "Test Notification 🔔",
+      "This is a test notification to verify everything is working!",
+      { type: "test" }
+    );
+    Alert.alert("Test Sent", "Check your notifications!");
+  } catch (error) {
+    Alert.alert("Error", "Failed to send test notification");
+  }
+};
 
-  const showScheduledNotifications = async () => {
-    try {
-      const notifications =
-        await NotificationService.getScheduledNotifications();
-      const count = notifications.length;
-      Alert.alert(
-        "Scheduled Notifications",
-        `You have ${count} scheduled notifications.\n\n${
-          count > 0
-            ? "Morning reminder: 8:00 AM daily\nLunch reminder: 12:00 PM daily"
-            : "No notifications scheduled"
-        }`,
-        [{ text: "OK" }]
-      );
-    } catch (error) {
-      Alert.alert("Error", "Failed to get notification info");
-    }
-  };
+const showScheduledNotifications = async () => {
+  try {
+    const notifications = await NotificationService.getScheduledNotifications();
+    const count = notifications.length;
+    Alert.alert(
+      "Scheduled Notifications",
+      `You have ${count} scheduled notifications.\n\n${
+        count > 0
+          ? "Daily reminders:\n• Morning check-in: 7:50 AM\n• Lunch check-in: 12:30 PM\n• Check-out: 3:50 PM"
+          : "No notifications scheduled"
+      }`,
+      [{ text: "OK" }]
+    );
+  } catch (error) {
+    Alert.alert("Error", "Failed to get notification info");
+  }
+};
 
   // Modal animation functions
   const showModal = (setModalVisible) => {

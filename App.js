@@ -1,32 +1,164 @@
-import React from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import SplashScreen from './screens/SplashScreen';
-import GetStartedScreen from './screens/GetStartedScreen';
-import ScanScreen from './screens/ScanScreen';
-import TraineeLoginScreen from './screens/TraineeLoginScreen';
-import GuestRegisterScreen from './screens/GuestRegisterScreen';
-import GuestEmailScreen from './screens/GuestEmailScreen';
-import ForgetPasswordScreen from './screens/ForgetPasswordScreen';
-import PasswordEmailScreen from './screens/PasswordEmailScreen';
+import React, { useState, useEffect } from "react";
+import { StatusBar } from "expo-status-bar";
+import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Provider, useSelector } from "react-redux";
+import { Ionicons } from "@expo/vector-icons";
+import { TouchableOpacity, View } from 'react-native';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import store from "./Components/Redux/Store.js";
+
+// Import all screens
+import SplashScreen from "./screens/SplashScreen";
+import GetStartedScreen from "./screens/GetStartedScreen";
+import TraineeLoginScreen from "./screens/TraineeLoginScreen";
+import GuestRegisterScreen from "./screens/GuestRegisterScreen";
+import GuestEmailScreen from "./screens/GuestEmailScreen";
+import ForgetPasswordScreen from "./screens/ForgetPasswordScreen";
+import PasswordEmailScreen from "./screens/PasswordEmailScreen";
+import PermissionsScreen from "./screens/PermissionsScreen";
+import ScannerScreen from "./screens/Scanner";
+import HomeScreen from "./screens/HomeScreen.js";
+import NotificationScreen from "./screens/NotificationsScreen.js";
+import ScannerAuth from "./screens/AuthScanner.js";
+import ProfileScreen from "./screens/ProfileScreen.js";
+import TimelineScreen from "./screens/TimeLineScreen.js";
+import GetStartedSeamlessly from "./screens/GetStartedSeamlessly.js";
+import GetStartedAttendance from "./screens/GetStartedAttendance.js";
+import GetStartedVerified from "./screens/GetStartedVerified.js";
+import SettingsScreen from "./screens/SettingsScreen.js";
+import TicketScreen from "./screens/TicketsScreen.js";
 
 const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
+
+// Bottom Tab Navigator for authenticated users
+function BottomTabNavigator() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarStyle: {
+          position: 'absolute',
+          bottom: 0,
+          left: 20,
+          right: 20,
+          elevation: 4,
+          height: 60,
+          backgroundColor: '#fff',
+          paddingBottom: 5,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 8,
+        },
+        headerShown: false,
+        tabBarIcon: ({ color, size }) => {
+          let iconName;
+          if (route.name === "HomeScreen") iconName = "home-outline";
+          else if (route.name === "ScannerAuth") iconName = "qr-code-outline";
+          else if (route.name === "Timeline") iconName = "time-outline";
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: "#8BC34A",
+        tabBarInactiveTintColor: "gray",
+        tabBarButton: (props) => {
+          if (route.name === 'ScannerAuth') {
+            return (
+              <TouchableOpacity
+                {...props}
+                style={{
+                  top: -10,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+                activeOpacity={0.7}
+              >
+                <View
+                  style={{
+                    width: 70,
+                    height: 70,
+                    borderRadius: 35,
+                    backgroundColor: '#8CD136',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 3,
+                    elevation: 5,
+                  }}
+                >
+                  <Ionicons name="qr-code-outline" size={35} color="#fff" />
+                </View>
+              </TouchableOpacity>
+            );
+          }
+          return <TouchableOpacity {...props} />;
+        },
+      })}
+    >
+      <Tab.Screen name="HomeScreen" component={HomeScreen} />
+      <Tab.Screen name="ScannerAuth" component={ScannerAuth} />
+      <Tab.Screen name="Timeline" component={TimelineScreen} />
+    </Tab.Navigator>
+  );
+}
+
+// Main App Navigator with token retrieval
+function AppNavigator() {
+  const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(null);
+
+  useEffect(() => {
+    const checkToken = async () => {
+      try {
+        const storedToken = await AsyncStorage.getItem("token");
+        setToken(storedToken);
+      } catch (error) {
+        console.error("Error retrieving token:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkToken();
+  }, []);
+
+  if (loading) return null;
+
+  return (
+    <Stack.Navigator 
+      initialRouteName={token ? "MainApp" : "GetStartedScreen"}
+      screenOptions={{ headerShown: false }}
+    >
+      {/* <Stack.Screen name="SplashScreen" component={SplashScreen} /> */}
+      <Stack.Screen name="GetStartedScreen" component={GetStartedScreen} />
+      <Stack.Screen name="GetStartedSeamlessly" component={GetStartedSeamlessly} />
+      <Stack.Screen name="PermissionsScreen" component={PermissionsScreen} />
+      <Stack.Screen name="GetStartedVerified" component={GetStartedVerified} />
+      <Stack.Screen name="GetStartedAttendance" component={GetStartedAttendance} />
+      <Stack.Screen name="ScannerScreen" component={ScannerScreen} />
+      <Stack.Screen name="TraineeLoginScreen" component={TraineeLoginScreen} />
+      <Stack.Screen name="GuestRegister" component={GuestRegisterScreen} />
+      <Stack.Screen name="GuestEmail" component={GuestEmailScreen} />
+      <Stack.Screen name="ForgetPassword" component={ForgetPasswordScreen} />
+      <Stack.Screen name="PasswordEmail" component={PasswordEmailScreen} />
+      <Stack.Screen name="MainApp" component={BottomTabNavigator} />
+      <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
+      <Stack.Screen name="NotificationScreen" component={NotificationScreen} />
+      <Stack.Screen name="SettingsScreen" component={SettingsScreen} />
+      <Stack.Screen name="TicketScreen" component={TicketScreen} />
+    </Stack.Navigator>
+  );
+}
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <StatusBar style="auto" />
-      <Stack.Navigator initialRouteName="SplashScreen" screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="SplashScreen" component={SplashScreen} />
-        <Stack.Screen name="GetStartedScreen" component={GetStartedScreen} />
-        <Stack.Screen name="ScanScreen" component={ScanScreen} />
-        <Stack.Screen name="TraineeLoginScreen" component={TraineeLoginScreen} />
-        <Stack.Screen name="GuestRegisterScreen" component={GuestRegisterScreen} />
-        <Stack.Screen name="GuestEmailScreen" component={GuestEmailScreen} />
-        <Stack.Screen name="ForgetPasswordScreen" component={ForgetPasswordScreen} />
-        <Stack.Screen name="PasswordEmailScreen" component={PasswordEmailScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <Provider store={store}>
+      <NavigationContainer>
+        <StatusBar style="auto" />
+        <AppNavigator />
+      </NavigationContainer>
+    </Provider>
   );
 }
